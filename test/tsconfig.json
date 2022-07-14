@@ -1,0 +1,9 @@
+{
+    "extends": "tsconfig.json",
+    "compilerOptions": {
+        "rootDir": ".",
+        "lib": ["ES2015"],
+        "outDir": "../dist/test",
+    },
+    "include": ["../src/**/*.ts", "../test/**/*.ts"]
+}

@@ -1,0 +1,18 @@
+import System from "../../src/System";
+import Entity from "../../src/Entity";
+
+/**
+ * System that tracks the number of times it has been updated
+ */
+export default class CounterUpdateSystem extends System {
+  public counter: number;
+
+  public constructor() {
+    super([]);
+    this.counter = 0;
+  }
+
+  protected onLoop(entities: Entity[], deltaTime: number): void {
+    this.counter++;
+  }
+}
