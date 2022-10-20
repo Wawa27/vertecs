@@ -1,7 +1,6 @@
 import Component from "../../src/Component";
 
-export class SimpleComponent extends Component {
-
+export default class SimpleComponent extends Component {
     public constructor() {
         super();
     }

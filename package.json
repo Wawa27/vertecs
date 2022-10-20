@@ -4,7 +4,8 @@
   "description": "A typescript entity-component-system framework",
   "scripts": {
     "build": "tsc",
-    "test": "mocha -r ts-node/register test/**/*.spec.ts"
+    "test": "mocha -r ts-node/register test/**/*.spec.ts",
+    "lint": "eslint --ext .ts src test --fix"
   },
   "keywords": [
     "ecs",
@@ -22,8 +23,16 @@
     "@types/chai": "^4.3.1",
     "@types/mocha": "^9.1.1",
     "@types/uuid": "^8.3.4",
+    "@typescript-eslint/eslint-plugin": "^5.31.0",
+    "@typescript-eslint/parser": "^5.31.0",
     "chai": "^4.3.6",
+    "eslint": "^8.20.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-prettier": "^4.2.1",
     "mocha": "^10.0.0",
+    "prettier": "^2.7.1",
+    "prettier-eslint": "^15.0.1",
     "ts-node": "^10.9.1"
   }
 }
