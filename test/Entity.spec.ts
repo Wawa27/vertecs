@@ -1,8 +1,8 @@
 import { assert } from "chai";
 import SimpleCounterComponent from "./components/CounterComponent";
 import CounterComponentSubclass from "./components/CounterComponentSubclass";
-import Entity from "../src/Entity";
-import Component from "../src/Component";
+import Entity from "../src/core/Entity";
+import Component from "../src/core/Component";
 import EmptyComponent from "./components/EmptyComponent";
 
 describe("Entity", () => {
