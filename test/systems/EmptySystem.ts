@@ -1,6 +1,6 @@
 import EmptyComponent from "../components/EmptyComponent";
-import System from "../../src/System";
-import Entity from "../../src/Entity";
+import System from "../../src/core/System";
+import Entity from "../../src/core/Entity";
 
 /**
  * Empty system

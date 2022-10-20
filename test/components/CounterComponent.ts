@@ -1,4 +1,4 @@
-import Component from "../../src/Component";
+import Component from "../../src/core/Component";
 
 /**
  * Simple components with a counter and increment method
