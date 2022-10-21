@@ -1,3 +1,5 @@
-export default abstract class ClientHandler {
-    protected constructor() {}
+import { WebSocket } from "ws";
+
+export default class ClientHandler {
+    public constructor(webSocket: WebSocket) {}
 }

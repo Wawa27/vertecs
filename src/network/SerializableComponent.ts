@@ -1,8 +1,15 @@
 import { Component } from "../core";
 
+/**
+ *
+ */
 export default abstract class SerializableComponent<T> extends Component {
-    protected constructor() {
+    #isPrivate: boolean;
+
+    private constructor(isPrivate: boolean) {
         super();
+
+        this.#isPrivate = isPrivate;
     }
 
     /**
