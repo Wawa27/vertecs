@@ -1,7 +1,7 @@
-import CounterComponent from "../components/CounterComponent";
-import System from "../../src/core/System";
-import Entity from "../../src/core/Entity";
-import Component from "../../src/core/Component";
+import CounterComponent from "test/core/components/CounterComponent";
+import System from "src/core/System";
+import Entity from "src/core/Entity";
+import Component from "src/core/Component";
 
 /**
  * This system keeps track of the number of times an entity became eligible
@@ -24,7 +24,7 @@ export default class CounterSystem extends System {
 
     protected onLoop(entities: Entity[], deltaTime: number): void {
         entities.forEach((entity) => {
-            entity.getComponent(CounterComponent).increment();
+            entity.getComponent(CounterComponent)?.increment();
         });
     }
 }

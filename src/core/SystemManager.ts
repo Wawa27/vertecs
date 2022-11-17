@@ -8,15 +8,15 @@ import Component, { ComponentClass } from "./Component";
 export default class SystemManager {
     #entities: Entity[] = [];
 
-    readonly #entityGroups: Map<ComponentClass[], Entity[]>;
+    readonly entityGroups: Map<ComponentClass[], Entity[]>;
 
-    readonly #systemGroups: Map<ComponentClass[], System[]>;
+    readonly systemGroups: Map<ComponentClass[], System[]>;
 
     static #instance: SystemManager;
 
     private constructor() {
-        this.#systemGroups = new Map<ComponentClass[], System[]>();
-        this.#entityGroups = new Map<ComponentClass[], Entity[]>();
+        this.systemGroups = new Map<ComponentClass[], System[]>();
+        this.entityGroups = new Map<ComponentClass[], Entity[]>();
     }
 
     public static getInstance(): SystemManager {
@@ -30,12 +30,12 @@ export default class SystemManager {
      * Add a system to the system manager
      */
     public addSystem(system: System): void {
-        const systems = this.#systemGroups.get(system.filter);
-        const entities = this.#entityGroups.get(system.filter);
+        const systems = this.systemGroups.get(system.filter);
+        const entities = this.entityGroups.get(system.filter);
 
         if (!systems || !entities) {
-            this.#systemGroups.set(system.filter, [system]);
-            this.#entityGroups.set(system.filter, []);
+            this.systemGroups.set(system.filter, [system]);
+            this.entityGroups.set(system.filter, []);
 
             // TODO: check if entities are eligible to this new group
         } else {
@@ -52,7 +52,7 @@ export default class SystemManager {
      * The entry point of the ECS engine
      */
     public async start(): Promise<void> {
-        Array.from(this.#systemGroups.values()).forEach((systems) => {
+        Array.from(this.systemGroups.values()).forEach((systems) => {
             systems.forEach(async (system) => system.onStart());
         });
         this.loop();
@@ -73,10 +73,10 @@ export default class SystemManager {
             return;
         }
 
-        Array.from(this.#entityGroups.keys()).forEach((group) => {
+        Array.from(this.entityGroups.keys()).forEach((group) => {
             if (this.isEntityEligibleToGroup(group, entity)) {
-                const entities = this.#entityGroups.get(group);
-                const systems = this.#systemGroups.get(group);
+                const entities = this.entityGroups.get(group);
+                const systems = this.systemGroups.get(group);
                 if (entities && systems) {
                     entities.push(entity);
                     systems.forEach((system) =>
@@ -98,14 +98,14 @@ export default class SystemManager {
      * see {@link start}
      */
     public loop() {
-        this.#systemGroups.forEach((systems, group) => {
+        this.systemGroups.forEach((systems, group) => {
             systems
                 .filter((system) => system.hasEnoughTimePassed())
                 .forEach((system) =>
-                    system.loop(this.#entityGroups.get(group) ?? [])
+                    system.loop(this.entityGroups.get(group) ?? [])
                 );
         });
-        setTimeout(this.loop, 10);
+        setTimeout(this.loop.bind(this), 10);
     }
 
     /**

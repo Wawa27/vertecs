@@ -11,7 +11,7 @@
 Start by creating a component class.
 
 ```typescript
-import {Component} from "vertecs";
+import { Component } from "vertecs";
 
 export default class PositionComponent extends Component {
     public x: number;
@@ -28,7 +28,7 @@ export default class PositionComponent extends Component {
 Now, create a system that updates the position of a component.
 
 ```typescript
-import {System} from "vertecs";
+import { System } from "vertecs";
 
 export default class PositionSystem extends System {
 
@@ -49,9 +49,9 @@ export default class PositionSystem extends System {
 Finally, add the system to the system manager, create an entity and start the system manager
 
 ```typescript
-import {SystemManager, Entity} from "vertecs";
-import {PositionComponent} from "./PositionComponent";
-import {PositionSystem} from "./PositionSystem";
+import { SystemManager, Entity } from "vertecs";
+import { PositionComponent } from "./PositionComponent";
+import { PositionSystem } from "./PositionSystem";
 
 const systemManager = new SystemManager.getInstance();
 
@@ -64,3 +64,56 @@ systemManager.addEntity(entity)
 
 systemManager.start(); // -> Position: .., ..
 ```
+
+### Networking
+
+Vertecs comes with a built-in networking system.
+
+Only components that extends the `NetworkComponent` class will be synced over the network.
+
+#### Example updating the PositionComponent over the network
+
+First, create a network component class.
+
+```typescript
+import { NetworkComponent } from "vertecs";
+
+type PositionComponentData = {
+    x: number;
+    y: number;
+}
+
+export default class PositionComponentSynchronizer extends NetworkComponent<PositionComponentData> {
+
+    public constructor() {
+        super();
+    }
+
+    public onAddedToEntity(entity: Entity) {
+        // The component might come from the network, so we need to make sure that the entity has a PositionComponent
+        if (!entity.hasComponent(PositionComponent)) {
+            entity.addComponent(new PositionComponent(0, 0));
+        }
+    }
+
+    public serialize(): PositionComponentData {
+        const position = this.$entity.getComponent(PositionComponent);
+        return {
+            x: position.x,
+            y: position.y
+        };
+    }
+
+    public deserialize(data: PositionComponentData): void {
+        const position = this.$entity.getComponent(PositionComponent);
+        position.x = data.x;
+        position.y = data.y;
+    }
+}
+```
+
+Now, create both network systems.
+
+```typescript
+import { NetworkSystem } from "vertecs";
+

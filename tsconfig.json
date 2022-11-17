@@ -4,8 +4,9 @@
     "target": "ESNext",
     "sourceMap": true,
     "outDir": "./dist",
-    "rootDir": "./src",
+    "rootDir": ".",
     "strict": true,
+    "moduleResolution": "Node",
     "esModuleInterop": true,
     "lib": [
       "esnext",
@@ -14,9 +15,21 @@
     ],
     "typeRoots": [
       "node_modules/@types"
-    ]
+    ],
+    "baseUrl": "./",
+    "paths": {
+      "src/*": [
+        "src/*"
+      ],
+      "test/*": [
+        "test/*"
+      ]
+    }
   },
-  "include": ["src/**/*.ts"],
+  "include": [
+    "src/**/*.ts",
+    "test/**/*.ts"
+  ],
   "exclude": [
     "node_modules"
   ]

@@ -4,7 +4,8 @@
   "description": "A typescript entity-component-system framework",
   "scripts": {
     "build": "tsc",
-    "test": "mocha -r ts-node/register test/**/*.spec.ts",
+    "build-examples": "tsc -p examples",
+    "test": "mocha -r ts-node/register -r tsconfig-paths/register test/**/*.spec.ts",
     "lint": "eslint --ext .ts src test --fix"
   },
   "keywords": [
@@ -35,6 +36,7 @@
     "mocha": "^10.0.0",
     "prettier": "^2.7.1",
     "prettier-eslint": "^15.0.1",
-    "ts-node": "^10.9.1"
+    "ts-node": "^10.9.1",
+    "tsconfig-paths": "^3.12.0"
   }
 }

@@ -1,4 +1,4 @@
-import Component from "../../src/core/Component";
+import Component from "src/core/Component";
 
 /**
  * Component that tracks the number of time it was attached to an entity

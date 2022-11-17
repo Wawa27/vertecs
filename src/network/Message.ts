@@ -1,4 +1,4 @@
-import SerializedEntity from "./SerializedEntity";
+import { SerializedEntity } from "./SerializedEntity";
 
 export type SharedMessageData = {
     entities: SerializedEntity[];
@@ -15,12 +15,25 @@ export default class Message {
 
     #privateMessageData: PrivateMessageData;
 
-    public constructor(
-        sharedMessageData: SharedMessageData,
-        privateMessageData: PrivateMessageData
-    ) {
-        this.#sharedMessageData = sharedMessageData;
-        this.#privateMessageData = privateMessageData;
+    public constructor() {
+        this.#sharedMessageData = { entities: [], customData: [] };
+        this.#privateMessageData = { entities: [], customData: [] };
+    }
+
+    public toJSON(): any {
+        const json: any = { ...this };
+        const prototype = Object.getPrototypeOf(this);
+        for (let i = 0; i < Object.getOwnPropertyNames(prototype).length; i++) {
+            const key = Object.getOwnPropertyNames(prototype)[i];
+            const descriptor = Object.getOwnPropertyDescriptor(prototype, key);
+            const hasGetter =
+                descriptor && typeof descriptor.get === "function";
+            if (hasGetter) {
+                // @ts-ignore
+                json[key] = this[key];
+            }
+        }
+        return json;
     }
 
     public get sharedMessageData(): SharedMessageData {
