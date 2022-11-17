@@ -1,8 +1,7 @@
 import { assert } from "chai";
-import SimpleCounterComponent from "./components/CounterComponent";
-import CounterComponentSubclass from "./components/CounterComponentSubclass";
-import Entity from "../src/core/Entity";
-import Component from "../src/core/Component";
+import CounterComponent from "test/core/components/CounterComponent";
+import CounterComponentSubclass from "test/core/components/CounterComponentSubclass";
+import { Component, Entity } from "../../src/core";
 import EmptyComponent from "./components/EmptyComponent";
 
 describe("Entity", () => {
@@ -11,7 +10,7 @@ describe("Entity", () => {
 
     beforeEach(() => {
         entity = new Entity();
-        simpleCounterComponent = new SimpleCounterComponent();
+        simpleCounterComponent = new CounterComponent();
     });
 
     describe("Component", () => {
@@ -30,7 +29,7 @@ describe("Entity", () => {
             });
 
             it("should not add a components of the same class", () => {
-                const sameClassComponent = new SimpleCounterComponent();
+                const sameClassComponent = new CounterComponent();
 
                 entity.addComponent(simpleCounterComponent);
                 entity.addComponent(sameClassComponent);
@@ -55,7 +54,7 @@ describe("Entity", () => {
 
                 assert.equal(
                     simpleCounterComponent,
-                    entity.getComponent(SimpleCounterComponent)
+                    entity.getComponent(CounterComponent)
                 );
             });
 
@@ -65,7 +64,7 @@ describe("Entity", () => {
                 entity.addComponent(emptyComponent);
 
                 const components = entity.getComponents([
-                    SimpleCounterComponent,
+                    CounterComponent,
                     EmptyComponent,
                 ]);
 
@@ -80,7 +79,7 @@ describe("Entity", () => {
 
                 const components = entity.getComponents([
                     EmptyComponent,
-                    SimpleCounterComponent,
+                    CounterComponent,
                 ]);
 
                 assert.deepStrictEqual(
@@ -96,7 +95,7 @@ describe("Entity", () => {
 
                 const components = entity.getComponents([
                     EmptyComponent,
-                    SimpleCounterComponent,
+                    CounterComponent,
                 ]);
 
                 assert.deepStrictEqual(
@@ -109,9 +108,7 @@ describe("Entity", () => {
                 const counterComponentSubclass = new CounterComponentSubclass();
                 entity.addComponent(counterComponentSubclass);
 
-                const foundComponent = entity.getComponent(
-                    SimpleCounterComponent
-                );
+                const foundComponent = entity.getComponent(CounterComponent);
 
                 assert.deepStrictEqual(
                     foundComponent,
@@ -141,7 +138,7 @@ describe("Entity", () => {
         it("should remove the added components", () => {
             entity.addComponent(simpleCounterComponent);
 
-            entity.removeComponent(SimpleCounterComponent);
+            entity.removeComponent(CounterComponent);
 
             assert.equal(entity.components.length, 0);
         });

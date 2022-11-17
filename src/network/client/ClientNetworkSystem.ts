@@ -1,32 +1,46 @@
 import { WebSocket } from "ws";
-import { Entity } from "../../core";
+import { Entity, SystemManager } from "../../core";
 import Message from "../Message";
 import NetworkSystem from "../NetworkSystem";
-import SerializedEntity from "../SerializedEntity";
+import { SerializedEntity } from "../SerializedEntity";
+import { ComponentClass } from "../../core/Component";
 
+/**
+ * Entry point for the client-side network.
+ * This system is responsible for sending and receiving entities over the network.
+ * It must be extended to provide a custom listener for various events.
+ */
 export default abstract class ClientNetworkSystem extends NetworkSystem {
     #webSocket?: WebSocket;
 
     #lastMessage?: Message;
 
-    protected constructor() {
-        super([]);
+    #address: string;
+
+    protected constructor(
+        allowedNetworkComponents: ComponentClass[],
+        address: string
+    ) {
+        super(allowedNetworkComponents);
+
+        this.#address = address;
     }
 
     public async onStart(): Promise<void> {
-        this.#webSocket = new WebSocket("ws://localhost:10025");
+        console.log(`Connecting to server : ${this.#address} ...`);
+        this.#webSocket = new WebSocket(this.#address);
 
         if (!this.#webSocket) {
             throw new Error("Failed to connect to server");
         }
 
         this.#webSocket.on("open", () => {
-            this.#webSocket?.send("Connected to server");
+            console.log("Connected to server");
+            this.onConnect();
         });
 
         this.#webSocket.on("message", (data) => {
-            // @ts-ignore
-            this.#lastMessage = JSON.parse(data);
+            this.#lastMessage = JSON.parse(data.toString());
         });
     }
 
@@ -34,6 +48,10 @@ export default abstract class ClientNetworkSystem extends NetworkSystem {
         if (!this.#lastMessage) {
             return;
         }
+
+        console.debug(
+            `Processing message ${JSON.stringify(this.#lastMessage)}`
+        );
 
         this.#lastMessage.sharedMessageData.entities.forEach(
             (serializedEntity) => {
@@ -59,9 +77,10 @@ export default abstract class ClientNetworkSystem extends NetworkSystem {
         if (!targetEntity) {
             // New entity from server
             targetEntity = new Entity({ id: serializedEntity.id });
+            SystemManager.getInstance().addEntity(targetEntity);
         }
 
-        serializedEntity.readComponents(targetEntity);
+        this.readComponents(serializedEntity, targetEntity);
     }
 
     /**
@@ -74,5 +93,5 @@ export default abstract class ClientNetworkSystem extends NetworkSystem {
      * Called when the client received a new entity from the server.
      * @protected
      */
-    protected abstract onNewEntity(): void;
+    protected abstract onNewEntity(entity: Entity): void;
 }
