@@ -1,9 +1,9 @@
 import { WebSocket } from "ws";
-import { Entity, SystemManager } from "../../core";
+import { ComponentClass } from "src/core/Component";
+import Entity from "src/core/Entity";
 import Message from "../Message";
 import NetworkSystem from "../NetworkSystem";
 import { SerializedEntity } from "../SerializedEntity";
-import { ComponentClass } from "../../core/Component";
 
 /**
  * Entry point for the client-side network.
@@ -49,10 +49,6 @@ export default abstract class ClientNetworkSystem extends NetworkSystem {
             return;
         }
 
-        console.debug(
-            `Processing message ${JSON.stringify(this.#lastMessage)}`
-        );
-
         this.#lastMessage.sharedMessageData.entities.forEach(
             (serializedEntity) => {
                 this.processEntity(serializedEntity, entities);
@@ -77,7 +73,8 @@ export default abstract class ClientNetworkSystem extends NetworkSystem {
         if (!targetEntity) {
             // New entity from server
             targetEntity = new Entity({ id: serializedEntity.id });
-            SystemManager.getInstance().addEntity(targetEntity);
+            this.ecsManager!.addEntity(targetEntity);
+            this.onNewEntity(targetEntity);
         }
 
         this.readComponents(serializedEntity, targetEntity);

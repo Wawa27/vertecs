@@ -5,7 +5,7 @@
   "scripts": {
     "build": "tsc",
     "build-examples": "tsc -p examples",
-    "test": "mocha -r ts-node/register -r tsconfig-paths/register test/**/*.spec.ts",
+    "test": "mocha -r ts-node/register -r tsconfig-paths/register test/**/*.spec.ts --exit",
     "lint": "eslint --ext .ts src test --fix",
     "prepare": "husky install"
   },

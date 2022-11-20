@@ -1,4 +1,6 @@
 import { WebSocket, WebSocketServer } from "ws";
+import ClientComponent from "src/network/ClientComponent";
+import { IncomingMessage } from "http";
 import { Entity } from "../../core";
 import ClientHandler from "./ClientHandler";
 import SerializableComponent from "../SerializableComponent";
@@ -49,23 +51,32 @@ export default class ServerNetworkSystem extends NetworkSystem {
         });
 
         console.log("Listening for connections");
-        this.#webSocketServer.on("connection", (webSocket) => {
-            console.log(`New connection : ${webSocket.url}`);
-            const clientHandler = new this.#ClientHandlerConstructor(webSocket);
-            this.#clientHandlers.push(clientHandler);
-            clientHandler.onConnect();
-        });
+        this.#webSocketServer.on(
+            "connection",
+            (webSocket, request: IncomingMessage) => {
+                console.log(`New connection : ${request.socket.remoteAddress}`);
+                const clientHandler = new this.#ClientHandlerConstructor(
+                    webSocket
+                );
+                this.#clientHandlers.push(clientHandler);
+                clientHandler.onConnect();
+            }
+        );
     }
 
     public onEntityEligible(
         entity: Entity,
         lastComponentAdded: Component | undefined
-    ) {
-        console.debug("Entity eligible for network");
-    }
+    ) {}
 
     protected onLoop(entities: Entity[], deltaTime: number): void {
         const message = new Message();
+
+        const clientsEntity = Entity.findAllByComponent(
+            this.ecsManager!,
+            ClientComponent
+        );
+
         entities.forEach((entity) => {
             let serializableComponents = entity.getComponents<
                 SerializableComponent<any>
@@ -82,7 +93,20 @@ export default class ServerNetworkSystem extends NetworkSystem {
             const serializedEntity = { id: entity.id, components: [] };
 
             serializableComponents.forEach((serializableComponent) => {
-                if (serializableComponent?.isDirty()) {
+                if (serializableComponent?.isClientScoped) {
+                    clientsEntity.forEach((clientEntity) => {
+                        if (
+                            serializableComponent?.shouldUpdateClient(
+                                clientEntity
+                            )
+                        ) {
+                            this.writeComponent(
+                                serializedEntity,
+                                serializableComponent
+                            );
+                        }
+                    });
+                } else if (serializableComponent?.shouldUpdateClients()) {
                     this.writeComponent(
                         serializedEntity,
                         serializableComponent
