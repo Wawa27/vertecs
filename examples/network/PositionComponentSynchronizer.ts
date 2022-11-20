@@ -8,8 +8,11 @@ type PositionComponentData = {
 };
 
 export default class PositionComponentSynchronizer extends SerializableComponent<PositionComponentData> {
+    #lastUpdate: number;
+
     public constructor() {
         super();
+        this.#lastUpdate = 0;
     }
 
     public onAddedToEntity(entity: Entity) {
@@ -18,8 +21,13 @@ export default class PositionComponentSynchronizer extends SerializableComponent
         }
     }
 
-    public shouldUpdate(): boolean {
-        return true;
+    public shouldUpdate() {
+        // In this example, we update the client/server every second
+        if (Date.now() - this.#lastUpdate > 1000) {
+            this.#lastUpdate = Date.now();
+            return true;
+        }
+        return false;
     }
 
     public accept(data: PositionComponentData): boolean {
