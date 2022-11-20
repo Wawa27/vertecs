@@ -1,14 +1,17 @@
 import { WebSocket, WebSocketServer } from "ws";
 import ClientComponent from "src/network/ClientComponent";
 import { IncomingMessage } from "http";
-import { Entity } from "../../core";
+import { EcsManager, Entity } from "../../core";
 import ClientHandler from "./ClientHandler";
 import SerializableComponent from "../SerializableComponent";
 import NetworkSystem from "../NetworkSystem";
 import Message from "../Message";
 import Component, { ComponentClass } from "../../core/Component";
 
-type ClientHandlerConstructor = new (webSocket: WebSocket) => ClientHandler;
+type ClientHandlerConstructor = new (
+    ecsManager: EcsManager,
+    webSocket: WebSocket
+) => ClientHandler;
 
 /**
  * This class is responsible for managing all the clients connected to the server.
@@ -22,7 +25,7 @@ export default class ServerNetworkSystem extends NetworkSystem {
 
     public constructor(
         allowedNetworkComponents: ComponentClass[],
-        clientHandlerConstructor: new (webSocket: WebSocket) => ClientHandler
+        clientHandlerConstructor: ClientHandlerConstructor
     ) {
         super([SerializableComponent]);
 
@@ -56,6 +59,7 @@ export default class ServerNetworkSystem extends NetworkSystem {
             (webSocket, request: IncomingMessage) => {
                 console.log(`New connection : ${request.socket.remoteAddress}`);
                 const clientHandler = new this.#ClientHandlerConstructor(
+                    this.ecsManager!,
                     webSocket
                 );
                 this.#clientHandlers.push(clientHandler);

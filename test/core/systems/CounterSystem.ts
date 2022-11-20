@@ -1,4 +1,4 @@
-import CounterComponent from "test/core/components/CounterComponent";
+import CounterComponent from "test/components/CounterComponent";
 import System from "src/core/System";
 import Entity from "src/core/Entity";
 import Component from "src/core/Component";

@@ -69,64 +69,14 @@ systemManager.start(); // -> Position: .., ..
 
 Vertecs comes with a built-in networking system.
 
+The networking system is based on the [socket.io](https://socket.io/) library.
+
+The `ClientHandler` class, that must be extended and provided to the `ServerNetworkSystem` class is used to handle
+client connections/disconnections and messages.
+
+On the client side, the `ClientNetworkSystem` class is used to connect to the server and send messages.
+
 Only components that extends the `NetworkComponent` class will be synced over the network.
 
-#### Example updating the PositionComponent over the network
-
-First, create a network component class.
-
-```typescript
-import { NetworkComponent } from "vertecs";
-
-type PositionComponentData = {
-    x: number;
-    y: number;
-}
-
-export default class PositionComponentSynchronizer extends NetworkComponent<PositionComponentData> {
-    #lastUpdate: number;
-
-    public constructor() {
-        super();
-    }
-
-    public onAddedToEntity(entity: Entity) {
-        // The component might come from the network, so we need to make sure that the entity has a PositionComponent
-        if (!entity.hasComponent(PositionComponent)) {
-            entity.addComponent(new PositionComponent(0, 0));
-        }
-    }
-    
-    public accept(data: PositionComponentData) {
-        return true;
-    }
-    
-    public isDirty() {
-        // In this example, we update 
-        if (Date.now() - this.#lastUpdate > 1000) {
-            this.#lastUpdate = this.entity.getComponent(PositionComponent).x;
-            return true;
-        }
-    }
-
-    public serialize(): PositionComponentData {
-        const position = this.$entity.getComponent(PositionComponent);
-        return {
-            x: position.x,
-            y: position.y
-        };
-    }
-
-    public deserialize(data: PositionComponentData): void {
-        const position = this.$entity.getComponent(PositionComponent);
-        position.x = data.x;
-        position.y = data.y;
-    }
-}
-```
-
-Now, create both network systems.
-
-```typescript
-import { NetworkSystem } from "vertecs";
-
+There's three methods (`shouldUpdate`, `shouldUpdateClient`, `shouldUpdateClients`) that can be overridden to customize
+the component synchronization behavior.
