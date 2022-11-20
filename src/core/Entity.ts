@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from "uuid";
 import Component, { ComponentClass } from "./Component";
-import SystemManager from "./SystemManager";
+import EcsManager from "./EcsManager";
 
 interface EntityOptions {
     id?: string;
@@ -13,6 +13,8 @@ interface EntityOptions {
  * An entity is a general purpose object which contains components
  */
 export default class Entity {
+    #ecsManager?: EcsManager;
+
     readonly #id: string;
 
     readonly #components: Component[];
@@ -30,14 +32,6 @@ export default class Entity {
     public constructor(options?: EntityOptions) {
         const id = options?.id ?? uuidv4();
 
-        if (
-            SystemManager.getInstance().entities.find(
-                (entity) => entity.id === id
-            )
-        ) {
-            throw new Error(`Entity found with same ID: ${id}`);
-        }
-
         this.#id = id;
         this.#children = options?.children ?? [];
         this.#components = [];
@@ -53,42 +47,54 @@ export default class Entity {
 
     /**
      * Find an entity by it's id
+     * @param systemManager
      * @param id The entity id to find
      */
-    public static findById(id: string): Entity | undefined {
-        return SystemManager.getInstance().entities.find(
-            (entity) => entity.id === id
-        );
+    public static findById(
+        systemManager: EcsManager,
+        id: string
+    ): Entity | undefined {
+        return systemManager.entities.find((entity) => entity.id === id);
     }
 
     /**
      * Find an entity by a component
+     * @param systemManager
      * @param component The component class
      */
     public static findByComponent(
+        systemManager: EcsManager,
         component: ComponentClass
     ): Entity | undefined {
-        return SystemManager.getInstance().entities.find((entity) =>
+        return systemManager.entities.find((entity) =>
             entity.getComponent(component)
         );
     }
 
     /**
      * Find an entity by a component
+     * @param systemManager The system manager
      * @param component The component class
      */
-    public static findAllByComponent(component: ComponentClass): Entity[] {
-        return SystemManager.getInstance().entities.filter((entity) =>
+    public static findAllByComponent(
+        systemManager: EcsManager,
+        component: ComponentClass
+    ): Entity[] {
+        return systemManager.entities.filter((entity) =>
             entity.getComponent(component)
         );
     }
 
     /**
      * Find an entity by a tag
+     * @param systemManager
      * @param tag The tag
      */
-    public static findAllByTag(tag: string): Entity[] {
-        return SystemManager.getInstance().entities.filter((entity) =>
+    public static findAllByTag(
+        systemManager: EcsManager,
+        tag: string
+    ): Entity[] {
+        return systemManager.entities.filter((entity) =>
             entity.tags.includes(tag)
         );
     }
@@ -175,10 +181,7 @@ export default class Entity {
      */
     public addComponent(component: Component) {
         if (!this.getComponent(component.constructor as ComponentClass)) {
-            SystemManager.getInstance().onComponentAddedToEntity(
-                this,
-                component
-            );
+            this.#ecsManager?.onComponentAddedToEntity(this, component);
             component.onAddedToEntity(this);
             component.entity = this;
             this.components.push(component);
@@ -212,10 +215,7 @@ export default class Entity {
         const component = this.getComponent(componentClass);
         if (component) {
             this.#components.splice(this.#components.indexOf(component), 1);
-            SystemManager.getInstance().onComponentRemovedFromEntity(
-                this,
-                component
-            );
+            this.#ecsManager?.onComponentRemovedFromEntity(this, component);
             return component;
         }
 

@@ -1,4 +1,4 @@
-import CounterComponent from "test/core/components/CounterComponent";
+import CounterComponent from "test/components/CounterComponent";
 
 /**
  * Subclass of CounterComponent

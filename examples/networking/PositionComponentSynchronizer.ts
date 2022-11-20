@@ -18,7 +18,7 @@ export default class PositionComponentSynchronizer extends SerializableComponent
         }
     }
 
-    public isDirty(): boolean {
+    public shouldUpdate(): boolean {
         return true;
     }
 
@@ -50,7 +50,6 @@ export default class PositionComponentSynchronizer extends SerializableComponent
         if (!positionComponent) {
             throw new Error("PositionComponent not found");
         }
-        console.debug("New position", data);
         positionComponent.x = data.x;
         positionComponent.y = data.y;
     }

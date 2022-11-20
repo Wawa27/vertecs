@@ -84,6 +84,7 @@ type PositionComponentData = {
 }
 
 export default class PositionComponentSynchronizer extends NetworkComponent<PositionComponentData> {
+    #lastUpdate: number;
 
     public constructor() {
         super();
@@ -93,6 +94,18 @@ export default class PositionComponentSynchronizer extends NetworkComponent<Posi
         // The component might come from the network, so we need to make sure that the entity has a PositionComponent
         if (!entity.hasComponent(PositionComponent)) {
             entity.addComponent(new PositionComponent(0, 0));
+        }
+    }
+    
+    public accept(data: PositionComponentData) {
+        return true;
+    }
+    
+    public isDirty() {
+        // In this example, we update 
+        if (Date.now() - this.#lastUpdate > 1000) {
+            this.#lastUpdate = this.entity.getComponent(PositionComponent).x;
+            return true;
         }
     }
 

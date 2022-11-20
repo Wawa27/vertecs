@@ -1,7 +1,7 @@
-import { SystemManager } from "../../../src";
+import { EcsManager } from "../../../src";
 import ExampleServerNetworkSystem from "./ExampleServerNetworkSystem";
 
-const systemManager = SystemManager.getInstance();
+const systemManager = EcsManager.getInstance();
 
 systemManager.addSystem(new ExampleServerNetworkSystem());
 
