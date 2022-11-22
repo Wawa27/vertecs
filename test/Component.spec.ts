@@ -2,7 +2,7 @@ import { assert } from "chai";
 import AttachCounter from "./components/AttachCounter";
 import Entity from "../src/Entity";
 import Component from "../src/Component";
-import { SimpleComponent } from "./components/SimpleComponent";
+import SimpleComponent from "./components/SimpleComponent";
 
 describe("Component", () => {
     describe("ID", () => {
