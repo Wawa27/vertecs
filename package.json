@@ -5,7 +5,8 @@
   "scripts": {
     "build": "tsc",
     "test": "mocha -r ts-node/register test/**/*.spec.ts",
-    "lint": "eslint --ext .ts src test --fix"
+    "lint": "eslint --ext .ts src test --fix",
+    "prepare": "husky install"
   },
   "keywords": [
     "ecs",
@@ -30,6 +31,7 @@
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-prettier": "^4.2.1",
+    "husky": "^8.0.2",
     "mocha": "^10.0.0",
     "prettier": "^2.7.1",
     "prettier-eslint": "^15.0.1",
