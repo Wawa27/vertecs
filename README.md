@@ -65,7 +65,7 @@ ecsManager.addEntity(entity)
 ecsManager.start(); // -> Position: .., ..
 ```
 
-### Networking
+### Network
 
 Vertecs comes with a built-in networking system.
 
