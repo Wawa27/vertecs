@@ -1,6 +1,6 @@
 import { assert } from "chai";
-import CounterComponent from "test/components/CounterComponent";
-import CounterComponentSubclass from "test/core/components/CounterComponentSubclass";
+import CounterComponent from "../components/CounterComponent";
+import CounterComponentSubclass from "../core/components/CounterComponentSubclass";
 import { Component, Entity } from "../../src/core";
 import EmptyComponent from "./components/EmptyComponent";
 

@@ -1,8 +1,8 @@
 import { assert } from "chai";
-import AttachCounter from "test/core/components/AttachCounter";
-import Entity from "src/core/Entity";
-import Component from "src/core/Component";
-import SimpleComponent from "test/core/components/SimpleComponent";
+import Entity from "../../src/core/Entity";
+import Component from "../../src/core/Component";
+import SimpleComponent from "../core/components/SimpleComponent";
+import AttachCounter from "../core/components/AttachCounter";
 
 describe("Component", () => {
     describe("ID", () => {

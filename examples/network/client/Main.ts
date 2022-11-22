@@ -3,8 +3,14 @@ import ExampleClientNetworkSystem from "./ExampleClientNetworkSystem";
 
 const ecsManager = new EcsManager();
 
-await ecsManager.addSystem(
-    new ExampleClientNetworkSystem("ws://localhost:10025")
-);
+const start = async () => {
+    console.debug("Starting client...");
+    await ecsManager.addSystem(
+        new ExampleClientNetworkSystem("ws://localhost:10025")
+    );
 
-await ecsManager.start();
+    await ecsManager.start();
+    console.debug("Started !");
+};
+
+start();

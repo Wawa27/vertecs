@@ -1,7 +1,7 @@
-import CounterComponent from "test/components/CounterComponent";
-import System from "src/core/System";
-import Entity from "src/core/Entity";
-import Component from "src/core/Component";
+import CounterComponent from "../../components/CounterComponent";
+import Entity from "../../../src/core/Entity";
+import Component from "../../../src/core/Component";
+import System from "../../../src/core/System";
 
 /**
  * This system keeps track of the number of times an entity became eligible

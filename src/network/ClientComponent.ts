@@ -1,4 +1,4 @@
-import { Component } from "src/core";
+import { Component } from "../core";
 
 /**
  * The component that is used to store the client metadata

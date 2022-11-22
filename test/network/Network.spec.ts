@@ -1,10 +1,10 @@
-import { Entity, EcsManager } from "src/core";
-import { ServerNetworkSystem } from "src/network";
-import NetworkCounterSynchronizer from "test/network/components/NetworkCounterSynchronizer";
-import TestClientNetworkSystem from "test/network/systems/TestClientNetworkSystem";
-import TestClientHandler from "test/network/systems/TestClientHandler";
 import { assert } from "chai";
-import CounterComponent from "test/components/CounterComponent";
+import NetworkCounterSynchronizer from "../network/components/NetworkCounterSynchronizer";
+import TestClientNetworkSystem from "../network/systems/TestClientNetworkSystem";
+import TestClientHandler from "../network/systems/TestClientHandler";
+import CounterComponent from "../components/CounterComponent";
+import { ServerNetworkSystem } from "../../src/network";
+import { Entity, EcsManager } from "../../src/core";
 
 describe("Networking", () => {
     const allowedNetworkComponents = [NetworkCounterSynchronizer];

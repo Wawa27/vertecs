@@ -1,5 +1,5 @@
 import { WebSocket } from "ws";
-import { EcsManager } from "src/core";
+import { EcsManager } from "../../core";
 import Message from "../Message";
 
 export default class ClientHandler {

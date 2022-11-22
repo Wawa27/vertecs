@@ -1,6 +1,6 @@
 import { WebSocket } from "ws";
-import { ComponentClass } from "src/core/Component";
-import Entity from "src/core/Entity";
+import { ComponentClass } from "../../core/Component";
+import Entity from "../../core/Entity";
 import Message from "../Message";
 import NetworkSystem from "../NetworkSystem";
 import { SerializedEntity } from "../SerializedEntity";

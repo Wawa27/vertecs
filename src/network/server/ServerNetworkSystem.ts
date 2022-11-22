@@ -1,6 +1,6 @@
 import { WebSocket, WebSocketServer } from "ws";
-import ClientComponent from "src/network/ClientComponent";
 import { IncomingMessage } from "http";
+import ClientComponent from "../../network/ClientComponent";
 import { EcsManager, Entity } from "../../core";
 import ClientHandler from "./ClientHandler";
 import SerializableComponent from "../SerializableComponent";
@@ -53,7 +53,7 @@ export default class ServerNetworkSystem extends NetworkSystem {
             },
         });
 
-        console.log("Listening for connections");
+        console.log("Listening for connections...");
         this.#webSocketServer.on(
             "connection",
             (webSocket, request: IncomingMessage) => {
