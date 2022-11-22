@@ -1,7 +1,7 @@
 import { SerializedComponent } from "./SerializedComponent";
 
 /**
- * The json representation of an entity that can be sent over the network
+ * The json representation of an entity that can be sent over the networking
  */
 export type SerializedEntity = {
     owner?: string;

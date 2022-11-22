@@ -1,9 +1,9 @@
 import { assert } from "chai";
-import NetworkCounterSynchronizer from "../network/components/NetworkCounterSynchronizer";
-import TestClientNetworkSystem from "../network/systems/TestClientNetworkSystem";
-import TestClientHandler from "../network/systems/TestClientHandler";
+import NetworkCounterSynchronizer from "./components/NetworkCounterSynchronizer";
+import TestClientNetworkSystem from "./systems/TestClientNetworkSystem";
+import TestClientHandler from "./systems/TestClientHandler";
 import CounterComponent from "../components/CounterComponent";
-import { ServerNetworkSystem } from "../../src/network";
+import { ServerNetworkSystem } from "../../src/networking";
 import { Entity, EcsManager } from "../../src/core";
 
 describe("Networking", () => {

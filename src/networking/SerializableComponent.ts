@@ -2,7 +2,7 @@ import { Component, Entity } from "../core";
 
 /**
  * A serializable component is a component that can be serialized and deserialized,
- * it is used to send components over the network or to save them to a file for example
+ * it is used to send components over the networking or to save them to a file for example
  */
 export default abstract class SerializableComponent<T> extends Component {
     #isPrivate: boolean;
@@ -22,7 +22,7 @@ export default abstract class SerializableComponent<T> extends Component {
     public abstract accept(data: T): boolean;
 
     /**
-     * Check for data synchronization, return true if the data is dirty and need to be sent over the network
+     * Check for data synchronization, return true if the data is dirty and need to be sent over the networking
      */
     public abstract shouldUpdate(): boolean;
 
@@ -50,7 +50,7 @@ export default abstract class SerializableComponent<T> extends Component {
     }
 
     /**
-     * Serialize the component's data into a json object that can be sent over the network
+     * Serialize the component's data into a json object that can be sent over the networking
      */
     public abstract serialize(): T;
 

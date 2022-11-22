@@ -1,5 +1,5 @@
 import { WebSocket } from "ws";
-import ClientHandler from "../../../src/network/server/ClientHandler";
+import ClientHandler from "../../../src/networking/server/ClientHandler";
 import { EcsManager } from "../../../src/core";
 
 export default class TestClientHandler extends ClientHandler {

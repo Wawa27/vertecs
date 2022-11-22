@@ -4,7 +4,7 @@ import SerializableComponent from "./SerializableComponent";
 import { SerializedEntity } from "./SerializedEntity";
 
 /**
- * The network system is responsible for sending and receiving entities over the network.
+ * The networking system is responsible for sending and receiving entities over the networking.
  * This class is used by the server and the client to provide a common interface for formatting entities.
  */
 export default class NetworkSystem extends System {

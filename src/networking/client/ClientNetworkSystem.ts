@@ -6,8 +6,8 @@ import NetworkSystem from "../NetworkSystem";
 import { SerializedEntity } from "../SerializedEntity";
 
 /**
- * Entry point for the client-side network.
- * This system is responsible for sending and receiving entities over the network.
+ * Entry point for the client-side networking.
+ * This system is responsible for sending and receiving entities over the networking.
  * It must be extended to provide a custom listener for various events.
  */
 export default abstract class ClientNetworkSystem extends NetworkSystem {

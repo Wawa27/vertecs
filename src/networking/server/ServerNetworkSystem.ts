@@ -1,6 +1,6 @@
 import { WebSocket, WebSocketServer } from "ws";
 import { IncomingMessage } from "http";
-import ClientComponent from "../../network/ClientComponent";
+import ClientComponent from "../ClientComponent";
 import { EcsManager, Entity } from "../../core";
 import ClientHandler from "./ClientHandler";
 import SerializableComponent from "../SerializableComponent";
