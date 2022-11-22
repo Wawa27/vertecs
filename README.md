@@ -11,7 +11,7 @@
 Start by creating a component class.
 
 ```typescript
-import {Component} from "vertecs";
+import { Component } from "vertecs";
 
 export default class PositionComponent extends Component {
     public x: number;
@@ -28,7 +28,7 @@ export default class PositionComponent extends Component {
 Now, create a system that updates the position of a component.
 
 ```typescript
-import {System} from "vertecs";
+import { System } from "vertecs";
 
 export default class PositionSystem extends System {
 
@@ -46,21 +46,37 @@ export default class PositionSystem extends System {
 }
 ```
 
-Finally, add the system to the system manager, create an entity and start the system manager
+Finally, add the system to the ecs manager, create an entity and start the ecs manager
 
 ```typescript
-import {SystemManager, Entity} from "vertecs";
-import {PositionComponent} from "./PositionComponent";
-import {PositionSystem} from "./PositionSystem";
+import { SystemManager, Entity, EcsManager } from "vertecs";
+import { PositionComponent } from "./PositionComponent";
+import { PositionSystem } from "./PositionSystem";
 
-const systemManager = new SystemManager.getInstance();
+const ecsManager = new EcsManager();
 
-systemManager.addSystem(new PositionSystem());
+ecsManager.addSystem(new PositionSystem());
 
 const entity = new Entity();
 entity.addComponent(new PositionComponent(0, 0));
 
-systemManager.addEntity(entity)
+ecsManager.addEntity(entity)
 
-systemManager.start(); // -> Position: .., ..
+ecsManager.start(); // -> Position: .., ..
 ```
+
+### Network
+
+Vertecs comes with a built-in networking system.
+
+The networking system is based on the [ws](https://github.com/websockets/ws) library.
+
+The `ClientHandler` class, that must be extended and provided to the `ServerNetworkSystem` class is used to handle
+client connections/disconnections and messages.
+
+On the client side, the `ClientNetworkSystem` class is used to connect to the server and send messages.
+
+Only components that extends the `NetworkComponent` class will be synced over the network.
+
+There's three methods (`shouldUpdate`, `shouldUpdateClient`, `shouldUpdateClients`) that can be overridden to customize
+the component synchronization behavior.

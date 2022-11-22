@@ -5,37 +5,32 @@ import Component, { ComponentClass } from "./Component";
 /**
  * The system manager is responsible for managing all the systems
  */
-export default class SystemManager {
+export default class EcsManager {
     #entities: Entity[] = [];
 
-    readonly #entityGroups: Map<ComponentClass[], Entity[]>;
+    readonly entityGroups: Map<ComponentClass[], Entity[]>;
 
-    readonly #systemGroups: Map<ComponentClass[], System[]>;
+    readonly systemGroups: Map<ComponentClass[], System[]>;
 
-    static #instance: SystemManager;
-
-    private constructor() {
-        this.#systemGroups = new Map<ComponentClass[], System[]>();
-        this.#entityGroups = new Map<ComponentClass[], Entity[]>();
-    }
-
-    public static getInstance(): SystemManager {
-        if (!SystemManager.#instance) {
-            SystemManager.#instance = new SystemManager();
-        }
-        return SystemManager.#instance;
+    public constructor() {
+        this.systemGroups = new Map<ComponentClass[], System[]>();
+        this.entityGroups = new Map<ComponentClass[], Entity[]>();
     }
 
     /**
      * Add a system to the system manager
      */
-    public addSystem(system: System): void {
-        const systems = this.#systemGroups.get(system.filter);
-        const entities = this.#entityGroups.get(system.filter);
+    public async addSystem(system: System): Promise<void> {
+        const systems = this.systemGroups.get(system.filter);
+        const entities = this.entityGroups.get(system.filter);
+
+        if (!system.hasStarted) {
+            await system.start(this);
+        }
 
         if (!systems || !entities) {
-            this.#systemGroups.set(system.filter, [system]);
-            this.#entityGroups.set(system.filter, []);
+            this.systemGroups.set(system.filter, [system]);
+            this.entityGroups.set(system.filter, []);
 
             // TODO: check if entities are eligible to this new group
         } else {
@@ -52,8 +47,12 @@ export default class SystemManager {
      * The entry point of the ECS engine
      */
     public async start(): Promise<void> {
-        Array.from(this.#systemGroups.values()).forEach((systems) => {
-            systems.forEach(async (system) => system.onStart());
+        Array.from(this.systemGroups.values()).forEach((systems) => {
+            systems.forEach(async (system) => {
+                if (!system.hasStarted) {
+                    await system.start(this);
+                }
+            });
         });
         this.loop();
     }
@@ -68,29 +67,29 @@ export default class SystemManager {
     /**
      * Add an entity to the system manager
      */
-    public addEntity(entity: Entity) {
-        if (this.#entities.includes(entity)) {
-            return;
+    public addEntity(newEntity: Entity) {
+        if (this.entities.find((entity) => entity.id === newEntity.id)) {
+            throw new Error(`Entity found with same ID: ${newEntity.id}`);
         }
 
-        Array.from(this.#entityGroups.keys()).forEach((group) => {
-            if (this.isEntityEligibleToGroup(group, entity)) {
-                const entities = this.#entityGroups.get(group);
-                const systems = this.#systemGroups.get(group);
+        Array.from(this.entityGroups.keys()).forEach((group) => {
+            if (this.isEntityEligibleToGroup(group, newEntity)) {
+                const entities = this.entityGroups.get(group);
+                const systems = this.systemGroups.get(group);
                 if (entities && systems) {
-                    entities.push(entity);
+                    entities.push(newEntity);
                     systems.forEach((system) =>
-                        system.onEntityEligible(entity, undefined)
+                        system.onEntityEligible(newEntity, undefined)
                     );
                 }
             }
         });
 
-        if (entity.children.length > 0) {
-            this.addEntities(entity.children);
+        if (newEntity.children.length > 0) {
+            this.addEntities(newEntity.children);
         }
 
-        this.#entities.push(entity);
+        this.#entities.push(newEntity);
     }
 
     /**
@@ -98,14 +97,14 @@ export default class SystemManager {
      * see {@link start}
      */
     public loop() {
-        this.#systemGroups.forEach((systems, group) => {
+        this.systemGroups.forEach((systems, group) => {
             systems
                 .filter((system) => system.hasEnoughTimePassed())
                 .forEach((system) =>
-                    system.loop(this.#entityGroups.get(group) ?? [])
+                    system.loop(this.entityGroups.get(group) ?? [])
                 );
         });
-        setTimeout(this.loop, 10);
+        setTimeout(this.loop.bind(this), 10);
     }
 
     /**

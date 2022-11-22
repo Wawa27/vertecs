@@ -1,3 +1,5 @@
+import EcsManager from "src/core/EcsManager";
+import now from "performance-now";
 import Component, { ComponentClass } from "./Component";
 import Entity from "./Entity";
 
@@ -5,6 +7,10 @@ import Entity from "./Entity";
  * A system loops over all entities and uses the components of the entities to perform logic.
  */
 export default abstract class System {
+    protected ecsManager?: EcsManager;
+
+    #hasStarted: boolean;
+
     #filter: ComponentClass[];
 
     #lastUpdateTime: number;
@@ -18,6 +24,7 @@ export default abstract class System {
         this.#filter = filter;
         this.#lastUpdateTime = Number.NEGATIVE_INFINITY;
         this.#tps = tps ?? 60;
+        this.#hasStarted = false;
     }
 
     /**
@@ -25,7 +32,13 @@ export default abstract class System {
      */
     public loop(entities: Entity[]): void {
         this.onLoop(entities, this.getDeltaTime());
-        this.#lastUpdateTime = performance.now();
+        this.#lastUpdateTime = now();
+    }
+
+    public async start(ecsManager: EcsManager): Promise<void> {
+        this.ecsManager = ecsManager;
+        this.#hasStarted = true;
+        await this.onStart();
     }
 
     /**
@@ -63,7 +76,7 @@ export default abstract class System {
      * @private
      */
     private getDeltaTime() {
-        return performance.now() - this.#lastUpdateTime;
+        return now() - this.#lastUpdateTime;
     }
 
     /**
@@ -95,5 +108,13 @@ export default abstract class System {
 
     public set tps(value: number) {
         this.#tps = value;
+    }
+
+    public get hasStarted(): boolean {
+        return this.#hasStarted;
+    }
+
+    public set hasStarted(value: boolean) {
+        this.#hasStarted = value;
     }
 }

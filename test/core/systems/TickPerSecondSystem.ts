@@ -1,5 +1,5 @@
-import System from "../../src/System";
-import Entity from "../../src/Entity";
+import System from "../../../src/core/System";
+import Entity from "../../../src/core/Entity";
 
 export default class TickPerSecondSystem extends System {
     public counter: number;
