@@ -109,7 +109,9 @@ describe("Entity", () => {
                 const counterComponentSubclass = new CounterComponentSubclass();
                 entity.addComponent(counterComponentSubclass);
 
-                const foundComponent = entity.getComponent(SimpleCounterComponent);
+                const foundComponent = entity.getComponent(
+                    SimpleCounterComponent
+                );
 
                 assert.deepStrictEqual(
                     foundComponent,
