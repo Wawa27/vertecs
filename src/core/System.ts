@@ -35,8 +35,8 @@ export default abstract class System {
         this.#lastUpdateTime = now();
     }
 
-    public async start(systemManager: EcsManager): Promise<void> {
-        this.ecsManager = systemManager;
+    public async start(ecsManager: EcsManager): Promise<void> {
+        this.ecsManager = ecsManager;
         this.#hasStarted = true;
         await this.onStart();
     }

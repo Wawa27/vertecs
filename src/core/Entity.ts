@@ -47,54 +47,51 @@ export default class Entity {
 
     /**
      * Find an entity by it's id
-     * @param systemManager
+     * @param ecsManager
      * @param id The entity id to find
      */
     public static findById(
-        systemManager: EcsManager,
+        ecsManager: EcsManager,
         id: string
     ): Entity | undefined {
-        return systemManager.entities.find((entity) => entity.id === id);
+        return ecsManager.entities.find((entity) => entity.id === id);
     }
 
     /**
      * Find an entity by a component
-     * @param systemManager
+     * @param ecsManager
      * @param component The component class
      */
     public static findByComponent(
-        systemManager: EcsManager,
+        ecsManager: EcsManager,
         component: ComponentClass
     ): Entity | undefined {
-        return systemManager.entities.find((entity) =>
+        return ecsManager.entities.find((entity) =>
             entity.getComponent(component)
         );
     }
 
     /**
      * Find an entity by a component
-     * @param systemManager The system manager
+     * @param ecsManager The ecs manager
      * @param component The component class
      */
     public static findAllByComponent(
-        systemManager: EcsManager,
+        ecsManager: EcsManager,
         component: ComponentClass
     ): Entity[] {
-        return systemManager.entities.filter((entity) =>
+        return ecsManager.entities.filter((entity) =>
             entity.getComponent(component)
         );
     }
 
     /**
      * Find an entity by a tag
-     * @param systemManager
+     * @param ecsManager
      * @param tag The tag
      */
-    public static findAllByTag(
-        systemManager: EcsManager,
-        tag: string
-    ): Entity[] {
-        return systemManager.entities.filter((entity) =>
+    public static findAllByTag(ecsManager: EcsManager, tag: string): Entity[] {
+        return ecsManager.entities.filter((entity) =>
             entity.tags.includes(tag)
         );
     }

@@ -46,30 +46,30 @@ export default class PositionSystem extends System {
 }
 ```
 
-Finally, add the system to the system manager, create an entity and start the system manager
+Finally, add the system to the ecs manager, create an entity and start the ecs manager
 
 ```typescript
-import { SystemManager, Entity } from "vertecs";
+import { SystemManager, Entity, EcsManager } from "vertecs";
 import { PositionComponent } from "./PositionComponent";
 import { PositionSystem } from "./PositionSystem";
 
-const systemManager = new SystemManager.getInstance();
+const ecsManager = new EcsManager();
 
-systemManager.addSystem(new PositionSystem());
+ecsManager.addSystem(new PositionSystem());
 
 const entity = new Entity();
 entity.addComponent(new PositionComponent(0, 0));
 
-systemManager.addEntity(entity)
+ecsManager.addEntity(entity)
 
-systemManager.start(); // -> Position: .., ..
+ecsManager.start(); // -> Position: .., ..
 ```
 
 ### Networking
 
 Vertecs comes with a built-in networking system.
 
-The networking system is based on the [socket.io](https://socket.io/) library.
+The networking system is based on the [ws](https://github.com/websockets/ws) library.
 
 The `ClientHandler` class, that must be extended and provided to the `ServerNetworkSystem` class is used to handle
 client connections/disconnections and messages.

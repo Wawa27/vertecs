@@ -1,13 +1,13 @@
 import { EcsManager } from "../../../src";
 import ExampleServerNetworkSystem from "./ExampleServerNetworkSystem";
 
-const systemManager = new EcsManager();
+const ecsManager = new EcsManager();
 
 const start = async () => {
     console.log("Starting server...");
-    await systemManager.addSystem(new ExampleServerNetworkSystem());
+    await ecsManager.addSystem(new ExampleServerNetworkSystem());
 
-    await systemManager.start();
+    await ecsManager.start();
     console.log("Started !");
 };
 
