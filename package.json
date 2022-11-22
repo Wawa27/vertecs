@@ -5,7 +5,7 @@
   "scripts": {
     "build": "tsc",
     "test": "mocha -r ts-node/register test/**/*.spec.ts",
-    "lint": "eslint --ext .ts src test examples --fix",
+    "lint": "eslint --ext .ts src test --fix",
     "prepare": "husky install"
   },
   "keywords": [
