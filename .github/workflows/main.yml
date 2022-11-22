@@ -2,7 +2,7 @@ name: CI / Bump version
 on:
     pull_request:
         branches:
-            - dev
+            - master
         types: [closed]
 jobs:
     bump:
