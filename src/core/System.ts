@@ -1,5 +1,4 @@
 import EcsManager from "src/core/EcsManager";
-import now from "performance-now";
 import Component, { ComponentClass } from "./Component";
 import Entity from "./Entity";
 
@@ -32,7 +31,7 @@ export default abstract class System {
      */
     public loop(entities: Entity[]): void {
         this.onLoop(entities, this.getDeltaTime());
-        this.#lastUpdateTime = now();
+        this.#lastUpdateTime = performance.now();
     }
 
     public async start(ecsManager: EcsManager): Promise<void> {
@@ -76,7 +75,7 @@ export default abstract class System {
      * @private
      */
     private getDeltaTime() {
-        return now() - this.#lastUpdateTime;
+        return performance.now() - this.#lastUpdateTime;
     }
 
     /**
