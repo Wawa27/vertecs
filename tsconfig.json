@@ -17,19 +17,12 @@
       "node_modules/@types"
     ],
     "baseUrl": "./",
-    "paths": {
-      "src/*": [
-        "src/*"
-      ],
-      "test/*": [
-        "test/*"
-      ]
-    }
   },
   "include": [
     "src/**/*.ts",
     "test/**/*.ts",
-    "examples/**/*.ts"
+    "examples/**/*.ts",
+    "rollup.config.ts"
   ],
   "exclude": [
     "node_modules"

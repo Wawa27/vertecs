@@ -1,10 +1,11 @@
 {
   "name": "vertecs",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "A typescript entity-component-system framework",
   "type": "module",
   "scripts": {
     "build": "tsc",
+    "build:examples": "rollup -c rollup.config.ts --configPlugin typescript",
     "start:example-network-server": "ts-node --esm --experimental-specifier-resolution=node examples/network/server/Main",
     "start:example-network-client": "ts-node --esm --experimental-specifier-resolution=node examples/network/client/Main",
     "test": "mocha --experimental-specifier-resolution=node --loader=ts-node/esm test/**/*.spec.ts --exit",
@@ -21,13 +22,18 @@
     "game-loop"
   ],
   "dependencies": {
-    "performance-now": "^2.1.0",
+    "three": "^0.146.0",
     "uuid": "^8.3.2",
     "ws": "^8.9.0"
   },
   "devDependencies": {
+    "rollup-plugin-polyfill-node": "^0.11.0",
+    "@rollup/plugin-commonjs": "^23.0.3",
+    "@rollup/plugin-node-resolve": "^15.0.1",
+    "@rollup/plugin-typescript": "^10.0.0",
     "@types/chai": "^4.3.1",
     "@types/mocha": "^9.1.1",
+    "@types/three": "^0.146.0",
     "@types/uuid": "^8.3.4",
     "@types/ws": "^8.5.3",
     "@typescript-eslint/eslint-plugin": "^5.31.0",
@@ -41,7 +47,9 @@
     "mocha": "10.0.0",
     "prettier": "^2.7.1",
     "prettier-eslint": "^15.0.1",
+    "rollup": "^3.5.0",
     "ts-node": "^10.9.1",
-    "tsconfig-paths": "^3.12.0"
+    "tsconfig-paths": "^3.12.0",
+    "typescript": "^4.9.3"
   }
 }
