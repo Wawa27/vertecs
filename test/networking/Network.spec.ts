@@ -3,8 +3,8 @@ import NetworkCounterSynchronizer from "./components/NetworkCounterSynchronizer"
 import TestClientNetworkSystem from "./systems/TestClientNetworkSystem";
 import TestClientHandler from "./systems/TestClientHandler";
 import CounterComponent from "../components/CounterComponent";
-import { ServerNetworkSystem } from "../../src/networking";
 import { Entity, EcsManager } from "../../src/core";
+import { ServerNetworkSystem } from "../../src";
 
 describe("Networking", () => {
     const allowedNetworkComponents = [NetworkCounterSynchronizer];

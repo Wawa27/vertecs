@@ -1,25 +1,22 @@
-import { Component, Entity } from "../core";
+import { Entity } from "../core";
+import { SerializableComponent } from "../io";
 
-/**
- * A serializable component is a component that can be serialized and deserialized,
- * it is used to send components over the networking or to save them to a file for example
- */
-export default abstract class SerializableComponent<T> extends Component {
+export default abstract class NetworkableComponent<
+    T
+> extends SerializableComponent<T> {
+    /**
+     * Flag that indicates if the component is private and should not be sent to other clients.
+     * @private
+     */
     #isPrivate: boolean;
 
     #isClientScoped: boolean;
 
     protected constructor(isPrivate = false, isClientScoped = false) {
         super();
-        this.#isPrivate = isPrivate;
         this.#isClientScoped = isClientScoped;
+        this.#isPrivate = isPrivate;
     }
-
-    /**
-     * Server-side only. Return true if the component can be updated from the client.
-     * @param data
-     */
-    public abstract accept(data: T): boolean;
 
     /**
      * Check for data synchronization, return true if the data is dirty and need to be sent over the networking
@@ -48,17 +45,6 @@ export default abstract class SerializableComponent<T> extends Component {
     public shouldUpdateClients(): boolean {
         return this.shouldUpdate();
     }
-
-    /**
-     * Serialize the component's data into a json object that can be sent over the networking
-     */
-    public abstract serialize(): T;
-
-    /**
-     * Deserialize the json object, the data should come from a trusted source
-     * @param data
-     */
-    public abstract deserialize(data: T): void;
 
     public get isPrivate(): boolean {
         return this.#isPrivate;

@@ -1,7 +1,8 @@
 import { Entity, System } from "../core";
 import { ComponentClass } from "../core/Component";
-import SerializableComponent from "./SerializableComponent";
-import { SerializedEntity } from "./SerializedEntity";
+import NetworkableComponent from "./NetworkableComponent";
+import SerializableComponent from "../io/SerializableComponent";
+import { SerializedEntity } from "../io";
 
 /**
  * The networking system is responsible for sending and receiving entities over the networking.
@@ -44,7 +45,7 @@ export default class NetworkSystem extends System {
         serializedEntity.components.forEach((serializedComponent) => {
             const ComponentConstructor = NetworkSystem.getComponentConstructor(
                 serializedComponent.className
-            ) as new () => SerializableComponent<any>;
+            ) as new () => NetworkableComponent<any>;
 
             if (!ComponentConstructor) {
                 console.warn(

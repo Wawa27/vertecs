@@ -1,4 +1,4 @@
-import SerializableComponent from "../../src/networking/SerializableComponent";
+import SerializableComponent from "../../src/io/SerializableComponent";
 import { Entity } from "../../src";
 import PositionComponent from "./PositionComponent";
 

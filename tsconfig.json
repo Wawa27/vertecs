@@ -14,17 +14,10 @@
       "ES2015"
     ],
     "typeRoots": [
-      "node_modules/@types"
+      "node_modules/@types",
+      "./src/cannon/types.d.ts"
     ],
-    "baseUrl": "./",
-    "paths": {
-      "src/*": [
-        "src/*"
-      ],
-      "test/*": [
-        "test/*"
-      ]
-    }
+    "baseUrl": "./"
   },
   "include": [
     "src/**/*.ts",

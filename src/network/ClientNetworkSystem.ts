@@ -1,9 +1,9 @@
 import { WebSocket } from "ws";
-import { ComponentClass } from "../../core/Component";
-import Entity from "../../core/Entity";
-import Message from "../Message";
-import NetworkSystem from "../NetworkSystem";
-import { SerializedEntity } from "../SerializedEntity";
+import NetworkSystem from "./NetworkSystem";
+import Message from "./Message";
+import { ComponentClass } from "../core/Component";
+import { Entity } from "../core";
+import { SerializedEntity } from "../io";
 
 /**
  * Entry point for the client-side networking.

@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "A typescript entity-component-system framework",
   "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "module": "src/index.ts",
   "scripts": {
     "build": "tsc",
     "start:example-network-server": "ts-node --esm --experimental-specifier-resolution=node examples/network/server/Main",
@@ -23,7 +26,9 @@
   "dependencies": {
     "performance-now": "^2.1.0",
     "uuid": "^8.3.2",
-    "ws": "^8.9.0"
+    "ws": "^8.9.0",
+    "gl-matrix": "^3.4.3",
+    "cannon-es": "^0.20.0"
   },
   "devDependencies": {
     "@types/chai": "^4.3.1",

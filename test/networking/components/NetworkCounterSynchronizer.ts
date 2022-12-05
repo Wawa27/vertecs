@@ -1,12 +1,12 @@
 import CounterComponent from "../../components/CounterComponent";
 import { Entity } from "../../../src/core";
-import SerializableComponent from "../../../src/networking/SerializableComponent";
+import NetworkableComponent from "../../../src/network/NetworkableComponent";
 
 type CounterComponentData = {
     count: number;
 };
 
-export default class NetworkCounterSynchronizer extends SerializableComponent<CounterComponentData> {
+export default class NetworkCounterSynchronizer extends NetworkableComponent<CounterComponentData> {
     #lastUpdate: number;
 
     public constructor() {

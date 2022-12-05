@@ -1,12 +1,12 @@
 import { WebSocket, WebSocketServer } from "ws";
 import { IncomingMessage } from "http";
-import ClientComponent from "../ClientComponent";
-import { EcsManager, Entity } from "../../core";
+import NetworkableComponent from "./NetworkableComponent";
+import NetworkSystem from "./NetworkSystem";
 import ClientHandler from "./ClientHandler";
-import SerializableComponent from "../SerializableComponent";
-import NetworkSystem from "../NetworkSystem";
-import Message from "../Message";
-import Component, { ComponentClass } from "../../core/Component";
+import { EcsManager, Entity } from "../core";
+import Component, { ComponentClass } from "../core/Component";
+import Message from "./Message";
+import ClientComponent from "./ClientComponent";
 
 type ClientHandlerConstructor = new (
     ecsManager: EcsManager,
@@ -27,7 +27,7 @@ export default class ServerNetworkSystem extends NetworkSystem {
         allowedNetworkComponents: ComponentClass[],
         clientHandlerConstructor: ClientHandlerConstructor
     ) {
-        super([SerializableComponent]);
+        super([NetworkableComponent]);
 
         this.#ClientHandlerConstructor = clientHandlerConstructor;
         this.#clientHandlers = [];
@@ -82,39 +82,34 @@ export default class ServerNetworkSystem extends NetworkSystem {
         );
 
         entities.forEach((entity) => {
-            let serializableComponents = entity.getComponents<
-                SerializableComponent<any>
-            >(NetworkSystem.allowedNetworkComponents);
+            const networkableComponents = entity
+                .getComponents<NetworkableComponent<any>>(
+                    NetworkSystem.allowedNetworkComponents
+                )
+                .filter((component) => component);
 
-            serializableComponents = serializableComponents.filter(
-                (component) => component
-            );
-
-            if (serializableComponents.length === 0) {
+            if (networkableComponents.length === 0) {
                 return;
             }
 
             const serializedEntity = { id: entity.id, components: [] };
 
-            serializableComponents.forEach((serializableComponent) => {
-                if (serializableComponent?.isClientScoped) {
+            networkableComponents.forEach((networkableComponent) => {
+                if (networkableComponent?.isClientScoped) {
                     clientsEntity.forEach((clientEntity) => {
                         if (
-                            serializableComponent?.shouldUpdateClient(
+                            networkableComponent?.shouldUpdateClient(
                                 clientEntity
                             )
                         ) {
                             this.writeComponent(
                                 serializedEntity,
-                                serializableComponent
+                                networkableComponent
                             );
                         }
                     });
-                } else if (serializableComponent?.shouldUpdateClients()) {
-                    this.writeComponent(
-                        serializedEntity,
-                        serializableComponent
-                    );
+                } else if (networkableComponent?.shouldUpdateClients()) {
+                    this.writeComponent(serializedEntity, networkableComponent);
                 }
             });
 
