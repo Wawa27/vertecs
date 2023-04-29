@@ -6,9 +6,9 @@ import Component from "../../src/core/Component";
 export default class CounterComponent extends Component {
     public count: number;
 
-    public constructor() {
+    public constructor(counter?: number) {
         super();
-        this.count = 0;
+        this.count = counter || 0;
     }
 
     public increment() {

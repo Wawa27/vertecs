@@ -1,4 +1,4 @@
-import { ComponentClass } from "../../../src/core/Component";
+import Component, { ComponentClass } from "../../../src/core/Component";
 import { Entity } from "../../../src/core";
 import { ClientNetworkSystem } from "../../../src";
 

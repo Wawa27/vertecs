@@ -1,10 +1,9 @@
 import { v4 as uuidv4 } from "uuid";
 import Entity from "./Entity";
 
-export type ComponentClass<T extends Component = any> =
-    | { new (...args: any[]): T }
-    | ((...args: any[]) => T)
-    | Function;
+export type ComponentClass<T extends Component = any> = {
+    new (...args: any[]): T;
+};
 
 /**
  * A component is a piece of data that is attached to an entity

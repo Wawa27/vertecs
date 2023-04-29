@@ -1,4 +1,5 @@
 export * from "./core";
-export * from "./core";
-export * from "./io";
+export * from "./three";
 export * from "./network";
+export * from "./cannon";
+export * from "./math";

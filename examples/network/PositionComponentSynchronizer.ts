@@ -42,7 +42,7 @@ export default class PositionComponentSynchronizer extends SerializableComponent
         );
     }
 
-    public serialize(): PositionComponentData {
+    public write(): PositionComponentData {
         const positionComponent = this.entity?.findComponent(PositionComponent);
         if (!positionComponent) {
             throw new Error("PositionComponent not found");
@@ -53,7 +53,7 @@ export default class PositionComponentSynchronizer extends SerializableComponent
         };
     }
 
-    public deserialize(data: PositionComponentData): void {
+    public read(data: PositionComponentData): void {
         const positionComponent = this.entity?.findComponent(PositionComponent);
         if (!positionComponent) {
             throw new Error("PositionComponent not found");

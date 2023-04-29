@@ -1,7 +1,5 @@
-import { Body, Material, Shape, Vec3 } from "cannon-es";
-import { BodyType } from "objects/Body";
+import { Body, Material, Shape, Vec3, Quaternion, BodyType } from "cannon-es";
 import { quat, vec3 } from "gl-matrix";
-import { Quaternion } from "math/Quaternion";
 import { Component, Entity } from "../core";
 import Transform from "../math/Transform";
 
@@ -57,6 +55,7 @@ export default class CannonComponent extends Component {
                 transform.position[2]
             );
         }
+        // @ts-ignore
         this.#body.entityId = entity.id;
     }
 

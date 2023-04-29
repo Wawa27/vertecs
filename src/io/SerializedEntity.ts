@@ -1,4 +1,4 @@
-import { SerializedComponent } from "./SerializedComponent";
+import SerializedComponent from "./SerializedComponent";
 
 /**
  * The json representation of an entity

@@ -8,6 +8,7 @@
     "strict": true,
     "moduleResolution": "Node",
     "esModuleInterop": true,
+    "skipLibCheck": true,
     "lib": [
       "esnext",
       "dom",
@@ -15,7 +16,7 @@
     ],
     "typeRoots": [
       "node_modules/@types",
-      "./src/cannon/types.d.ts"
+      "./src/cannon/cannon-es.d.ts"
     ],
     "baseUrl": "./"
   },

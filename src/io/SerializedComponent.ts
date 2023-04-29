@@ -1,5 +1,5 @@
 /**
- * The json representation of a component that can be sent over the networking
+ * The json representation of a serialized component
  */
 type SerializedComponent<T> = {
     data: T;

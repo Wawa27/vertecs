@@ -42,11 +42,9 @@ describe("Networking", () => {
     });
 
     it("should send the newly created entity to client", async () => {
-        const newServerEntity = new Entity();
+        const newServerEntity = serverEcsManager.newEntity();
         newServerEntity.addComponent(new CounterComponent());
         newServerEntity.addComponent(new NetworkCounterSynchronizer());
-
-        await serverEcsManager.addEntity(newServerEntity);
 
         // Make sure the entity is sent
         // eslint-disable-next-line no-promise-executor-return
@@ -55,7 +53,7 @@ describe("Networking", () => {
 
         assert.equal(clientNetworkSystem.newEntities.length, 1);
         assert.exists(newClientEntity);
-        assert.equal(newClientEntity.getComponent(CounterComponent)!.count, 0);
+        assert.equal(newClientEntity.getComponent(CounterComponent)?.count, 0);
     });
 
     it("should update and send the new count", async () => {
@@ -66,6 +64,6 @@ describe("Networking", () => {
 
         assert.equal(clientNetworkSystem.newEntities.length, 1);
         assert.exists(newClientEntity);
-        assert.equal(newClientEntity.getComponent(CounterComponent)!.count, 1);
+        assert.equal(newClientEntity.getComponent(CounterComponent)?.count, 1);
     });
 });

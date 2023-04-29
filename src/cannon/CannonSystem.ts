@@ -1,11 +1,15 @@
-import { World } from "world/World";
-import { GSSolver } from "solver/GSSolver";
-import { SplitSolver } from "solver/SplitSolver";
-import { NaiveBroadphase } from "collision/NaiveBroadphase";
-import { Material, Vec3 } from "cannon-es";
-import { ContactMaterial } from "material/ContactMaterial";
+import {
+    Material,
+    Vec3,
+    World,
+    GSSolver,
+    SplitSolver,
+    NaiveBroadphase,
+    ContactMaterial,
+    RaycastResult,
+    Body,
+} from "cannon-es";
 import { vec3 } from "gl-matrix";
-import { RaycastResult } from "collision/RaycastResult";
 import CannonComponent from "./CannonComponent";
 import Transform from "../math/Transform";
 import { Component, Entity, System } from "../core";
@@ -76,6 +80,7 @@ export default class CannonSystem extends System {
             result
         );
 
+        // @ts-ignore
         const entityId = result.body?.entityId;
 
         if (!entityId || !this.ecsManager) {

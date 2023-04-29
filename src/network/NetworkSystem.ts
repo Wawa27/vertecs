@@ -1,41 +1,23 @@
 import { Entity, System } from "../core";
+import { SerializableComponent, SerializedEntity } from "../io";
 import { ComponentClass } from "../core/Component";
-import NetworkableComponent from "./NetworkableComponent";
-import SerializableComponent from "../io/SerializableComponent";
-import { SerializedEntity } from "../io";
 
 /**
  * The networking system is responsible for sending and receiving entities over the networking.
  * This class is used by the server and the client to provide a common interface for formatting entities.
  */
 export default class NetworkSystem extends System {
-    public static allowedNetworkComponents: ComponentClass[];
-
-    public constructor(allowedComponents: ComponentClass[]) {
-        super([]);
-
-        NetworkSystem.allowedNetworkComponents = allowedComponents;
+    public constructor(allowedNetworkComponents: ComponentClass[]) {
+        super(allowedNetworkComponents);
     }
 
     protected onLoop(entities: Entity[], deltaTime: number): void {}
-
-    public static getComponentConstructor(
-        componentClassName: string
-    ): ComponentClass | undefined {
-        return this.allowedNetworkComponents.find(
-            (component) => component.name === componentClassName
-        );
-    }
 
     public writeComponent(
         serializedEntity: SerializedEntity,
         serializableComponent: SerializableComponent<any>
     ) {
-        serializedEntity.components.push({
-            data: serializableComponent.serialize(),
-            id: serializableComponent.id,
-            className: serializableComponent.constructor.name,
-        });
+        serializedEntity.components.push(serializableComponent.serialize());
     }
 
     public readComponents(
@@ -43,9 +25,10 @@ export default class NetworkSystem extends System {
         targetEntity: Entity
     ) {
         serializedEntity.components.forEach((serializedComponent) => {
-            const ComponentConstructor = NetworkSystem.getComponentConstructor(
-                serializedComponent.className
-            ) as new () => NetworkableComponent<any>;
+            const ComponentConstructor = this.filter.find(
+                (ComponentClass) =>
+                    ComponentClass.name === serializedComponent.className
+            );
 
             if (!ComponentConstructor) {
                 console.warn(
@@ -61,7 +44,7 @@ export default class NetworkSystem extends System {
                 targetEntity.addComponent(component);
             }
 
-            component.deserialize(serializedComponent.data);
+            component.deserialize(serializedComponent);
         });
     }
 }

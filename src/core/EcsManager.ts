@@ -1,6 +1,7 @@
 import System from "./System";
-import Entity from "./Entity";
+import Entity, { EntityOptions } from "./Entity";
 import Component, { ComponentClass } from "./Component";
+import NetworkCounterSynchronizer from "../../test/network/components/NetworkCounterSynchronizer";
 
 /**
  * The system manager is responsible for managing all the systems
@@ -15,6 +16,14 @@ export default class EcsManager {
     public constructor() {
         this.systemGroups = new Map<ComponentClass[], System[]>();
         this.entityGroups = new Map<ComponentClass[], Entity[]>();
+    }
+
+    /**
+     * Create a new entity and add it to this ecs manager
+     * @param options
+     */
+    public newEntity(options?: EntityOptions): Entity {
+        return new Entity({ ...options, ecsManager: this });
     }
 
     /**
@@ -89,6 +98,7 @@ export default class EcsManager {
             this.addEntities(newEntity.children);
         }
 
+        newEntity.ecsManager = this;
         this.#entities.push(newEntity);
     }
 
@@ -110,7 +120,7 @@ export default class EcsManager {
     /**
      * Check if an entity components is eligible to a group filter
      */
-    private isEntityEligibleToGroup(
+    public isEntityEligibleToGroup(
         group: ComponentClass[],
         entity: Entity
     ): boolean {
@@ -120,14 +130,27 @@ export default class EcsManager {
     }
 
     /**
-     * Called BEFORE a component is added to an entity
+     * Called after a component is added to an entity
      * @param entity
      * @param component
      */
     public onComponentAddedToEntity(
         entity: Entity,
         component: Component
-    ): void {}
+    ): void {
+        Array.from(this.entityGroups.keys()).forEach((group) => {
+            if (this.isEntityEligibleToGroup(group, entity)) {
+                const entities = this.entityGroups.get(group);
+                const systems = this.systemGroups.get(group);
+                if (entities && systems) {
+                    entities.push(entity);
+                    systems.forEach((system) =>
+                        system.onEntityEligible(entity, component)
+                    );
+                }
+            }
+        });
+    }
 
     /**
      * Called AFTER a component is removed from an entity

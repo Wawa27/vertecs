@@ -1,6 +1,6 @@
-import { Component, Entity, System } from "src/core";
 import { Camera, PerspectiveCamera, Scene, WebGLRenderer } from "three";
-import ThreeComponent from "src/three/ThreeComponent";
+import { Component, Entity, System } from "../core";
+import ThreeComponent from "./ThreeComponent";
 
 export default class ThreeSystem extends System {
     #scene: Scene;
