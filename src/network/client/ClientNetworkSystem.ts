@@ -1,9 +1,9 @@
 import { WebSocket } from "ws";
-import { ComponentClass } from "../../core/Component";
+import Component, { ComponentClass } from "../../core/Component";
 import Entity from "../../core/Entity";
 import Message from "../Message";
 import NetworkSystem from "../NetworkSystem";
-import { SerializedEntity } from "../SerializedEntity";
+import { SerializedEntity } from "../../io";
 
 /**
  * Entry point for the client-side networking.
@@ -60,6 +60,8 @@ export default abstract class ClientNetworkSystem extends NetworkSystem {
                 this.processEntity(serializedEntity, entities);
             }
         );
+
+        this.#lastMessage = undefined;
     }
 
     private processEntity(

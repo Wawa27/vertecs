@@ -1,6 +1,5 @@
 import { WebSocket } from "ws";
-import ClientHandler from "../../../src/networking/server/ClientHandler";
-import { Entity, EcsManager } from "../../../src";
+import { Entity, EcsManager, ClientHandler } from "../../../src";
 import PositionComponent from "../PositionComponent";
 import PositionComponentSynchronizer from "../PositionComponentSynchronizer";
 

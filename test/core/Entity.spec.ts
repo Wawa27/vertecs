@@ -3,13 +3,15 @@ import CounterComponent from "../components/CounterComponent";
 import CounterComponentSubclass from "../core/components/CounterComponentSubclass";
 import { Component, Entity } from "../../src/core";
 import EmptyComponent from "./components/EmptyComponent";
+import { EcsManager } from "../../src";
 
 describe("Entity", () => {
+    const ecsManager = new EcsManager();
     let entity: Entity;
     let simpleCounterComponent: Component;
 
     beforeEach(() => {
-        entity = new Entity();
+        entity = ecsManager.newEntity();
         simpleCounterComponent = new CounterComponent();
     });
 
@@ -144,11 +146,13 @@ describe("Entity", () => {
         });
 
         it("should find a grandchild entity by its name ", () => {
-            const entity = new Entity({
+            const entity = ecsManager.newEntity({
                 children: [
-                    new Entity({
+                    ecsManager.newEntity({
                         name: "child",
-                        children: [new Entity({ name: "grandchild" })],
+                        children: [
+                            ecsManager.newEntity({ name: "grandchild" }),
+                        ],
                     }),
                 ],
             });
@@ -161,9 +165,9 @@ describe("Entity", () => {
     });
 
     describe("ID", () => {
-        it("should have the same ID", () => {
-            const firstEntity = new Entity();
-            const secondEntity = new Entity();
+        it("should not have the same ID", () => {
+            const firstEntity = ecsManager.newEntity();
+            const secondEntity = ecsManager.newEntity();
 
             assert.notEqual(firstEntity.id, secondEntity.id);
         });
@@ -171,7 +175,7 @@ describe("Entity", () => {
 
     describe("Clone", () => {
         it("should have the same name", () => {
-            const firstEntity = new Entity({ name: "Clone test" });
+            const firstEntity = ecsManager.newEntity({ name: "Clone test" });
 
             const clonedEntity = firstEntity.clone();
 
@@ -179,7 +183,7 @@ describe("Entity", () => {
         });
 
         it("should have the same number of components", () => {
-            const firstEntity = new Entity({ name: "Clone test" });
+            const firstEntity = ecsManager.newEntity({ name: "Clone test" });
             firstEntity.addComponent(
                 new (class A extends Component {
                     public constructor() {
@@ -208,10 +212,10 @@ describe("Entity", () => {
         });
 
         it("should have the same number of children", () => {
-            const firstEntity = new Entity({ name: "Clone test" });
-            firstEntity.addChild(new Entity());
-            firstEntity.addChild(new Entity());
-            firstEntity.addChild(new Entity());
+            const firstEntity = ecsManager.newEntity({ name: "Clone test" });
+            firstEntity.addChild(ecsManager.newEntity());
+            firstEntity.addChild(ecsManager.newEntity());
+            firstEntity.addChild(ecsManager.newEntity());
 
             const clonedEntity = firstEntity.clone();
 

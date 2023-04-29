@@ -1,4 +1,4 @@
-import { SerializedEntity } from "./SerializedEntity";
+import { SerializedEntity } from "../io";
 
 export type SharedMessageData = {
     entities: SerializedEntity[];

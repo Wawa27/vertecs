@@ -3,10 +3,11 @@ import { IncomingMessage } from "http";
 import ClientComponent from "../ClientComponent";
 import { EcsManager, Entity } from "../../core";
 import ClientHandler from "./ClientHandler";
-import SerializableComponent from "../SerializableComponent";
 import NetworkSystem from "../NetworkSystem";
 import Message from "../Message";
 import Component, { ComponentClass } from "../../core/Component";
+import { SerializableComponent } from "../../io";
+import NetworkComponent from "../NetworkComponent";
 
 type ClientHandlerConstructor = new (
     ecsManager: EcsManager,
@@ -27,7 +28,7 @@ export default class ServerNetworkSystem extends NetworkSystem {
         allowedNetworkComponents: ComponentClass[],
         clientHandlerConstructor: ClientHandlerConstructor
     ) {
-        super([SerializableComponent]);
+        super(allowedNetworkComponents);
 
         this.#ClientHandlerConstructor = clientHandlerConstructor;
         this.#clientHandlers = [];
@@ -82,21 +83,26 @@ export default class ServerNetworkSystem extends NetworkSystem {
         );
 
         entities.forEach((entity) => {
-            let serializableComponents = entity.getComponents<
-                SerializableComponent<any>
-            >(NetworkSystem.allowedNetworkComponents);
+            if (!this.ecsManager) {
+                console.warn("This system is not attached to an ECS manager");
+                return;
+            }
 
-            serializableComponents = serializableComponents.filter(
-                (component) => component
-            );
+            const networkComponents: NetworkComponent<any>[] = entity
+                .getComponents<SerializableComponent<any>>(this.filter)
+                .filter(
+                    (ComponentClass) =>
+                        ComponentClass &&
+                        ComponentClass instanceof NetworkComponent
+                ) as NetworkComponent<any>[];
 
-            if (serializableComponents.length === 0) {
+            if (networkComponents.length === 0) {
                 return;
             }
 
             const serializedEntity = { id: entity.id, components: [] };
 
-            serializableComponents.forEach((serializableComponent) => {
+            networkComponents.forEach((serializableComponent) => {
                 if (serializableComponent?.isClientScoped) {
                     clientsEntity.forEach((clientEntity) => {
                         if (
@@ -118,7 +124,9 @@ export default class ServerNetworkSystem extends NetworkSystem {
                 }
             });
 
-            message.sharedMessageData.entities.push(serializedEntity);
+            if (serializedEntity.components.length !== 0) {
+                message.sharedMessageData.entities.push(serializedEntity);
+            }
         });
 
         this.#clientHandlers.forEach((clientHandler) => {

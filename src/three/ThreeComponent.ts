@@ -1,5 +1,5 @@
-import { Component } from "src/core";
 import { BoxGeometry, Mesh, MeshBasicMaterial, Object3D } from "three";
+import { Component } from "../core";
 
 export default class ThreeComponent extends Component {
     #isVisible: boolean;

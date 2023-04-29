@@ -2,11 +2,12 @@ import { v4 as uuidv4 } from "uuid";
 import Component, { ComponentClass } from "./Component";
 import EcsManager from "./EcsManager";
 
-interface EntityOptions {
+export interface EntityOptions {
     id?: string;
     name?: string;
     components?: Component[];
     children?: Entity[];
+    ecsManager?: EcsManager;
 }
 
 /**
@@ -38,6 +39,7 @@ export default class Entity {
         this.#name = options?.name;
         this.#root = this;
         this.#tags = [];
+        this.#ecsManager = options?.ecsManager;
 
         // Add components one by one to trigger events
         options?.components?.forEach((component) =>
@@ -178,10 +180,10 @@ export default class Entity {
      */
     public addComponent(component: Component) {
         if (!this.getComponent(component.constructor as ComponentClass)) {
-            this.#ecsManager?.onComponentAddedToEntity(this, component);
+            this.components.push(component);
+            this.#ecsManager!.onComponentAddedToEntity(this, component);
             component.onAddedToEntity(this);
             component.entity = this;
-            this.components.push(component);
         }
     }
 
@@ -212,7 +214,7 @@ export default class Entity {
         const component = this.getComponent(componentClass);
         if (component) {
             this.#components.splice(this.#components.indexOf(component), 1);
-            this.#ecsManager?.onComponentRemovedFromEntity(this, component);
+            this.#ecsManager!.onComponentRemovedFromEntity(this, component);
             return component;
         }
 
@@ -228,6 +230,7 @@ export default class Entity {
             components: Array.from(this.#components.values()).map((component) =>
                 component.clone()
             ),
+            ecsManager: this.#ecsManager,
         });
 
         this.children.forEach((child) => {
@@ -248,6 +251,14 @@ export default class Entity {
             );
             this.components[i].onDestroyed();
         }
+    }
+
+    public get ecsManager(): EcsManager | undefined {
+        return this.#ecsManager;
+    }
+
+    public set ecsManager(value: EcsManager | undefined) {
+        this.#ecsManager = value;
     }
 
     public get tags(): string[] {
