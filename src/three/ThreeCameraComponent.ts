@@ -1,5 +1,5 @@
-import { Component } from "src/core";
 import { Camera } from "three";
+import { Component } from "../core";
 
 export default class ThreeCameraComponent extends Component {
     #camera: Camera;

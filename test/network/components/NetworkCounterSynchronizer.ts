@@ -1,12 +1,12 @@
 import CounterComponent from "../../components/CounterComponent";
 import { Entity } from "../../../src/core";
-import SerializableComponent from "../../../src/networking/SerializableComponent";
+import NetworkComponent from "../../../src/network/NetworkComponent";
 
 type CounterComponentData = {
     count: number;
 };
 
-export default class NetworkCounterSynchronizer extends SerializableComponent<CounterComponentData> {
+export default class NetworkCounterSynchronizer extends NetworkComponent<CounterComponentData> {
     #lastUpdate: number;
 
     public constructor() {
@@ -24,7 +24,7 @@ export default class NetworkCounterSynchronizer extends SerializableComponent<Co
         return true;
     }
 
-    public deserialize(data: CounterComponentData): void {
+    public read(data: CounterComponentData): void {
         const counterComponent = this.entity?.findComponent(CounterComponent);
         if (!counterComponent) {
             throw new Error("CounterComponent not found");
@@ -32,7 +32,7 @@ export default class NetworkCounterSynchronizer extends SerializableComponent<Co
         counterComponent.count = data.count;
     }
 
-    public serialize(): any {
+    public write(): CounterComponentData {
         this.#lastUpdate = Date.now();
         const counter = this.entity?.findComponent(CounterComponent);
         if (!counter) {

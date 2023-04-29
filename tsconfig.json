@@ -8,15 +8,17 @@
     "strict": true,
     "moduleResolution": "Node",
     "esModuleInterop": true,
+    "skipLibCheck": true,
     "lib": [
       "esnext",
       "dom",
       "ES2015"
     ],
     "typeRoots": [
-      "node_modules/@types"
+      "node_modules/@types",
+      "./src/cannon/cannon-es.d.ts"
     ],
-    "baseUrl": "./",
+    "baseUrl": "./"
   },
   "include": [
     "src/**/*.ts",

@@ -1,6 +1,6 @@
-import { ClientNetworkSystem } from "../../../src/networking";
-import { ComponentClass } from "../../../src/core/Component";
+import Component, { ComponentClass } from "../../../src/core/Component";
 import { Entity } from "../../../src/core";
+import { ClientNetworkSystem } from "../../../src";
 
 export default class TestClientNetworkSystem extends ClientNetworkSystem {
     #isConnected: boolean;

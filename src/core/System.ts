@@ -10,7 +10,7 @@ export default abstract class System {
 
     #hasStarted: boolean;
 
-    #filter: ComponentClass[];
+    public readonly filter: ComponentClass[];
 
     #lastUpdateTime: number;
 
@@ -20,7 +20,7 @@ export default abstract class System {
      * Create a new system with the given component group filter and the given tps
      */
     protected constructor(filter: ComponentClass[], tps?: number) {
-        this.#filter = filter;
+        this.filter = filter;
         this.#lastUpdateTime = Number.NEGATIVE_INFINITY;
         this.#tps = tps ?? 60;
         this.#hasStarted = false;
@@ -39,6 +39,12 @@ export default abstract class System {
         this.#hasStarted = true;
         await this.onStart();
     }
+
+    /**
+     * Called when the system is added to an ecs manager
+     * @param ecsManager
+     */
+    public onAddedToEcsManager(ecsManager: EcsManager): void {}
 
     /**
      * Called when the system is ready to start
@@ -83,14 +89,6 @@ export default abstract class System {
      */
     public hasEnoughTimePassed(): boolean {
         return this.getDeltaTime() > 1000 / this.#tps;
-    }
-
-    public get filter(): ComponentClass[] {
-        return this.#filter;
-    }
-
-    public set filter(value: ComponentClass[]) {
-        this.#filter = value;
     }
 
     public get lastUpdateTime(): number {
