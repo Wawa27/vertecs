@@ -1,7 +1,5 @@
 # Vertecs
 
-![](docs/example.mp4)
-
 ## A typescript entity-component-system framework
 
 ### Installation
