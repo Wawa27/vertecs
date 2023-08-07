@@ -4,8 +4,12 @@ import PositionComponent from "../PositionComponent";
 import PositionComponentSynchronizer from "../PositionComponentSynchronizer";
 
 export default class ExampleClientHandler extends ClientHandler {
-    public constructor(ecsManager: EcsManager, webSocket: WebSocket) {
-        super(ecsManager, webSocket);
+    public constructor(
+        playerEntity: Entity,
+        ecsManager: EcsManager,
+        webSocket: WebSocket
+    ) {
+        super(playerEntity, ecsManager, webSocket);
     }
 
     public onConnect() {

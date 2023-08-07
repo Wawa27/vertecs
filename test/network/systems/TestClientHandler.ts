@@ -1,9 +1,13 @@
 import { WebSocket } from "ws";
-import { EcsManager } from "../../../src/core";
+import { EcsManager, Entity } from "../../../src/core";
 import ClientHandler from "../../../src/network/server/ClientHandler";
 
 export default class TestClientHandler extends ClientHandler {
-    public constructor(ecsManager: EcsManager, webSocket: WebSocket) {
-        super(ecsManager, webSocket);
+    public constructor(
+        playerEntity: Entity,
+        ecsManager: EcsManager,
+        webSocket: WebSocket
+    ) {
+        super(playerEntity, ecsManager, webSocket);
     }
 }

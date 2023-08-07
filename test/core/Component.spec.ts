@@ -1,6 +1,4 @@
 import { assert } from "chai";
-import Entity from "../../src/core/Entity";
-import Component from "../../src/core/Component";
 import SimpleComponent from "../core/components/SimpleComponent";
 import AttachCounter from "../core/components/AttachCounter";
 import { EcsManager } from "../../src";
@@ -18,7 +16,7 @@ describe("Component", () => {
 
         it("should call onAttachedToEntity", () => {
             const component = new AttachCounter();
-            const entity = ecsManager.newEntity();
+            const entity = ecsManager.createEntity();
 
             entity.addComponent(component);
 

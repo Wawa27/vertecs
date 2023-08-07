@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from "uuid";
-import Component, { ComponentClass } from "./Component";
+import Component from "./Component";
 import EcsManager from "./EcsManager";
+import type { ComponentClass } from "./Component";
 
 export interface EntityOptions {
     id?: string;
@@ -31,15 +32,19 @@ export default class Entity {
     readonly #tags: string[];
 
     public constructor(options?: EntityOptions) {
-        const id = options?.id ?? uuidv4();
-
-        this.#id = id;
-        this.#children = options?.children ?? [];
+        this.#id = options?.id ?? uuidv4();
+        this.#children = [];
         this.#components = [];
         this.#name = options?.name;
         this.#root = this;
         this.#tags = [];
         this.#ecsManager = options?.ecsManager;
+
+        options?.children?.forEach((child) => this.addChild(child));
+
+        if (this.#ecsManager) {
+            this.#ecsManager.addEntity(this);
+        }
 
         // Add components one by one to trigger events
         options?.components?.forEach((component) =>
@@ -140,9 +145,17 @@ export default class Entity {
         componentClass: ComponentClass<T>
     ): T | undefined {
         if (!componentClass) return undefined;
-        return this.components.find(
-            (component) => component instanceof componentClass
-        ) as T | undefined;
+        return this.components.find((component) => {
+            if (
+                component.constructor.name === componentClass.name &&
+                !(component instanceof componentClass)
+            ) {
+                console.warn(
+                    `Component class ${component.constructor.name} has the same name but is not the same class. Make sure your component class is correctly imported.`
+                );
+            }
+            return component instanceof componentClass;
+        }) as T | undefined;
     }
 
     /**
@@ -176,15 +189,24 @@ export default class Entity {
 
     /**
      * Add a component to this entity
-     * @param component The component to add
+     * @param newComponent The component to add
      */
-    public addComponent(component: Component) {
-        if (!this.getComponent(component.constructor as ComponentClass)) {
-            this.components.push(component);
-            this.#ecsManager!.onComponentAddedToEntity(this, component);
-            component.onAddedToEntity(this);
-            component.entity = this;
+    public addComponent(newComponent: Component) {
+        if (!this.getComponent(newComponent.constructor as ComponentClass)) {
+            newComponent.entity = this;
+            this.components.push(newComponent);
+            this.#ecsManager?.onComponentAddedToEntity(this, newComponent);
+            newComponent.onAddedToEntity(this);
+            this.#components.forEach((component) => {
+                if (component !== newComponent) {
+                    component.onComponentAddedToAttachedEntity(component);
+                }
+            });
         }
+    }
+
+    public addComponents(...newComponents: Component[]) {
+        newComponents.forEach((component) => this.addComponent(component));
     }
 
     /**
@@ -194,6 +216,10 @@ export default class Entity {
     public addChild(entity: Entity) {
         this.#children.push(entity);
         entity.parent = this;
+        entity.root = this.root;
+        if (!entity.ecsManager) {
+            this.ecsManager?.addEntity(entity);
+        }
     }
 
     /**
@@ -214,7 +240,8 @@ export default class Entity {
         const component = this.getComponent(componentClass);
         if (component) {
             this.#components.splice(this.#components.indexOf(component), 1);
-            this.#ecsManager!.onComponentRemovedFromEntity(this, component);
+            this.#ecsManager?.onComponentRemovedFromEntity(this, component);
+            component.onRemovedFromEntity(this);
             return component;
         }
 
@@ -234,8 +261,7 @@ export default class Entity {
         });
 
         this.children.forEach((child) => {
-            const childClone = child.clone();
-            clone.addChild(childClone);
+            clone.addChild(child.clone());
         });
 
         return clone;
@@ -245,12 +271,13 @@ export default class Entity {
      * Destroy this entity, remove and destroy all added components
      */
     public destroy(): void {
+        this.children.forEach((child) => child.destroy());
         for (let i = this.components.length - 1; i >= 0; i--) {
             this.removeComponent(
                 this.components[i].constructor as ComponentClass
             );
-            this.components[i].onDestroyed();
         }
+        this.parent?.children.splice(this.parent.children.indexOf(this), 1);
     }
 
     public get ecsManager(): EcsManager | undefined {
@@ -269,6 +296,10 @@ export default class Entity {
         return this.#root;
     }
 
+    public set root(value: Entity) {
+        this.#root = value;
+    }
+
     public get components(): Component[] {
         return this.#components;
     }
@@ -279,9 +310,9 @@ export default class Entity {
 
     public set parent(entity: Entity | undefined) {
         this.#parent = entity;
-        this.#root = entity ?? this;
+        this.#root = entity?.root ?? this;
         this.components.forEach((component) =>
-            component.onEntityParentChanged(this)
+            component.onEntityParentChanged(entity)
         );
     }
 

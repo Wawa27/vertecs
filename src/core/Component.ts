@@ -1,9 +1,13 @@
 import { v4 as uuidv4 } from "uuid";
 import Entity from "./Entity";
 
-export type ComponentClass<T extends Component = any> = {
-    new (...args: any[]): T;
+export type ComponentClass<T extends Component = any> = Function & {
+    prototype: T;
 };
+
+export type ComponentClassConstructor<T extends Component = any> = new (
+    ...args: any[]
+) => T;
 
 /**
  * A component is a piece of data that is attached to an entity
@@ -42,7 +46,13 @@ export default abstract class Component {
      * Called whenever the attached entity parent change
      * @param entity The new parent entity
      */
-    public onEntityParentChanged(entity: Entity): void {}
+    public onEntityParentChanged(entity?: Entity): void {}
+
+    /**
+     * Called when another component is added to the attached entity
+     * @param component
+     */
+    public onComponentAddedToAttachedEntity(component: Component): void {}
 
     /**
      * This method is called when the {@see destroy} method is called

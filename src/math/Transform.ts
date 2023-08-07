@@ -4,8 +4,15 @@
  * Global position, rotation and scale are only updated when dirty and queried,
  * parents are updated from the current transform up to the root transform.
  */
-import { mat4, quat, vec3 } from "gl-matrix";
+import { mat3, mat4, quat, vec3 } from "gl-matrix";
 import { Component, Entity } from "../core";
+import { SerializableComponent } from "../io";
+
+type TransformData = {
+    position: vec3;
+    rotation: quat;
+    scaling: vec3;
+};
 
 export default class Transform extends Component {
     /**
@@ -77,7 +84,7 @@ export default class Transform extends Component {
         this.position = vec3.create();
         this.rotation = quat.create();
         this.scaling = vec3.fromValues(1, 1, 1);
-        this.forward = forward ?? vec3.fromValues(0, 0, -1);
+        this.forward = forward ?? vec3.fromValues(0, 0, 1);
 
         if (translation) vec3.copy(this.position, translation);
         if (rotation) quat.copy(this.rotation, rotation);
@@ -148,33 +155,14 @@ export default class Transform extends Component {
         this.dirty = true;
     }
 
-    /**
-     * Set this transform position relative to the world instead of the model
-     * @param target The world position
-     */
-    public setWorldPosition(target: vec3): void {
-        const translation = vec3.transformMat4(
-            target,
-            target,
-            this.getWorldToModelMatrix()
-        );
-        this.setPosition(translation);
-    }
-
-    public setWorldPositionXYZ(x: number, y: number, z: number): void {
-        this.setWorldPosition([x, y, z]);
-    }
-
     public setWorldRotation(rotation: quat): void {
-        // TODO: Cache this
-        const worldRotation = mat4.getRotation(
+        const inverseWorldRotation = quat.invert(
             quat.create(),
-            this.updateAndGetModelToWorldMatrix()
+            this.getWorldRotation(quat.create())
         );
-        // TODO: Cache this
-        const inverseWorldRotation = quat.invert(quat.create(), worldRotation);
-        quat.mul(inverseWorldRotation, inverseWorldRotation, rotation);
-        this.rotate(inverseWorldRotation);
+        quat.multiply(this.rotation, this.rotation, inverseWorldRotation);
+        quat.mul(this.rotation, this.rotation, rotation);
+        this.dirty = true;
     }
 
     /**
@@ -200,7 +188,7 @@ export default class Transform extends Component {
      * @param x An angle in radians
      */
     public rotateX(x: number): void {
-        quat.rotateX(this.rotation, quat.create(), x);
+        quat.rotateX(this.rotation, this.rotation, x);
         this.dirty = true;
     }
 
@@ -218,7 +206,7 @@ export default class Transform extends Component {
      * @param z An angle in radians
      */
     public rotateZ(z: number): void {
-        quat.rotateZ(this.rotation, quat.create(), z);
+        quat.rotateZ(this.rotation, this.rotation, z);
         this.dirty = true;
     }
 
@@ -228,9 +216,9 @@ export default class Transform extends Component {
     }
 
     public setWorldScale(scale: vec3): void {
-        const inverseScale = mat4.getScaling(
+        const inverseScale = vec3.inverse(
             vec3.create(),
-            this.getWorldToModelMatrix()
+            this.getWorldScale(vec3.create())
         );
         this.setScale(vec3.mul(inverseScale, inverseScale, scale));
     }
@@ -254,7 +242,7 @@ export default class Transform extends Component {
      * Updates the model to world matrix of this transform and returns it
      * It update all the parents until no one is dirty
      */
-    public updateAndGetModelToWorldMatrix(): mat4 {
+    public updateModelToWorldMatrix(): mat4 {
         if (this.dirty) {
             // Update the model matrix
             mat4.fromRotationTranslationScale(
@@ -266,13 +254,14 @@ export default class Transform extends Component {
 
             if (this.parent) {
                 // Post multiply the model to world matrix with the parent model to world matrix
-                this.parent.updateAndGetModelToWorldMatrix();
+                this.parent.updateModelToWorldMatrix();
                 return mat4.mul(
                     this.modelToWorldMatrix,
-                    this.parent?.updateAndGetModelToWorldMatrix(),
+                    this.parent?.updateModelToWorldMatrix(),
                     this.modelMatrix
                 );
             }
+
             return mat4.copy(this.modelToWorldMatrix, this.modelMatrix);
         }
 
@@ -280,18 +269,15 @@ export default class Transform extends Component {
     }
 
     public getWorldToModelMatrix(): mat4 {
-        return mat4.invert(
+        const invert = mat4.invert(
             this.worldToModelMatrix,
-            this.updateAndGetModelToWorldMatrix()
+            this.updateModelToWorldMatrix()
         );
+        return invert;
     }
 
-    /**
-     * Get the world position
-     * @param out The world position
-     */
     public getWorldPosition(out: vec3): vec3 {
-        return mat4.getTranslation(out, this.updateAndGetModelToWorldMatrix());
+        return mat4.getTranslation(out, this.updateModelToWorldMatrix());
     }
 
     /**
@@ -299,7 +285,7 @@ export default class Transform extends Component {
      * @param out The world scale
      */
     public getWorldScale(out: vec3): vec3 {
-        return mat4.getScaling(out, this.updateAndGetModelToWorldMatrix());
+        return mat4.getScaling(out, this.updateModelToWorldMatrix());
     }
 
     /**
@@ -307,19 +293,32 @@ export default class Transform extends Component {
      * @param out The world rotation
      */
     public getWorldRotation(out: quat): quat {
-        return mat4.getRotation(out, this.updateAndGetModelToWorldMatrix());
+        return mat4.getRotation(out, this.updateModelToWorldMatrix());
     }
 
-    public getWorldForward(): vec3 {
+    public getWorldForwardVector(out: vec3): vec3 {
         const worldRotation = this.getWorldRotation(quat.create());
-        return vec3.transformQuat(vec3.create(), this.forward, worldRotation);
+        return vec3.normalize(
+            out,
+            vec3.transformQuat(vec3.create(), this.forward, worldRotation)
+        );
     }
 
-    public toWorldPosition(out: vec3, position: vec3) {
-        vec3.transformMat4(
+    public getVectorInModelSpace(out: vec3, vector: vec3): vec3 {
+        this.updateModelToWorldMatrix();
+        mat4.invert(this.worldToModelMatrix, this.modelToWorldMatrix);
+        return vec3.transformMat4(out, vector, this.worldToModelMatrix);
+    }
+
+    public getVectorInWorldSpace(out: vec3, vector: vec3): vec3 {
+        return vec3.transformMat4(out, vector, this.updateModelToWorldMatrix());
+    }
+
+    public toWorldScale(out: vec3, scale: vec3): vec3 {
+        return vec3.mul(
             out,
-            position,
-            this.updateAndGetModelToWorldMatrix()
+            scale,
+            vec3.inverse(vec3.create(), this.getWorldScale(vec3.create()))
         );
     }
 
@@ -339,7 +338,7 @@ export default class Transform extends Component {
     }
 
     public setWorldUnitScale(): void {
-        const modelToWorldMatrix = this.updateAndGetModelToWorldMatrix();
+        const modelToWorldMatrix = this.updateModelToWorldMatrix();
 
         const scale = vec3.create(); // TODO: Cache this
         const currentScale = vec3.create(); // TODO: Cache this
@@ -350,6 +349,13 @@ export default class Transform extends Component {
         );
 
         this.scale(scale);
+    }
+
+    public setWorldPosition(position: vec3): void {
+        const worldPosition = this.getWorldPosition(vec3.create());
+        vec3.sub(position, position, worldPosition);
+        vec3.add(this.position, this.position, position);
+        this.dirty = true;
     }
 
     /**
