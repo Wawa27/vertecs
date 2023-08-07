@@ -1,10 +1,10 @@
 /**
  * The json representation of a serialized component
  */
-type SerializedComponent<T> = {
+interface SerializedComponent<T> {
+    id?: string;
     data: T;
-    id: string;
     className: string;
-};
+}
 
 export default SerializedComponent;

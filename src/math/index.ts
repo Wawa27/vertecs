@@ -1,3 +1,4 @@
 import Transform from "./Transform";
+import MathUtils from "./MathUtils";
 
-export default Transform;
+export { Transform, MathUtils };

@@ -1,16 +1,17 @@
-import { BoxGeometry, Mesh, MeshBasicMaterial, Object3D } from "three";
+import { Object3D } from "three";
+import * as SkeletonUtils from "three/examples/jsm/utils/SkeletonUtils.js";
 import { Component } from "../core";
 
-export default class ThreeComponent extends Component {
+export default class ThreeMesh extends Component {
     #isVisible: boolean;
 
     #object3d: Object3D;
 
-    public constructor(id?: string) {
+    public constructor(object3D: Object3D, id?: string) {
         super(id);
 
         this.#isVisible = true;
-        this.#object3d = new Mesh(new BoxGeometry(), new MeshBasicMaterial());
+        this.#object3d = object3D;
     }
 
     public get object3d(): Object3D {
@@ -27,5 +28,9 @@ export default class ThreeComponent extends Component {
 
     public set isVisible(value: boolean) {
         this.#isVisible = value;
+    }
+
+    public clone(): ThreeMesh {
+        return new ThreeMesh(SkeletonUtils.clone(this.#object3d));
     }
 }

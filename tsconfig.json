@@ -1,14 +1,14 @@
 {
   "compilerOptions": {
-    "module": "ES2022",
-    "target": "ES2017",
-    "sourceMap": true,
+    "module": "ESNext",
+    "target": "ESNext",
     "outDir": "./dist",
     "rootDir": ".",
     "strict": true,
     "moduleResolution": "Node",
     "esModuleInterop": true,
     "skipLibCheck": true,
+    "declaration": true,
     "lib": [
       "esnext",
       "dom",
@@ -16,15 +16,16 @@
     ],
     "typeRoots": [
       "node_modules/@types",
-      "./src/cannon/cannon-es.d.ts"
+      "./src/cannon/",
+      "./src/oimojs/",
+      "./types"
     ],
-    "baseUrl": "./"
+    "baseUrl": "./src",
   },
   "include": [
     "src/**/*.ts",
     "test/**/*.ts",
-    "examples/**/*.ts",
-    "rollup.config.ts"
+    "examples/**/*.ts"
   ],
   "exclude": [
     "node_modules"

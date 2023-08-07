@@ -9,8 +9,8 @@ type CounterComponentData = {
 export default class NetworkCounterSynchronizer extends NetworkComponent<CounterComponentData> {
     #lastUpdate: number;
 
-    public constructor() {
-        super();
+    public constructor(owner: string) {
+        super(owner);
         this.#lastUpdate = Date.now();
     }
 
@@ -21,7 +21,7 @@ export default class NetworkCounterSynchronizer extends NetworkComponent<Counter
     }
 
     public accept(data: CounterComponentData): boolean {
-        return true;
+        return false;
     }
 
     public read(data: CounterComponentData): void {
@@ -38,8 +38,7 @@ export default class NetworkCounterSynchronizer extends NetworkComponent<Counter
         if (!counter) {
             throw new Error("CounterComponent not found");
         }
-        const currentCount = counter.count;
-        counter.count++;
+        const currentCount = counter.count++;
         return {
             count: currentCount,
         };

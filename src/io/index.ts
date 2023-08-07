@@ -1,5 +1,7 @@
 import SerializableComponent from "./SerializableComponent";
 import SerializedEntity from "./SerializedEntity";
-import SerializedComponent from "./SerializedComponent";
+import type SerializedComponent from "./SerializedComponent";
+import IoUtils from "./IoUtils";
 
-export { SerializableComponent, SerializedEntity, SerializedComponent };
+export type { SerializedComponent };
+export { SerializedEntity, SerializableComponent, IoUtils };

@@ -1,6 +1,7 @@
-import EcsManager from "src/core/EcsManager";
-import Component, { ComponentClass } from "./Component";
+import Component from "./Component";
+import type { ComponentClass } from "./Component";
 import Entity from "./Entity";
+import EcsManager from "./EcsManager";
 
 /**
  * A system loops over all entities and uses the components of the entities to perform logic.
@@ -21,7 +22,7 @@ export default abstract class System {
      */
     protected constructor(filter: ComponentClass[], tps?: number) {
         this.filter = filter;
-        this.#lastUpdateTime = Number.NEGATIVE_INFINITY;
+        this.#lastUpdateTime = -1;
         this.#tps = tps ?? 60;
         this.#hasStarted = false;
     }
@@ -40,6 +41,11 @@ export default abstract class System {
         await this.onStart();
     }
 
+    public async stop(): Promise<void> {
+        this.#hasStarted = false;
+        await this.onStop();
+    }
+
     /**
      * Called when the system is added to an ecs manager
      * @param ecsManager
@@ -47,9 +53,19 @@ export default abstract class System {
     public onAddedToEcsManager(ecsManager: EcsManager): void {}
 
     /**
+     * Called when the system is added to an ecs manager
+     */
+    public async initialize(): Promise<void> {}
+
+    /**
      * Called when the system is ready to start
      */
     public async onStart(): Promise<void> {}
+
+    /**
+     * Called when the system is stopped
+     */
+    public async onStop(): Promise<void> {}
 
     /**
      * Called whenever an entity becomes eligible to a system
@@ -66,7 +82,7 @@ export default abstract class System {
      */
     public onEntityNoLongerEligible(
         entity: Entity,
-        lastComponentAdded: Component
+        lastComponentRemoved: Component
     ): void {}
 
     /**
@@ -81,14 +97,17 @@ export default abstract class System {
      * @private
      */
     private getDeltaTime() {
-        return performance.now() - this.#lastUpdateTime;
+        return performance.now() - this.#lastUpdateTime || 0;
     }
 
     /**
      * Return true if enough time has passed since the last update, false otherwise
      */
     public hasEnoughTimePassed(): boolean {
-        return this.getDeltaTime() > 1000 / this.#tps;
+        return (
+            this.#lastUpdateTime === -1 ||
+            performance.now() - this.#lastUpdateTime >= 1000 / this.#tps
+        );
     }
 
     public get lastUpdateTime(): number {

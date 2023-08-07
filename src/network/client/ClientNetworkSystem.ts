@@ -1,9 +1,10 @@
-import { WebSocket } from "ws";
-import Component, { ComponentClass } from "../../core/Component";
+import type { ComponentClass } from "../../core/Component";
+import Component from "../../core/Component";
 import Entity from "../../core/Entity";
-import Message from "../Message";
+import GameState from "../GameState";
 import NetworkSystem from "../NetworkSystem";
-import { SerializedEntity } from "../../io";
+import NetworkComponent from "../NetworkComponent";
+import NetworkEntity from "../NetworkEntity";
 
 /**
  * Entry point for the client-side networking.
@@ -13,17 +14,21 @@ import { SerializedEntity } from "../../io";
 export default abstract class ClientNetworkSystem extends NetworkSystem {
     #webSocket?: WebSocket;
 
-    #lastMessage?: Message;
+    #serverSnapshot?: GameState;
 
     #address: string;
 
+    #connected;
+
     protected constructor(
         allowedNetworkComponents: ComponentClass[],
-        address: string
+        address: string,
+        tps?: number
     ) {
-        super(allowedNetworkComponents);
+        super(allowedNetworkComponents, tps);
 
         this.#address = address;
+        this.#connected = false;
     }
 
     public async onStart(): Promise<void> {
@@ -34,52 +39,124 @@ export default abstract class ClientNetworkSystem extends NetworkSystem {
             throw new Error("Failed to connect to server");
         }
 
-        this.#webSocket.on("open", () => {
+        this.#webSocket.addEventListener("open", () => {
             console.log("Connected to server");
+            this.#connected = true;
             this.onConnect();
         });
 
-        this.#webSocket.on("message", (data) => {
-            this.#lastMessage = JSON.parse(data.toString());
-        });
+        this.#webSocket.addEventListener(
+            "message",
+            (event: { data: { toString: () => string } }) => {
+                if (this.#serverSnapshot) {
+                    console.warn("Too many messages from server");
+                    return;
+                }
+
+                this.#serverSnapshot = JSON.parse(
+                    event.data.toString(),
+                    GameState.reviver
+                );
+            }
+        );
     }
 
+    public onEntityEligible(
+        entity: Entity,
+        lastComponentAdded: Component | undefined
+    ) {}
+
     protected onLoop(entities: Entity[], deltaTime: number): void {
-        if (!this.#lastMessage) {
+        if (this.#serverSnapshot) {
+            this.#serverSnapshot.entities.forEach((serializedEntity) => {
+                this.processEntity(serializedEntity, entities);
+            });
+
+            this.#serverSnapshot.customData.forEach((data) => {
+                this.onCustomPrivateData(data);
+            });
+
+            this.#serverSnapshot = undefined;
+        }
+
+        if (!this.#connected) {
             return;
         }
 
-        this.#lastMessage.sharedMessageData.entities.forEach(
-            (serializedEntity) => {
-                this.processEntity(serializedEntity, entities);
-            }
-        );
+        const deltaGameState = new GameState();
 
-        this.#lastMessage.privateMessageData.entities.forEach(
-            (serializedEntity) => {
-                this.processEntity(serializedEntity, entities);
-            }
-        );
+        entities.forEach((entity) => {
+            const networkComponents: NetworkComponent<any>[] = entity
+                .getComponents<NetworkComponent<any>>(
+                    this.$allowedNetworkComponents
+                )
+                .filter(
+                    (ComponentClass) => ComponentClass
+                ) as NetworkComponent<any>[];
 
-        this.#lastMessage = undefined;
+            if (networkComponents.length === 0) {
+                return;
+            }
+
+            const networkEntity = new NetworkEntity(
+                entity.id,
+                new Map(),
+                entity.name
+            );
+
+            // Loop through all the network components and check if they should be updated.
+            // If they should be updated, serialize them and add them to the serialized entity.
+            networkComponents.forEach((serializableComponent) => {
+                if (serializableComponent.shouldUpdate()) {
+                    networkEntity.components.set(
+                        serializableComponent.constructor.name,
+                        serializableComponent.serialize()
+                    );
+                }
+            });
+
+            if (networkEntity.components.size === 0) {
+                return;
+            }
+
+            deltaGameState.entities.set(networkEntity.id, networkEntity);
+        });
+
+        if (deltaGameState.entities.size === 0) {
+            return;
+        }
+
+        this.#webSocket?.send(JSON.stringify(deltaGameState));
     }
 
     private processEntity(
-        serializedEntity: SerializedEntity,
+        networkEntity: NetworkEntity,
         entities: Entity[]
     ): void {
-        let targetEntity = entities.find(
-            (entity) => entity.id === serializedEntity.id
+        let targetEntity = this.ecsManager?.entities.find(
+            (entity) => entity.id === networkEntity.id
         );
+
+        if (networkEntity.destroyed) {
+            this.ecsManager?.destroyEntity(networkEntity.id);
+        }
+
+        let isNewEntity = false;
 
         if (!targetEntity) {
             // New entity from server
-            targetEntity = new Entity({ id: serializedEntity.id });
-            this.ecsManager!.addEntity(targetEntity);
-            this.onNewEntity(targetEntity);
+            targetEntity = this.ecsManager!.createEntity({
+                id: networkEntity.id,
+                name: networkEntity.name,
+            });
+            isNewEntity = true;
         }
 
-        this.readComponents(serializedEntity, targetEntity);
+        this.deserializeEntity(networkEntity, targetEntity);
+
+        if (isNewEntity) {
+            this.onNewEntity(targetEntity);
+        }
     }
 
     /**
@@ -93,4 +170,6 @@ export default abstract class ClientNetworkSystem extends NetworkSystem {
      * @protected
      */
     protected abstract onNewEntity(entity: Entity): void;
+
+    protected onCustomPrivateData(customPrivateData: any): void {}
 }
