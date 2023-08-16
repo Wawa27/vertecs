@@ -27,7 +27,7 @@
   ],
   "dependencies": {
     "chai-spies": "^1.0.0",
-    "ts-gl-matrix": "4.0.2",
+    "ts-gl-matrix": "4.0.3",
     "oimo-esm": "^1.0.10",
     "performance-now": "^2.1.0",
     "three": "^0.155",
@@ -63,7 +63,7 @@
     "typescript": "^5.0.4"
   },
   "peerDependencies": {
-    "ts-gl-matrix": "4.0.2",
+    "ts-gl-matrix": "4.0.3",
     "performance-now": "^2.1.0",
     "three": "^0.155",
     "uuid": "^8.3.2",

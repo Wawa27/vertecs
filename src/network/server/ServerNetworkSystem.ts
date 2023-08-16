@@ -1,5 +1,5 @@
-import { WebSocket, WebSocketServer } from "ws";
 import { IncomingMessage } from "http";
+import { WebSocket, WebSocketServer } from "ws";
 import ClientComponent from "../ClientComponent";
 import { EcsManager, Entity } from "../../core";
 import ClientHandler from "./ClientHandler";
