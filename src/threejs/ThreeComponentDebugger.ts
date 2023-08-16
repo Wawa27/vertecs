@@ -1,5 +1,5 @@
 import { BufferGeometry, Line, LineBasicMaterial, Vector3 } from "three";
-import { vec3 } from "gl-matrix";
+import { vec3 } from "ts-gl-matrix";
 import { Component, Entity } from "../core";
 import ThreeMesh from "./ThreeMesh";
 import { Transform } from "../math";

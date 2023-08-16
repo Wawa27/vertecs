@@ -1,4 +1,4 @@
-import { vec3 } from "gl-matrix";
+import { vec3 } from "ts-gl-matrix";
 import { Entity } from "../../../core";
 import { Transform } from "../../../math";
 import AxisAlignedBoundingBox from "../../AxisAlignedBoundingBox";
@@ -27,7 +27,7 @@ export default class Quadtree {
             throw new Error("Transform not found");
         }
 
-        const worldPosition = transform.getWorldPosition(vec3.create());
+        const worldPosition = transform.getWorldPosition();
 
         if (!this.#bounds.contains(worldPosition)) {
             console.warn("Tried to add entity outside of quadtree bounds");
@@ -60,7 +60,7 @@ export default class Quadtree {
             throw new Error("Transform not found");
         }
 
-        const worldPosition = transform.getWorldPosition(vec3.create());
+        const worldPosition = transform.getWorldPosition();
 
         if (!this.#bounds.contains(worldPosition)) {
             console.warn("Tried to remove entity outside of quadtree bounds");

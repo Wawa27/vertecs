@@ -1,5 +1,5 @@
 import { assert } from "chai";
-import { vec3, quat } from "gl-matrix";
+import { vec3, quat } from "ts-gl-matrix";
 import { Entity, Transform } from "../../src";
 
 describe("Transform", () => {
@@ -53,10 +53,9 @@ describe("Transform", () => {
             childEntity.addComponent(new Transform(childTranslation));
             parentEntity.addChild(childEntity);
 
-            const worldPosition = vec3.create();
-            childEntity
+            const worldPosition = childEntity
                 .getComponent(Transform)
-                ?.getWorldPosition(worldPosition);
+                ?.getWorldPosition();
 
             const expectedWorldPosition = vec3.fromValues(5, 7, 9);
             assert.deepEqual(worldPosition, expectedWorldPosition);

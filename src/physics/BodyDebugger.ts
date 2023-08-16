@@ -1,5 +1,5 @@
 import { BoxGeometry, Mesh, MeshBasicMaterial, SphereGeometry } from "three";
-import { vec3 } from "gl-matrix";
+import { vec3 } from "ts-gl-matrix";
 import { Component, Entity } from "../core";
 import { ThreeMesh } from "../threejs";
 import { Transform } from "../math";
@@ -29,11 +29,7 @@ export default class BodyDebugger extends Component {
         boundingBoxDebugEntity.addComponent(
             new ThreeMesh(
                 new Mesh(
-                    new BoxGeometry(
-                        boundingBoxSize[0],
-                        boundingBoxSize[1],
-                        boundingBoxSize[2]
-                    ),
+                    new SphereGeometry(sphereBody?.radius || 1, 32, 32),
                     new MeshBasicMaterial({ color: 0xff0000 })
                 )
             )
@@ -42,9 +38,7 @@ export default class BodyDebugger extends Component {
         const inverseScale = vec3.create();
         vec3.inverse(
             inverseScale,
-            entity.getComponent(Transform)?.getWorldScale(vec3.create()) || [
-                1, 1, 1,
-            ]
+            entity.getComponent(Transform)?.getWorldScale() || [1, 1, 1]
         );
 
         boundingBoxDebugEntity.addComponent(
@@ -55,8 +49,6 @@ export default class BodyDebugger extends Component {
     }
 
     public onRemovedFromEntity(entity: Entity) {
-        console.debug("destroying body debugger");
-        console.debug(entity.findChildByName("body-debugger")?.name);
         entity.findChildByName("body-debugger")?.destroy();
         entity.findChildByName("bounding-box-debugger")?.destroy();
     }

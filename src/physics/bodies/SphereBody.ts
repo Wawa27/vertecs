@@ -1,4 +1,4 @@
-import { vec3 } from "gl-matrix";
+import { vec3 } from "ts-gl-matrix";
 import Body, { PhysicsData } from "./Body";
 import AxisAlignedBoundingBox from "../AxisAlignedBoundingBox";
 import { Transform } from "../../math";
@@ -19,7 +19,7 @@ export default class SphereBody extends Body {
     public getBoundingBox(): AxisAlignedBoundingBox {
         const position = this.entity
             ?.getComponent(Transform)
-            ?.getWorldPosition(vec3.create());
+            ?.getWorldPosition();
 
         if (!position) {
             throw new Error("SphereBody needs a Transform component");

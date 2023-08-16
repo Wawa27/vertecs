@@ -1,37 +1,53 @@
-import Component from "./Component";
+import Component, { ComponentClassConstructor } from "./Component";
 import type { ComponentClass } from "./Component";
 import Entity from "./Entity";
 import EcsManager from "./EcsManager";
 
+type SystemConstructor<T extends Component[]> = new (
+    ...args: any[]
+) => System<T>;
+
 /**
  * A system loops over all entities and uses the components of the entities to perform logic.
  */
-export default abstract class System {
+export default abstract class System<T extends Component[] = []> {
     protected ecsManager?: EcsManager;
 
     #hasStarted: boolean;
 
-    public readonly filter: ComponentClass[];
+    public readonly filter: ComponentClass<T[number]>[];
 
     #lastUpdateTime: number;
 
     #tps: number;
 
+    #loopTime: number;
+
+    $dependencies: SystemConstructor<Component[]>[];
+
     /**
      * Create a new system with the given component group filter and the given tps
      */
-    protected constructor(filter: ComponentClass[], tps?: number) {
+    protected constructor(
+        filter: ComponentClass<T[number]>[],
+        tps?: number,
+        dependencies?: SystemConstructor<Component[]>[]
+    ) {
         this.filter = filter;
         this.#lastUpdateTime = -1;
         this.#tps = tps ?? 60;
         this.#hasStarted = false;
+        this.#loopTime = 0;
+        this.$dependencies = dependencies ?? [];
     }
 
     /**
      * Called every frame, you should not call this method directly but instead use the {@see onLoop} method
      */
-    public loop(entities: Entity[]): void {
-        this.onLoop(entities, this.getDeltaTime());
+    public loop(components: T[], entities: Entity[]): void {
+        this.#loopTime = performance.now();
+        this.onLoop(components, entities, this.getDeltaTime());
+        this.#loopTime = performance.now() - this.#loopTime;
         this.#lastUpdateTime = performance.now();
     }
 
@@ -87,10 +103,15 @@ export default abstract class System {
 
     /**
      * Called every frame
-     * @param entities The entities eligible to this system
+     * @param components
+     * @param entities
      * @param deltaTime The time since the last loop
      */
-    protected abstract onLoop(entities: Entity[], deltaTime: number): void;
+    protected abstract onLoop(
+        components: T[],
+        entities: Entity[],
+        deltaTime: number
+    ): void;
 
     /**
      * Return the time since the last update
@@ -110,12 +131,20 @@ export default abstract class System {
         );
     }
 
+    public get dependencies(): SystemConstructor<Component[]>[] {
+        return this.$dependencies;
+    }
+
     public get lastUpdateTime(): number {
         return this.#lastUpdateTime;
     }
 
     public set lastUpdateTime(value: number) {
         this.#lastUpdateTime = value;
+    }
+
+    public get loopTime(): number {
+        return this.#loopTime;
     }
 
     public get tps(): number {

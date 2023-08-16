@@ -1,20 +1,23 @@
 import { Camera, WebGLRenderer } from "three";
-import { vec3 } from "gl-matrix";
+import { vec3 } from "ts-gl-matrix";
 // @ts-ignore
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { Transform } from "../../math";
 import { ThreeCameraComponent } from "../index";
 import { Component, Entity, System } from "../../core";
+import ThreeSystem from "../ThreeSystem";
 
-export default class ThreeCameraSystem extends System {
+export default class ThreeCameraSystem extends System<
+    [ThreeCameraComponent, Transform]
+> {
     #cameraEntity?: Entity;
 
     #renderer: WebGLRenderer;
 
     #controls?: OrbitControls;
 
-    public constructor(renderer: WebGLRenderer) {
-        super([ThreeCameraComponent, Transform]);
+    public constructor(renderer: WebGLRenderer, tps?: number) {
+        super([ThreeCameraComponent, Transform], tps);
         this.#renderer = renderer;
     }
 
@@ -71,7 +74,11 @@ export default class ThreeCameraSystem extends System {
         this.#controls?.update();
     }
 
-    protected onLoop(entities: Entity[], deltaTime: number): void {
+    protected onLoop(
+        components: [ThreeCameraComponent, Transform][],
+        entities: Entity[],
+        deltaTime: number
+    ): void {
         const cameraComponent =
             this.#cameraEntity?.getComponent(ThreeCameraComponent);
         const camera = cameraComponent?.camera;
@@ -89,7 +96,7 @@ export default class ThreeCameraSystem extends System {
             return;
         }
 
-        const worldPosition = transform.getWorldPosition(vec3.create());
+        const worldPosition = transform.getWorldPosition();
 
         camera.position.set(
             worldPosition[0],
@@ -98,18 +105,14 @@ export default class ThreeCameraSystem extends System {
         );
 
         if (lookAtTransform) {
-            const worldPosition = lookAtTransform.getWorldPosition(
-                vec3.create()
-            );
+            const worldPosition = lookAtTransform.getWorldPosition();
             camera.position.set(
                 worldPosition[0] + cameraComponent.lookAtOffset[0],
                 worldPosition[1] + cameraComponent.lookAtOffset[1],
                 worldPosition[2] + cameraComponent.lookAtOffset[2]
             );
 
-            const lookAtWorldPosition = lookAtTransform?.getWorldPosition(
-                vec3.create()
-            );
+            const lookAtWorldPosition = lookAtTransform?.getWorldPosition();
 
             if (lookAtWorldPosition) {
                 camera.lookAt(

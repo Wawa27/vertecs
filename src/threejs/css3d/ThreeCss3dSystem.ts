@@ -1,13 +1,15 @@
 import { PerspectiveCamera, Scene } from "three";
 // @ts-ignore
 import { CSS3DRenderer } from "three/addons/renderers/CSS3DRenderer.js";
-import { vec3 } from "gl-matrix";
+import { vec3 } from "ts-gl-matrix";
 import { Component, Entity, System } from "../../core";
 import ThreeCss3dComponent from "./ThreeCss3dComponent";
 import ThreeSystem from "../ThreeSystem";
 import { Transform } from "../../math";
 
-export default class ThreeCss3dSystem extends System {
+export default class ThreeCss3dSystem extends System<
+    [ThreeCss3dComponent, Transform]
+> {
     #renderer: CSS3DRenderer;
 
     #scene: Scene;
@@ -17,7 +19,7 @@ export default class ThreeCss3dSystem extends System {
     #camera: PerspectiveCamera;
 
     public constructor(threeSystem: ThreeSystem, tps?: number) {
-        super([ThreeCss3dComponent], tps);
+        super([ThreeCss3dComponent, Transform], tps);
 
         this.#threeSystem = threeSystem;
 
@@ -61,19 +63,18 @@ export default class ThreeCss3dSystem extends System {
         this.#scene.remove(css3dComponent.css3dObject);
     }
 
-    protected onLoop(entities: Entity[], deltaTime: number): void {
+    protected onLoop(
+        components: [ThreeCss3dComponent, Transform][],
+        entities: Entity[],
+        deltaTime: number
+    ): void {
         this.#camera.position.copy(this.#threeSystem.camera.position);
         this.#camera.quaternion.copy(this.#threeSystem.camera.quaternion);
 
-        entities.forEach((entity) => {
-            const css3dComponent = entity.getComponent(ThreeCss3dComponent);
-            const transform = entity.getComponent(Transform);
+        for (let i = 0; i < components.length; i++) {
+            const [css3dComponent, transform] = components[i];
 
-            if (!css3dComponent || !transform) {
-                throw new Error("CSS3D object or transform not found");
-            }
-
-            const worldPosition = transform.getWorldPosition(vec3.create());
+            const worldPosition = transform.getWorldPosition();
 
             // Position is multiplied by 100 because the css renderer is 100x bigger than the webgl renderer
             css3dComponent.css3dObject.position.x = worldPosition[0] * 100;
@@ -81,7 +82,7 @@ export default class ThreeCss3dSystem extends System {
             css3dComponent.css3dObject.position.z = worldPosition[2] * 100;
 
             css3dComponent.css3dObject.lookAt(this.#camera.position);
-        });
+        }
         this.#renderer.render(this.#scene, this.#camera);
     }
 }

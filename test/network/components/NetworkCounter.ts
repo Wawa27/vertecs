@@ -6,12 +6,12 @@ type CounterComponentData = {
     count: number;
 };
 
-export default class NetworkCounterSynchronizer extends NetworkComponent<CounterComponentData> {
-    #lastUpdate: number;
+export default class NetworkCounter extends NetworkComponent<CounterComponentData> {
+    #lastCount: number;
 
-    public constructor(owner: string) {
-        super(owner);
-        this.#lastUpdate = Date.now();
+    public constructor() {
+        super();
+        this.#lastCount = -1;
     }
 
     public onAddedToEntity(entity: Entity) {
@@ -21,11 +21,14 @@ export default class NetworkCounterSynchronizer extends NetworkComponent<Counter
     }
 
     public accept(data: CounterComponentData): boolean {
-        return false;
+        return true;
     }
 
     public read(data: CounterComponentData): void {
         const counterComponent = this.entity?.findComponent(CounterComponent);
+
+        this.#lastCount = counterComponent?.count ?? -1;
+
         if (!counterComponent) {
             throw new Error("CounterComponent not found");
         }
@@ -33,18 +36,28 @@ export default class NetworkCounterSynchronizer extends NetworkComponent<Counter
     }
 
     public write(): CounterComponentData {
-        this.#lastUpdate = Date.now();
+        this.$updateTimestamp = Date.now();
         const counter = this.entity?.findComponent(CounterComponent);
         if (!counter) {
             throw new Error("CounterComponent not found");
         }
-        const currentCount = counter.count++;
+        const currentCount = counter.count;
         return {
             count: currentCount,
         };
     }
 
     public shouldUpdate(): boolean {
-        return this.#lastUpdate + 1000 < Date.now();
+        const shouldUpdate =
+            this.#lastCount !==
+            this.entity?.findComponent(CounterComponent)?.count;
+
+        if (shouldUpdate) {
+            this.$updateTimestamp = Date.now();
+            this.#lastCount =
+                this.entity?.findComponent(CounterComponent)?.count ?? -1;
+        }
+
+        return shouldUpdate;
     }
 }

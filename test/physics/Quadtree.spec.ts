@@ -1,4 +1,4 @@
-import { vec3 } from "gl-matrix";
+import { vec3 } from "ts-gl-matrix";
 import Quadtree from "../../src/physics/broadphase/quadtree/Quadtree";
 import AxisAlignedBoundingBox from "../../src/physics/AxisAlignedBoundingBox";
 import { Entity, Transform } from "../../src";

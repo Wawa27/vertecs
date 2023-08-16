@@ -1,4 +1,4 @@
 import NetworkSphereBody from "./NetworkSphereBody";
+import NetworkCubeBody from "./NetworkCubeBody";
 
-// eslint-disable-next-line import/prefer-default-export
-export { NetworkSphereBody };
+export { NetworkSphereBody, NetworkCubeBody };

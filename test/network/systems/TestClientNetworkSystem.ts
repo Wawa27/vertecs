@@ -32,11 +32,19 @@ export default class TestClientNetworkSystem extends ClientNetworkSystem {
         this.#isConnected = value;
     }
 
-    public get newEntities(): Entity[] {
+    public get entities(): Entity[] {
         return this.#newEntities;
     }
 
-    public set newEntities(value: Entity[]) {
+    public set entities(value: Entity[]) {
         this.#newEntities = value;
+    }
+
+    public get serverSnapshot(): any {
+        return this.$serverSnapshot;
+    }
+
+    public set serverSnapshot(value: any) {
+        this.$serverSnapshot = value;
     }
 }

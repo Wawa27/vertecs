@@ -1,4 +1,4 @@
-import { vec3 } from "gl-matrix";
+import { Vec3Like } from "ts-gl-matrix";
 import Broadphase from "../Broadphase";
 import { Entity } from "../../../core";
 import Quadtree from "./Quadtree";
@@ -8,7 +8,7 @@ import Body from "../../bodies/Body";
 export default class QuadtreeBroadphase extends Broadphase {
     private quadtree: Quadtree;
 
-    public constructor(minimum: vec3, maximum: vec3) {
+    public constructor(minimum: Vec3Like, maximum: Vec3Like) {
         super();
         this.quadtree = new Quadtree(
             new AxisAlignedBoundingBox(minimum, maximum)

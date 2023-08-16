@@ -8,6 +8,7 @@ import Collision from "./Collision";
 import DefaultSolver from "./solver/DefaultSolver";
 import Ray from "./Ray";
 import BodyDebugger from "./BodyDebugger";
+import NetworkSphereBody from "./network/NetworkSphereBody";
 
 export {
     Body,
@@ -20,5 +21,6 @@ export {
     DefaultSolver,
     Ray,
     BodyDebugger,
+    NetworkSphereBody,
 };
 export * from "./network";

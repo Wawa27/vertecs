@@ -5,7 +5,7 @@ import {
     PerspectiveCamera,
     PointLight,
 } from "three";
-import { quat } from "gl-matrix";
+import { quat } from "ts-gl-matrix";
 import {
     OimoComponent,
     ThreeCameraComponent,

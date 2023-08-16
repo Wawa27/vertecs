@@ -1,4 +1,4 @@
-import { vec3 } from "gl-matrix";
+import { vec3 } from "ts-gl-matrix";
 import { Component } from "../../core";
 import { SerializableComponent } from "../../io";
 import AxisAlignedBoundingBox from "../AxisAlignedBoundingBox";

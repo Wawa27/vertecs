@@ -1,5 +1,10 @@
 import { WebSocket } from "ws";
-import { Entity, EcsManager, ClientHandler } from "../../../src";
+import {
+    Entity,
+    EcsManager,
+    ClientHandler,
+    IsNetworked,
+} from "../../../../src";
 import PositionComponent from "../PositionComponent";
 import PositionComponentSynchronizer from "../PositionComponentSynchronizer";
 
@@ -20,5 +25,6 @@ export default class ExampleClientHandler extends ClientHandler {
 
         entity.addComponent(new PositionComponent(4, 4));
         entity.addComponent(new PositionComponentSynchronizer());
+        entity.addComponent(new IsNetworked());
     }
 }

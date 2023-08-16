@@ -1,22 +1,22 @@
-import { vec3 } from "gl-matrix";
+import { vec3, Vec3Like } from "ts-gl-matrix";
 import SphereBody from "./bodies/SphereBody";
 import { Entity } from "../core";
 import { Transform } from "../math";
 
 export default class Ray {
-    #origin: vec3;
+    #origin: Vec3Like;
 
-    #direction: vec3;
+    #direction: Vec3Like;
 
-    public constructor(origin: vec3, direction: vec3) {
+    public constructor(origin: Vec3Like, direction: Vec3Like) {
         this.#origin = origin;
         this.#direction = direction;
     }
 
-    public getSphereIntersection(sphereEntity: Entity): vec3 | undefined {
+    public getSphereIntersection(sphereEntity: Entity): Vec3Like | undefined {
         const sphereWorldPosition = sphereEntity
             .getComponent(Transform)
-            ?.getWorldPosition(vec3.create());
+            ?.getWorldPosition();
         const radius = sphereEntity.getComponent(SphereBody)?.radius;
 
         if (!sphereWorldPosition || !radius) {
@@ -53,11 +53,11 @@ export default class Ray {
         );
     }
 
-    public get origin(): vec3 {
+    public get origin(): Vec3Like {
         return this.#origin;
     }
 
-    public get direction(): vec3 {
+    public get direction(): Vec3Like {
         return this.#direction;
     }
 }

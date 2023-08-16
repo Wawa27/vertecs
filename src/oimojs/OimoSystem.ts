@@ -1,11 +1,11 @@
 // @ts-ignore
 import { World } from "oimo-esm";
-import { quat, vec3 } from "gl-matrix";
+import { quat, vec3 } from "ts-gl-matrix";
 import { MathUtils, Transform } from "../math";
 import { Component, Entity, System } from "../core";
 import OimoComponent from "./OimoComponent";
 
-export default class OimoSystem extends System {
+export default class OimoSystem extends System<[OimoComponent, Transform]> {
     #world?: World;
 
     public constructor(tps?: number) {
@@ -38,7 +38,7 @@ export default class OimoSystem extends System {
 
         const worldRotation = MathUtils.getEulerFromQuat(
             vec3.create(),
-            transform?.getWorldRotation(quat.create()) ?? quat.create()
+            transform?.getWorldRotation() ?? quat.create()
         );
 
         oimoComponent.body = this.#world?.add({
@@ -48,19 +48,21 @@ export default class OimoSystem extends System {
         });
     }
 
-    protected onLoop(entities: Entity[], deltaTime: number): void {
+    protected onLoop(
+        components: [OimoComponent, Transform][],
+        entities: Entity[],
+        deltaTime: number
+    ): void {
         this.#world?.step();
 
-        for (let i = 0; i < entities.length; i++) {
-            const entity = entities[i];
-            const oimoComponent = entity.getComponent(OimoComponent);
-            const transform = entity.getComponent(Transform);
+        for (let i = 0; i < components.length; i++) {
+            const [oimoComponent, transform] = components[i];
 
-            if (!oimoComponent || !transform || !oimoComponent.body) {
-                throw new Error("OimoComponent or Transform not found");
+            if (!oimoComponent.body) {
+                throw new Error("Oimo body not found");
             }
 
-            transform?.setPosition([
+            transform.setPosition([
                 oimoComponent.body.position.x,
                 oimoComponent.body.position.y,
                 oimoComponent.body.position.z,
@@ -69,7 +71,7 @@ export default class OimoSystem extends System {
             // TODO: Allow manual rotation
             if (oimoComponent.bodyOptions.disableRotation) {
                 oimoComponent.body.angularVelocity.set(0, 0, 0);
-                const worldRotation = transform.getWorldRotation(quat.create());
+                const worldRotation = transform.getWorldRotation();
                 oimoComponent.body.quaternion.set(
                     worldRotation[0],
                     worldRotation[1],
@@ -77,7 +79,7 @@ export default class OimoSystem extends System {
                     worldRotation[3]
                 );
             } else {
-                transform?.setRotationQuat(
+                transform.setRotationQuat(
                     quat.fromValues(
                         oimoComponent.body.getQuaternion().x,
                         oimoComponent.body.getQuaternion().y,

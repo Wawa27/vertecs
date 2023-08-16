@@ -12,7 +12,7 @@ type FiniteStateMachineData = {
 };
 
 export default class FiniteStateMachine extends SerializableComponent<FiniteStateMachineData> {
-    public static readonly States: typeof State[] = [];
+    public static readonly States: (typeof State)[] = [];
 
     #currentStateName: string;
 

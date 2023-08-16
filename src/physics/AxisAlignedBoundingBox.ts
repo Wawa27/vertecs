@@ -1,16 +1,16 @@
-import { vec3 } from "gl-matrix";
+import { vec3, Vec3Like } from "ts-gl-matrix";
 
 export default class AxisAlignedBoundingBox {
-    #minimum: vec3;
+    #minimum: Vec3Like;
 
-    #maximum: vec3;
+    #maximum: Vec3Like;
 
-    public constructor(min: vec3, max: vec3) {
+    public constructor(min: Vec3Like, max: Vec3Like) {
         this.#minimum = min;
         this.#maximum = max;
     }
 
-    public contains(point: vec3): boolean {
+    public contains(point: Vec3Like): boolean {
         return (
             point[0] >= this.#minimum[0] &&
             point[0] <= this.#maximum[0] &&
@@ -32,11 +32,11 @@ export default class AxisAlignedBoundingBox {
         );
     }
 
-    public get minimum(): vec3 {
+    public get minimum(): Vec3Like {
         return this.#minimum;
     }
 
-    public get maximum(): vec3 {
+    public get maximum(): Vec3Like {
         return this.#maximum;
     }
 }

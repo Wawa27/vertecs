@@ -10,7 +10,7 @@ export default class ClientHandler {
 
     readonly #privateData: CustomData[];
 
-    readonly #playerEntity: Entity;
+    readonly $clientEntity: Entity;
 
     #clientSnapshot?: GameState;
 
@@ -21,7 +21,7 @@ export default class ClientHandler {
         ecsManager: EcsManager,
         webSocket: WebSocket
     ) {
-        this.#playerEntity = playerEntity;
+        this.$clientEntity = playerEntity;
         this.ecsManager = ecsManager;
         this.$webSocket = webSocket;
         this.#forceUpdate = true;
@@ -67,8 +67,8 @@ export default class ClientHandler {
         this.#clientSnapshot = snapshot;
     }
 
-    public get playerEntity(): Entity {
-        return this.#playerEntity;
+    public get clientEntity(): Entity {
+        return this.$clientEntity;
     }
 
     public get privateData(): CustomData[] {

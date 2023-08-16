@@ -2,8 +2,9 @@ import { Entity, System } from "../core";
 import NetworkSystem from "./NetworkSystem";
 import { Transform } from "../math";
 import { ComponentClass } from "../core/Component";
+import IsNetworked from "./IsNetworked";
 
-export default class NetworkInterpolationSystem extends System {
+export default class NetworkInterpolationSystem extends System<[IsNetworked]> {
     #networkSystem: NetworkSystem;
 
     public constructor(
@@ -15,7 +16,11 @@ export default class NetworkInterpolationSystem extends System {
         this.#networkSystem = networkSystem;
     }
 
-    protected onLoop(entities: Entity[], deltaTime: number): void {
+    protected onLoop(
+        components: [IsNetworked][],
+        entities: Entity[],
+        deltaTime: number
+    ): void {
         entities.forEach((entity) => {
             const transform = entity.getComponent(Transform);
 
