@@ -1,4 +1,4 @@
-import { quat, vec3 } from "gl-matrix";
+import { Vec3 } from "ts-gl-matrix";
 import { Component, Entity } from "../../core";
 import { Transform } from "../../math";
 import NetworkComponent from "../NetworkComponent";
@@ -10,11 +10,11 @@ export type TransformData = {
 };
 
 export default class NetworkTransform extends NetworkComponent<TransformData> {
-    #lastPosition: vec3;
+    #lastPosition: Vec3;
 
-    public constructor(ownerId?: string, scope = "public") {
-        super(ownerId, scope);
-        this.#lastPosition = vec3.fromValues(Infinity, Infinity, Infinity);
+    public constructor() {
+        super();
+        this.#lastPosition = new Vec3(Infinity, Infinity, Infinity);
     }
 
     public onAddedToEntity(entity: Entity) {
@@ -29,7 +29,7 @@ export default class NetworkTransform extends NetworkComponent<TransformData> {
     }
 
     public read(data: TransformData): void {
-        this.#lastPosition = vec3.fromValues(
+        this.#lastPosition = new Vec3(
             data.position[0],
             data.position[1],
             data.position[2]
@@ -50,16 +50,16 @@ export default class NetworkTransform extends NetworkComponent<TransformData> {
     public shouldUpdate(): boolean {
         const position = this.entity
             ?.getComponent(Transform)
-            ?.getWorldPosition(vec3.create());
+            ?.getWorldPosition();
 
         if (!position) {
             throw new Error("TransformNetworkComponent: Position not found");
         }
 
-        const distance = vec3.distance(this.#lastPosition, position);
+        const distance = this.#lastPosition.distance(position);
 
         if (distance > 0.01) {
-            this.#lastPosition = vec3.fromValues(
+            this.#lastPosition = new Vec3(
                 position[0],
                 position[1],
                 position[2]
@@ -77,9 +77,9 @@ export default class NetworkTransform extends NetworkComponent<TransformData> {
             throw new Error("TransformNetworkComponent: Transform not found");
         }
 
-        const position = transform.getWorldPosition(vec3.create());
-        const rotation = transform.getWorldRotation(quat.create());
-        const scale = transform.getWorldScale(vec3.create());
+        const position = transform.getWorldPosition();
+        const rotation = transform.getWorldRotation();
+        const scale = transform.getWorldScale();
 
         return {
             position: [position[0], position[1], position[2]],
@@ -89,6 +89,6 @@ export default class NetworkTransform extends NetworkComponent<TransformData> {
     }
 
     public clone(): Component {
-        return new NetworkTransform(this.ownerId, this.scope);
+        return new NetworkTransform();
     }
 }

@@ -1,6 +1,7 @@
 import { Object3D } from "three";
 import * as SkeletonUtils from "three/examples/jsm/utils/SkeletonUtils.js";
-import { Component } from "../core";
+import { Component, Entity } from "../core";
+import ThreeAnimation from "./ThreeAnimation";
 
 export default class ThreeMesh extends Component {
     #isVisible: boolean;
@@ -12,6 +13,12 @@ export default class ThreeMesh extends Component {
 
         this.#isVisible = true;
         this.#object3d = object3D;
+    }
+
+    public onAddedToEntity(entity: Entity) {
+        if (this.object3d.animations.length > 0) {
+            entity.addComponent(new ThreeAnimation());
+        }
     }
 
     public get object3d(): Object3D {

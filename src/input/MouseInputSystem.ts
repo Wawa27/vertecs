@@ -1,6 +1,6 @@
 import { Entity, System } from "../core";
 
-export default abstract class MouseInputSystem extends System {
+export default abstract class MouseInputSystem extends System<[]> {
     #buffer: (MouseEvent | WheelEvent)[];
 
     readonly #canvasId?: string;
@@ -28,7 +28,7 @@ export default abstract class MouseInputSystem extends System {
         }
     }
 
-    public onLoop(entities: Entity[]): void {
+    public onLoop(components: [], entities: Entity[]): void {
         this.#buffer.forEach((event) => {
             switch (event.type) {
                 case "mousemove":

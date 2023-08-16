@@ -1,4 +1,4 @@
-import { vec3 } from "gl-matrix";
+import { Vec3, vec3 } from "ts-gl-matrix";
 import { assert } from "chai";
 import { DefaultNarrowphase, SphereBody } from "../../src";
 
@@ -45,8 +45,8 @@ describe("Default Narrowphase", () => {
             sphere2Position,
             sphere2Shape
         );
-        const expectedCollisionNormal = vec3.fromValues(-1, 0, 0);
+        const expectedCollisionNormal = new Vec3([0, 0, 0]);
 
-        assert.deepEqual(collisionNormal, expectedCollisionNormal);
+        assert.isTrue(Vec3.equals(collisionNormal!, expectedCollisionNormal));
     });
 });

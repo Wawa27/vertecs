@@ -5,10 +5,14 @@ import EmptyComponent from "../components/EmptyComponent";
 /**
  * Empty system
  */
-export default class EmptySystem extends System {
+export default class EmptySystem extends System<[EmptyComponent]> {
     public constructor() {
         super([EmptyComponent]);
     }
 
-    protected onLoop(entities: Entity[], deltaTime: number): void {}
+    protected onLoop(
+        components: [EmptyComponent][],
+        entities: Entity[],
+        deltaTime: number
+    ): void {}
 }

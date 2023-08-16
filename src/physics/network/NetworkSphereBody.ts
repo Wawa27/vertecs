@@ -8,8 +8,8 @@ type SphereBodyData = {
 };
 
 export default class NetworkSphereBody extends NetworkComponent<SphereBodyData> {
-    public constructor(ownerId?: string, scope = "public") {
-        super(ownerId, scope);
+    public constructor() {
+        super();
     }
 
     public onAddedToEntity(entity: Entity) {

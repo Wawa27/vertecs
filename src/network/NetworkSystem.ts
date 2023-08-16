@@ -1,3 +1,4 @@
+import * as net from "net";
 import { Entity, System } from "../core";
 import { SerializedEntity } from "../io";
 import type {
@@ -5,90 +6,161 @@ import type {
     ComponentClassConstructor,
 } from "../core/Component";
 import GameState from "./GameState";
-import type SerializedNetworkComponent from "./NetworkComponent";
-import NetworkComponent from "./NetworkComponent";
+import NetworkComponent, {
+    SerializedNetworkComponent,
+} from "./NetworkComponent";
 import NetworkEntity from "./NetworkEntity";
+import IsNetworked from "./IsNetworked";
+import Component from "../core/Component";
 
 /**
  * The networking system is responsible for sending and receiving entities over the networking.
  * This class is used by the server and the client to provide a common interface for formatting entities.
  */
-export default class NetworkSystem extends System {
+export default class NetworkSystem extends System<[IsNetworked]> {
     #previousSnapshots: GameState[];
 
     protected $currentSnapshot: GameState;
 
-    $allowedNetworkComponents: ComponentClass[];
+    $allowedNetworkComponents: ComponentClass<Component>[];
 
     public constructor(
         allowedNetworkComponents: ComponentClass[],
         tps?: number
     ) {
-        super([NetworkComponent], tps);
+        super([IsNetworked], tps);
 
-        this.$allowedNetworkComponents = allowedNetworkComponents;
+        this.$allowedNetworkComponents = [
+            ...allowedNetworkComponents,
+            IsNetworked,
+        ];
         this.#previousSnapshots = [];
         this.$currentSnapshot = new GameState();
     }
 
-    protected onLoop(entities: Entity[], deltaTime: number): void {}
+    protected onLoop(
+        components: [IsNetworked][],
+        entities: Entity[],
+        deltaTime: number
+    ): void {}
 
     /**
      * Deserialize the components of the serialized entity and add them to the target entity.
      * @param serializedEntity
-     * @param targetEntity
      */
-    public deserializeEntity(
-        serializedEntity: NetworkEntity,
-        targetEntity: Entity
-    ) {
+    protected deserializeEntity(serializedEntity: NetworkEntity) {
+        const targetEntity = this.ecsManager?.entities.find(
+            (entity) => entity.id === serializedEntity.id
+        );
+
+        if (!targetEntity) {
+            console.warn(
+                `Received entity with id ${serializedEntity.id} but it doesn't exist`
+            );
+            return;
+        }
+
         if (serializedEntity.destroyed) {
             targetEntity.destroy();
             return;
         }
 
-        serializedEntity.components.forEach((networkComponent) => {
-            const ComponentConstructor = this.$allowedNetworkComponents.find(
-                (ComponentClass) =>
-                    ComponentClass.name === networkComponent.className
-            ) as ComponentClassConstructor;
+        serializedEntity.components.forEach((networkComponent) =>
+            this.deserializeComponent(networkComponent, targetEntity)
+        );
+    }
 
-            if (!ComponentConstructor) {
-                console.warn(
-                    `Received unknown component from server ${networkComponent.className}`
-                );
+    protected deserializeComponent(
+        serializedNetworkComponent: SerializedNetworkComponent<any>,
+        targetEntity: Entity
+    ) {
+        const ComponentConstructor = this.$allowedNetworkComponents.find(
+            (ComponentClass) =>
+                ComponentClass.name === serializedNetworkComponent.className
+        ) as ComponentClassConstructor;
+
+        if (!ComponentConstructor) {
+            console.warn(
+                `Received unknown component from server ${JSON.stringify(
+                    serializedNetworkComponent
+                )}`
+            );
+            return;
+        }
+
+        let component = targetEntity.getComponent(
+            ComponentConstructor
+        ) as NetworkComponent<any>;
+
+        if (!component) {
+            component = new ComponentConstructor();
+            targetEntity.addComponent(component);
+        }
+
+        if (
+            serializedNetworkComponent.updateTimestamp > 0 &&
+            component.updateTimestamp
+        ) {
+            // If the component is older than the last update, ignore it
+            // Clients should check if the server component match with the old state of the entity
+            // If it doesn't match, the client should roll back the entity to this state
+            if (
+                serializedNetworkComponent.updateTimestamp <=
+                component.updateTimestamp
+            ) {
+                // this.isOutOfSync(
+                //     this.#previousSnapshots[0],
+                //     serializedEntity,
+                //     networkComponent
+                // );
                 return;
             }
+        }
 
-            let component = targetEntity.getComponent(
-                ComponentConstructor
-            ) as NetworkComponent<any>;
+        component.deserialize(serializedNetworkComponent);
+    }
 
-            if (!component) {
-                component = new ComponentConstructor();
-                targetEntity.addComponent(component);
+    protected serializeEntity(entity: Entity): NetworkEntity | undefined {
+        const serializedEntity = new NetworkEntity(
+            entity.id,
+            new Map(),
+            entity.name
+        );
+
+        const networkComponents: NetworkComponent<any>[] = entity
+            .getComponents(this.$allowedNetworkComponents)
+            .filter((component) => component) as NetworkComponent<any>[];
+
+        if (networkComponents.length === 0) {
+            return undefined;
+        }
+
+        // Loop through all the network components and check if they should be updated.
+        // If they should be updated, serialize them and add them to the serialized entity.
+        networkComponents.forEach((serializableComponent) => {
+            const serializedData = this.serializeComponent(
+                serializableComponent
+            );
+            if (serializedData) {
+                const componentName = serializableComponent.constructor.name;
+                serializedEntity.components.set(componentName, serializedData);
             }
-
-            if (networkComponent.updateTimestamp && component.updateTimestamp) {
-                // If the component is older than the last update, ignore it
-                // Clients should check if the server component match with the old state of the entity
-                // If it doesn't match, the client should roll back the entity to this state
-                if (
-                    networkComponent.updateTimestamp <=
-                    component.updateTimestamp
-                ) {
-                    // this.isOutOfSync(
-                    //     this.#previousSnapshots[0],
-                    //     serializedEntity,
-                    //     networkComponent
-                    // );
-                    return;
-                }
-            }
-
-            component.deserialize(networkComponent);
-            component.forceUpdate = true;
         });
+
+        if (serializedEntity.components.size > 0) {
+            return serializedEntity;
+        }
+
+        return undefined;
+    }
+
+    protected serializeComponent(
+        component: NetworkComponent<any>
+    ): SerializedNetworkComponent<any> | undefined {
+        if (!component.shouldUpdate() && !component.forceUpdate) {
+            return undefined;
+        }
+        return component.serialize();
     }
 
     /**

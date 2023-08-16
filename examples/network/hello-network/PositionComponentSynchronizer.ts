@@ -1,5 +1,5 @@
-import SerializableComponent from "../../src/io/SerializableComponent";
-import { Entity } from "../../src";
+import SerializableComponent from "../../../src/io/SerializableComponent";
+import { Entity } from "../../../src";
 import PositionComponent from "./PositionComponent";
 
 type PositionComponentData = {

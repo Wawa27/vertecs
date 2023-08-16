@@ -119,19 +119,18 @@ export const initializeBoilerplate = async (): Promise<EcsManager> => {
     );
     light.addComponent(new ThreeLightComponent(new PointLight(0xffffff, 1)));
 
-    class RespawnSystem extends System {
+    class RespawnSystem extends System<[OimoComponent]> {
         public constructor() {
             super([OimoComponent]);
         }
 
-        protected onLoop(entities: Entity[], deltaTime: number): void {
-            entities.forEach((entity) => {
-                const oimoComponent = entity.getComponent(OimoComponent);
-
-                if (!oimoComponent) {
-                    return;
-                }
-
+        protected onLoop(
+            components: [OimoComponent][],
+            entities: Entity[],
+            deltaTime: number
+        ): void {
+            for (let i = 0; i < components.length; i++) {
+                const [oimoComponent] = components[i];
                 if (oimoComponent.body && oimoComponent.body.position.y < -10) {
                     oimoComponent.body?.resetPosition(
                         Math.random() * 10 - 5,
@@ -139,7 +138,7 @@ export const initializeBoilerplate = async (): Promise<EcsManager> => {
                         Math.random() * 10 - 5
                     );
                 }
-            });
+            }
         }
     }
 

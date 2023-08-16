@@ -1,4 +1,4 @@
-import { Component } from "../../src";
+import { Component, Entity } from "../../../src";
 
 export default class PositionComponent extends Component {
     #x: number;
@@ -10,6 +10,10 @@ export default class PositionComponent extends Component {
 
         this.#x = x;
         this.#y = y;
+    }
+
+    public onAddedToEntity(entity: Entity) {
+        console.debug("PositionComponent added to entity");
     }
 
     public get x(): number {

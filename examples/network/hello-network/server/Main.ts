@@ -1,4 +1,4 @@
-import { EcsManager } from "../../../src";
+import { EcsManager } from "../../../../src";
 import ExampleServerNetworkSystem from "./ExampleServerNetworkSystem";
 
 const ecsManager = new EcsManager();

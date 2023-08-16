@@ -7,7 +7,7 @@ import System from "../../../src/core/System";
  * This system keeps track of the number of times an entity became eligible
  * It also increments all counter components
  */
-export default class CounterSystem extends System {
+export default class CounterSystem extends System<[CounterComponent]> {
     public counter: number;
 
     public constructor() {
@@ -22,9 +22,14 @@ export default class CounterSystem extends System {
         this.counter++;
     }
 
-    protected onLoop(entities: Entity[], deltaTime: number): void {
-        entities.forEach((entity) => {
-            entity.getComponent(CounterComponent)?.increment();
-        });
+    protected onLoop(
+        components: [CounterComponent][],
+        entities: Entity[],
+        deltaTime: number
+    ): void {
+        for (let i = 0; i < entities.length; i++) {
+            const [counterComponent] = components[i];
+            counterComponent.increment();
+        }
     }
 }

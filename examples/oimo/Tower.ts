@@ -6,7 +6,7 @@ import {
     PointLight,
     SphereGeometry,
 } from "three";
-import { quat } from "gl-matrix";
+import { quat } from "ts-gl-matrix";
 import {
     OimoComponent,
     OimoSystem,

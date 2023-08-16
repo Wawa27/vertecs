@@ -1,4 +1,4 @@
-import { quat, vec3 } from "gl-matrix";
+import { quat, QuatLike, vec3, Vec3Like } from "ts-gl-matrix";
 
 export default class MathUtils {
     public static getEulerToDegrees(radians: number): number {
@@ -11,7 +11,7 @@ export default class MathUtils {
      * @param quat
      * @param out
      */
-    public static getEulerFromQuat(out: vec3, quat: quat): vec3 {
+    public static getEulerFromQuat(out: Vec3Like, quat: QuatLike): Vec3Like {
         const sinRCosP = 2 * (quat[3] * quat[0] + quat[1] * quat[2]);
         const cosRCosP = 1 - 2 * (quat[0] * quat[0] + quat[1] * quat[1]);
         const roll = Math.atan2(sinRCosP, cosRCosP);

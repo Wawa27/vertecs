@@ -1,8 +1,8 @@
-import { Component } from "index";
-import { vec3 } from "gl-matrix";
+import { vec3 } from "ts-gl-matrix";
 import Body, { PhysicsData } from "./Body";
 import AxisAlignedBoundingBox from "../AxisAlignedBoundingBox";
 import { Transform } from "../../math";
+import { Component } from "../../core";
 
 export default class CubeBody extends Body {
     #width: number;
@@ -22,7 +22,7 @@ export default class CubeBody extends Body {
     public getBoundingBox(): AxisAlignedBoundingBox {
         const position = this.entity
             ?.getComponent(Transform)
-            ?.getWorldPosition(vec3.create());
+            ?.getWorldPosition();
 
         if (!position) {
             throw new Error("CubeBody needs a Transform component");
@@ -54,12 +54,24 @@ export default class CubeBody extends Body {
         return this.#width;
     }
 
+    public set width(value: number) {
+        this.#width = value;
+    }
+
     public get height(): number {
         return this.#height;
     }
 
+    public set height(value: number) {
+        this.#height = value;
+    }
+
     public get depth(): number {
         return this.#depth;
+    }
+
+    public set depth(value: number) {
+        this.#depth = value;
     }
 
     public clone(): Component {

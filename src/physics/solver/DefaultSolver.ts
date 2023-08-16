@@ -1,4 +1,4 @@
-import { vec3 } from "gl-matrix";
+import { vec3, Vec3Like } from "ts-gl-matrix";
 import Body from "../bodies/Body";
 import { Entity } from "../../core";
 import { Transform } from "../../math";
@@ -7,7 +7,11 @@ import { Transform } from "../../math";
  * Simple solver that pushes the bodies away from each other
  */
 export default class DefaultSolver {
-    public solve(entity1: Entity, entity2: Entity, contactNormal: vec3): void {
+    public solve(
+        entity1: Entity,
+        entity2: Entity,
+        contactNormal: Vec3Like
+    ): void {
         const entity1Transform = entity1.getComponent(Transform);
         const entity2Transform = entity2.getComponent(Transform);
         const body1 = entity1.getComponent(Body);

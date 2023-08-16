@@ -1,15 +1,16 @@
 import { Scene } from "three";
-import { vec3 } from "gl-matrix";
 import { Component, Entity, System } from "../../core";
 import ThreeLightComponent from "./ThreeLightComponent";
 import { Transform } from "../../math";
 import ThreeMesh from "../ThreeMesh";
 
-export default class ThreeLightSystem extends System {
+export default class ThreeLightSystem extends System<
+    [ThreeLightComponent, Transform]
+> {
     #scene: Scene;
 
     public constructor(scene: Scene, tps?: number) {
-        super([ThreeLightComponent], tps);
+        super([ThreeLightComponent, Transform], tps);
         this.#scene = scene;
     }
 
@@ -32,23 +33,20 @@ export default class ThreeLightSystem extends System {
         }
     }
 
-    protected onLoop(entities: Entity[], deltaTime: number): void {
-        entities.forEach((entity) => {
-            const lightComponent = entity.getComponent(ThreeLightComponent);
-            const transform = entity.getComponent(Transform);
+    protected onLoop(
+        components: [ThreeLightComponent, Transform][],
+        entities: Entity[],
+        deltaTime: number
+    ): void {
+        for (let i = 0; i < components.length; i++) {
+            const [lightComponent, transform] = components[i];
 
-            if (!lightComponent) {
-                throw new Error("Entity is missing a ThreeLightComponent");
-            }
-
-            if (transform) {
-                const worldPosition = transform.getWorldPosition(vec3.create());
-                lightComponent.light.position.set(
-                    worldPosition[0],
-                    worldPosition[1],
-                    worldPosition[2]
-                );
-            }
-        });
+            const worldPosition = transform.getWorldPosition();
+            lightComponent.light.position.set(
+                worldPosition[0],
+                worldPosition[1],
+                worldPosition[2]
+            );
+        }
     }
 }

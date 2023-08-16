@@ -1,12 +1,12 @@
-import { vec3 } from "gl-matrix";
+import { Vec3Like } from "ts-gl-matrix";
 import { Component, Entity } from "../core";
 
 export default class Collision extends Component {
-    #position: vec3;
+    #position: Vec3Like;
 
     #collidingWith: Entity;
 
-    public constructor(position: vec3, collidingWith: Entity) {
+    public constructor(position: Vec3Like, collidingWith: Entity) {
         super();
         this.#position = position;
         this.#collidingWith = collidingWith;

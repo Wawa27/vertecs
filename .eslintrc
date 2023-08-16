@@ -31,6 +31,7 @@
     "no-use-before-define": "off",
     "max-classes-per-file": "off",
     "no-empty-function": "off",
-    "no-param-reassign": "off"
+    "no-param-reassign": "off",
+    "no-promise-executor-return": "off"
   }
 }

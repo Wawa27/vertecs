@@ -29,19 +29,21 @@ Now, create a system that updates the position of a component.
 
 ```typescript
 import { System } from "vertecs";
+import PositionComponent from "./PositionComponent";
 
-export default class PositionSystem extends System {
+export default class PositionSystem extends System<PositionComponent> {
 
     public constructor() {
         super([PositionComponent], 60);
     }
 
-    public onLoop(entities: Entity[], deltaTime: number) {
-        entities.forEach(entity => {
-            const position = entity.getComponent(PositionComponent);
-            position.x += 1 * deltaTime;
-            console.log("Position:", position.x, position.y);
-        });
+    public onLoop(components: [PositionComponent][], entities: Entity[], deltaTime: number) {
+        for (let i = 0; i < components.length; i++) {
+            const [positionComponent] = components[i];
+            positionComponent.x += 1 * deltaTime;
+            console.log("Position:", positionComponent.x, positionComponent.y);
+        }
+        ;
     }
 }
 ```
@@ -108,18 +110,24 @@ await ecsManager.start();
 
 This example will create a green cube in the center of the screen.
 
-### Network
+### Features
 
-Vertecs comes with a built-in networking system.
+#### System dependencies
 
-The networking system is based on the [ws](https://github.com/websockets/ws) library.
+Systems can be dependent on other systems, this means that a system will only be updated if all of its dependencies are updated.
 
-The `ClientHandler` class, that must be extended and provided to the `ServerNetworkSystem` class is used to handle
-client connections/disconnections and messages.
+```typescript
+const ecsManager = new EcsManager();
 
-On the client side, the `ClientNetworkSystem` class is used to connect to the server and send messages.
+ecsManager.addSystem(new SystemA());
+ecsManager.addSystem(new SystemB(), [SystemA]);
+ecsManager.addSystem(new SystemC(), [SystemA, SystemB]);
 
-Only components that extends the `NetworkComponent` class will be synced over the network.
+ecsManager.start();
+```
 
-There's three methods (`shouldUpdate`, `shouldUpdateClient`, `shouldUpdateClients`) that can be overridden to customize
-the component synchronization behavior.
+In this example, `SystemA` will be updated first, then `SystemB` and finally `SystemC`.
+
+#### Networking
+
+Work in progress

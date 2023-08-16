@@ -1,7 +1,7 @@
 import System from "../../../src/core/System";
 import Entity from "../../../src/core/Entity";
 
-export default class TickPerSecondSystem extends System {
+export default class TickPerSecondSystem extends System<[]> {
     public counter: number;
 
     public constructor(tps?: number) {
@@ -9,7 +9,11 @@ export default class TickPerSecondSystem extends System {
         this.counter = 0;
     }
 
-    protected onLoop(entities: Entity[], deltaTime: number): void {
+    protected onLoop(
+        components: [],
+        entities: Entity[],
+        deltaTime: number
+    ): void {
         this.counter++;
     }
 }

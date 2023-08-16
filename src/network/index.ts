@@ -5,6 +5,7 @@ import ClientHandler from "./server/ClientHandler";
 import ClientComponent from "./ClientComponent";
 import type { CustomData } from "./GameState";
 import NetworkTransform from "./components/NetworkTransform";
+import IsNetworked from "./IsNetworked";
 
 export type { CustomData };
 export {
@@ -14,4 +15,5 @@ export {
     ClientHandler,
     ClientComponent,
     NetworkTransform,
+    IsNetworked,
 };

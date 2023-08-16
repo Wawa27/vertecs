@@ -1,6 +1,6 @@
 {
   "name": "vertecs",
-  "version": "2.0.1",
+  "version": "2.1.0",
   "description": "A typescript entity-component-system framework",
   "type": "module",
   "main": "src/index.ts",
@@ -8,8 +8,8 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "start:example-network-server": "ts-node --esm --experimental-specifier-resolution=node examples/network/server/Main",
-    "start:example-network-client": "ts-node --esm --experimental-specifier-resolution=node examples/network/client/Main",
+    "start:example-network-server": "ts-node --esm --experimental-specifier-resolution=node examples/network/hello-network/server/Main",
+    "start:example-network-client": "ts-node --esm --experimental-specifier-resolution=node examples/network/hello-network/client/Main",
     "test": "mocha --experimental-specifier-resolution=node --loader=ts-node/esm test/**/*.spec.ts --exit --recursive",
     "lint": "eslint --ext .ts src test examples --fix",
     "build:examples": "rollup -c rollup.config.ts --configPlugin typescript",
@@ -27,7 +27,7 @@
   ],
   "dependencies": {
     "chai-spies": "^1.0.0",
-    "gl-matrix": "^3.4.3",
+    "ts-gl-matrix": "4.0.2",
     "oimo-esm": "^1.0.10",
     "performance-now": "^2.1.0",
     "three": "^0.155",
@@ -63,8 +63,7 @@
     "typescript": "^5.0.4"
   },
   "peerDependencies": {
-    "cannon-es": "^0.20.0",
-    "gl-matrix": "^4.0.0-beta.1",
+    "ts-gl-matrix": "4.0.2",
     "performance-now": "^2.1.0",
     "three": "^0.155",
     "uuid": "^8.3.2",

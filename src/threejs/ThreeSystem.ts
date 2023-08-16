@@ -10,7 +10,6 @@ import {
     Vector3,
     WebGLRenderer,
 } from "three";
-import { quat, vec3 } from "gl-matrix";
 import { Component, EcsManager, Entity, System } from "../core";
 import ThreeMesh from "./ThreeMesh";
 import { Transform } from "../math";
@@ -20,7 +19,7 @@ import ThreeLightSystem from "./light/ThreeLightSystem";
 import ThreeCss3dSystem from "./css3d/ThreeCss3dSystem";
 import ThreeInstancedMesh from "./ThreeInstancedMesh";
 
-export default class ThreeSystem extends System {
+export default class ThreeSystem extends System<[Transform, ThreeMesh]> {
     #scene: Scene;
 
     #renderer: WebGLRenderer;
@@ -32,7 +31,7 @@ export default class ThreeSystem extends System {
     #css3dSystem?: ThreeCss3dSystem;
 
     public constructor(tps?: number) {
-        super([ThreeMesh], tps);
+        super([Transform, ThreeMesh], tps);
         this.#scene = new Scene();
 
         this.#renderer = new WebGLRenderer({ antialias: true });
@@ -50,11 +49,13 @@ export default class ThreeSystem extends System {
     }
 
     public onAddedToEcsManager(ecsManager: EcsManager) {
-        this.#lightSystem = new ThreeLightSystem(this.#scene);
+        this.#lightSystem = new ThreeLightSystem(this.#scene, this.tps);
         ecsManager.addSystem(this.#lightSystem);
 
-        this.#cameraSystem = new ThreeCameraSystem(this.renderer);
+        this.#cameraSystem = new ThreeCameraSystem(this.renderer, this.tps);
         ecsManager.addSystem(this.#cameraSystem);
+
+        this.$dependencies = [ThreeCameraSystem, ThreeLightSystem];
 
         if (document.getElementById("hud")) {
             this.#css3dSystem = new ThreeCss3dSystem(this, this.tps);
@@ -118,64 +119,49 @@ export default class ThreeSystem extends System {
 
     public async onStart(): Promise<void> {}
 
-    protected onLoop(entities: Entity[], deltaTime: number): void {
-        entities.forEach((entity) => {
-            const transform = entity.getComponent(Transform);
-            const threeMesh = entity.getComponent(ThreeMesh);
-            const cameraComponent = entity.getComponent(ThreeCameraComponent);
+    protected onLoop(
+        components: [Transform, ThreeMesh][],
+        entities: Entity[],
+        deltaTime: number
+    ): void {
+        const positionVector3 = new Vector3();
+        const quaternion = new Quaternion();
+        const scaleVector3 = new Vector3();
 
-            if (transform && threeMesh && !cameraComponent) {
-                const rotation = transform.getWorldRotation(quat.create());
-                const worldPosition = transform.getWorldPosition(vec3.create());
-                const worldScale = transform.getWorldScale(vec3.create());
+        const matrix4 = new Matrix4();
 
-                if (threeMesh instanceof ThreeInstancedMesh) {
-                    const object3d = threeMesh.object3d as InstancedMesh;
-                    const index = threeMesh.getEntityIndex(entity.id);
+        for (let i = 0; i < components.length; i++) {
+            const [transform, threeMesh] = components[i];
 
-                    const matrix = new Matrix4();
-                    object3d.getMatrixAt(index, matrix);
-                    matrix.compose(
-                        new Vector3(
-                            worldPosition[0],
-                            worldPosition[1],
-                            worldPosition[2]
-                        ),
-                        new Quaternion(
-                            rotation[0],
-                            rotation[1],
-                            rotation[2],
-                            rotation[3]
-                        ),
-                        new Vector3(worldScale[0], worldScale[1], worldScale[2])
-                    );
-                    object3d.setMatrixAt(index, matrix);
-                    object3d.instanceMatrix.needsUpdate = true;
-                } else {
-                    const { object3d } = threeMesh;
+            // TODO: Check how to ignore entities that have a camera
+            const [x, y, z] = transform.getWorldPosition();
+            const [qx, qy, qz, qw] = transform.getWorldRotation();
+            const [sx, sy, sz] = transform.getWorldScale();
 
-                    object3d.position.set(
-                        worldPosition[0],
-                        worldPosition[1],
-                        worldPosition[2]
-                    );
-                    object3d.rotation.setFromQuaternion(
-                        new Quaternion(
-                            rotation[0],
-                            rotation[1],
-                            rotation[2],
-                            rotation[3]
-                        )
-                    );
-                    object3d.scale.set(
-                        worldScale[0],
-                        worldScale[1],
-                        worldScale[2]
-                    );
-                    object3d.updateMatrix();
-                }
+            if (threeMesh instanceof ThreeInstancedMesh) {
+                const object3d = threeMesh.object3d as InstancedMesh;
+                const index = threeMesh.getEntityIndex(entities[i].id);
+
+                object3d.getMatrixAt(index, matrix4);
+
+                matrix4.makeRotationFromQuaternion(
+                    quaternion.set(qx, qy, qz, qw)
+                );
+                matrix4.scale(scaleVector3.set(sx, sy, sz));
+                matrix4.setPosition(x, y, z);
+
+                object3d.setMatrixAt(index, matrix4);
+                object3d.instanceMatrix.needsUpdate = true;
+            } else {
+                const { object3d } = threeMesh;
+
+                object3d.position.set(x, y, z);
+                object3d.quaternion.set(qx, qy, qz, qw);
+                object3d.scale.set(sx, sy, sz);
+
+                object3d.updateMatrix();
             }
-        });
+        }
 
         this.#renderer.render(
             this.#scene,

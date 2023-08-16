@@ -1,4 +1,4 @@
-import { vec3 } from "gl-matrix";
+import { vec3 } from "ts-gl-matrix";
 import Body from "./bodies/Body";
 import DefaultNarrowphase from "./narrowphase/DefaultNarrowphase";
 import Broadphase from "./broadphase/Broadphase";
@@ -8,20 +8,17 @@ import Ray from "./Ray";
 import SphereBody from "./bodies/SphereBody";
 import { Component, Entity, System } from "../core";
 import { Transform } from "../math";
-import SweepAndPruneBroadphase from "./broadphase/sap/SweepAndPruneBroadphase";
-import Quadtree from "./broadphase/quadtree/Quadtree";
-import AxisAlignedBoundingBox from "./AxisAlignedBoundingBox";
 import QuadtreeBroadphase from "./broadphase/quadtree/QuadtreeBroadphase";
 
-export default class PhysicsSystem extends System {
+export default class PhysicsSystem extends System<[Body, Transform]> {
     #broadphase: Broadphase;
 
     #narrowphase: DefaultNarrowphase;
 
     #solver: DefaultSolver;
 
-    public constructor() {
-        super([Body, Transform]);
+    public constructor(tps?: number) {
+        super([Body, Transform], tps);
         this.#broadphase = new QuadtreeBroadphase(
             vec3.fromValues(-10_000, -10_000, -10_000),
             vec3.fromValues(10_000, 10_000, 10_000)
@@ -44,23 +41,23 @@ export default class PhysicsSystem extends System {
         this.#broadphase.onEntityRemoved(entity);
     }
 
-    protected onLoop(entities: Entity[], deltaTime: number): void {
-        entities.forEach((entity) => {
-            this.applyGravity(entity, deltaTime);
-        });
+    protected onLoop(
+        components: [Body, Transform][],
+        entities: Entity[],
+        deltaTime: number
+    ): void {
+        for (let i = 0; i < components.length; i++) {
+            const [body, transform] = components[i];
+            this.applyGravity(body, transform, deltaTime);
+        }
 
-        entities.forEach((entity) => {
-            const transform = entity.getComponent(Transform);
-            const body = entity.getComponent(Body);
-
-            if (!transform || !body) {
-                throw new Error("Transform or body not found");
-            }
+        for (let i = 0; i < components.length; i++) {
+            const [body, transform] = components[i];
 
             if (body.hasMoved()) {
-                this.#broadphase.onEntityMoved(entity);
+                this.#broadphase.onEntityMoved(entities[i]);
             }
-        });
+        }
 
         const collisionPairs = this.#broadphase.getCollisionPairs(entities);
 
@@ -123,25 +120,22 @@ export default class PhysicsSystem extends System {
 
             const aDistance = vec3.distance(
                 ray.origin,
-                aTransform.getWorldPosition(vec3.create())
+                aTransform.getWorldPosition()
             );
             const bDistance = vec3.distance(
                 ray.origin,
-                bTransform.getWorldPosition(vec3.create())
+                bTransform.getWorldPosition()
             );
 
             return aDistance - bDistance;
         });
     }
 
-    private applyGravity(entity: Entity, deltaTime: number): void {
-        const transform = entity.getComponent(Transform);
-        const body = entity.getComponent(Body);
-
-        if (!transform || !body) {
-            throw new Error("Transform or Body not found");
-        }
-
+    private applyGravity(
+        body: Body,
+        transform: Transform,
+        deltaTime: number
+    ): void {
         if (!body.movable) {
             return;
         }

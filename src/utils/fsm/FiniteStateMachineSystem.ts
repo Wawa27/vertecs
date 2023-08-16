@@ -1,14 +1,21 @@
 import { Entity, System } from "../../core";
 import FiniteStateMachine from "./FiniteStateMachine";
 
-export default class FiniteStateMachineSystem extends System {
+export default class FiniteStateMachineSystem extends System<
+    [FiniteStateMachine]
+> {
     public constructor(tps?: number) {
         super([FiniteStateMachine], tps);
     }
 
-    protected onLoop(entities: Entity[], deltaTime: number): void {
-        entities.forEach((entity) => {
-            entity.getComponent(FiniteStateMachine)?.onLoop(deltaTime);
-        });
+    protected onLoop(
+        components: [FiniteStateMachine][],
+        entities: Entity[],
+        deltaTime: number
+    ): void {
+        for (let i = 0; i < components.length; i++) {
+            const [finiteStateMachine] = components[i];
+            finiteStateMachine.onLoop(deltaTime);
+        }
     }
 }

@@ -144,18 +144,9 @@ export default class Entity {
     public getComponent<T extends Component>(
         componentClass: ComponentClass<T>
     ): T | undefined {
-        if (!componentClass) return undefined;
-        return this.components.find((component) => {
-            if (
-                component.constructor.name === componentClass.name &&
-                !(component instanceof componentClass)
-            ) {
-                console.warn(
-                    `Component class ${component.constructor.name} has the same name but is not the same class. Make sure your component class is correctly imported.`
-                );
-            }
-            return component instanceof componentClass;
-        }) as T | undefined;
+        return this.components.find(
+            (component) => component instanceof componentClass
+        ) as T | undefined;
     }
 
     /**

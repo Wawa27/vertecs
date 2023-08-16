@@ -1,5 +1,5 @@
 import { Camera } from "three";
-import { vec3 } from "gl-matrix";
+import { Vec3 } from "ts-gl-matrix";
 import { Component, Entity } from "../../core";
 
 export default class ThreeCameraComponent extends Component {
@@ -7,21 +7,21 @@ export default class ThreeCameraComponent extends Component {
 
     #lookAt?: Entity;
 
-    #lookAtOffset: vec3;
+    #lookAtOffset: Vec3;
 
     readonly #orbitControls: boolean;
 
     public constructor(
         camera: Camera,
         lookAt?: Entity,
-        lookAtOffset?: vec3,
+        lookAtOffset?: Vec3,
         id?: string,
         update?: boolean
     ) {
         super(id);
         this.#camera = camera;
         this.#lookAt = lookAt;
-        this.#lookAtOffset = lookAtOffset || vec3.create();
+        this.#lookAtOffset = lookAtOffset || new Vec3();
         this.#orbitControls = update ?? true;
     }
 
@@ -29,11 +29,11 @@ export default class ThreeCameraComponent extends Component {
         return this.#orbitControls;
     }
 
-    public get lookAtOffset(): vec3 {
+    public get lookAtOffset(): Vec3 {
         return this.#lookAtOffset;
     }
 
-    public set lookAtOffset(value: vec3) {
+    public set lookAtOffset(value: Vec3) {
         this.#lookAtOffset = value;
     }
 

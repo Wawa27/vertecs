@@ -1,7 +1,8 @@
 import { System } from "../core";
 import type { ComponentClass } from "../core/Component";
+import Component from "../core/Component";
 
-export default abstract class KeyboardInputSystem extends System {
+export default abstract class KeyboardInputSystem extends System<[Component]> {
     #pressedKeys: Set<string> = new Set();
 
     #keyDownEvents: KeyboardEvent[];

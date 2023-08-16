@@ -4,7 +4,7 @@ import Entity from "../../../src/core/Entity";
 /**
  * System that tracks the number of times it has been updated
  */
-export default class CounterUpdateSystem extends System {
+export default class CounterUpdateSystem extends System<[]> {
     public counter: number;
 
     public constructor() {
@@ -12,7 +12,11 @@ export default class CounterUpdateSystem extends System {
         this.counter = 0;
     }
 
-    protected onLoop(entities: Entity[], deltaTime: number): void {
+    protected onLoop(
+        components: [],
+        entities: Entity[],
+        deltaTime: number
+    ): void {
         this.counter++;
     }
 }

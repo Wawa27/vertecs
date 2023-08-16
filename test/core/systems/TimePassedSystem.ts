@@ -1,7 +1,7 @@
 import System from "../../../src/core/System";
 import Entity from "../../../src/core/Entity";
 
-export default class TimePassedSystem extends System {
+export default class TimePassedSystem extends System<[]> {
     public timePassed: number;
 
     public constructor() {
@@ -9,7 +9,11 @@ export default class TimePassedSystem extends System {
         this.timePassed = 0;
     }
 
-    protected onLoop(entities: Entity[], deltaTime: number): void {
+    protected onLoop(
+        components: [],
+        entities: Entity[],
+        deltaTime: number
+    ): void {
         this.timePassed = deltaTime;
     }
 }

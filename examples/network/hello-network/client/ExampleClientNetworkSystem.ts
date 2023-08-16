@@ -1,5 +1,5 @@
 import allowedNetworkComponents from "../SharedConfiguration";
-import { ClientNetworkSystem, Entity } from "../../../src";
+import { ClientNetworkSystem, Entity } from "../../../../src";
 
 export default class ExampleClientNetworkSystem extends ClientNetworkSystem {
     public constructor(address: string) {
