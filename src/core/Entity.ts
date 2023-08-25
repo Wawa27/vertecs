@@ -213,6 +213,10 @@ export default class Entity {
         }
     }
 
+    public detachChild(entity: Entity) {
+        this.#children.filter((element) => element !== entity);
+    }
+
     /**
      * Add a tag to an entity
      * @param tag The tag to add
