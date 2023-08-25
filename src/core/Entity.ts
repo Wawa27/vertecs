@@ -218,7 +218,10 @@ export default class Entity {
      * @param entity The child
      */
     public removeChild(entity: Entity) {
-        this.#children.filter((element) => element !== entity);
+        const index = this.#children.indexOf(entity);
+        if (index !== -1) {
+            this.#children.splice(index, 1);
+        }
     }
 
     /**
