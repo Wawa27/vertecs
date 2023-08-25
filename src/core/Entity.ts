@@ -213,7 +213,11 @@ export default class Entity {
         }
     }
 
-    public detachChild(entity: Entity) {
+    /**
+     * Remove a child to this entity without destroying it
+     * @param entity The child
+     */
+    public removeChild(entity: Entity) {
         this.#children.filter((element) => element !== entity);
     }
 
