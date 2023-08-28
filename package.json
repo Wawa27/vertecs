@@ -10,7 +10,8 @@
     "dev": "tsc --watch",
     "start:example-network-server": "ts-node --esm --experimental-specifier-resolution=node examples/network/hello-network/server/Main",
     "start:example-network-client": "ts-node --esm --experimental-specifier-resolution=node examples/network/hello-network/client/Main",
-    "test": "mocha --experimental-specifier-resolution=node --loader=ts-node/esm test/**/*.spec.ts --exit --recursive",
+    "test": "mocha --require ts-node/register --experimental-specifier-resolution=node --loader=ts-node/esm test/**/*.spec.ts --exit --recursive",
+    "coverage": "c8 npm run test",
     "lint": "eslint --ext .ts src test examples --fix",
     "build:examples": "rollup -c rollup.config.ts --configPlugin typescript",
     "dev:examples": "rollup -c rollup.config.ts --configPlugin typescript --watch",
@@ -60,7 +61,8 @@
     "rollup-plugin-polyfill-node": "^0.11.0",
     "ts-node": "^10.9.1",
     "tsconfig-paths": "^3.12.0",
-    "typescript": "^5.0.4"
+    "typescript": "^5.0.4",
+    "c8": "^8.0.1"
   },
   "peerDependencies": {
     "ts-gl-matrix": "4.0.3",
