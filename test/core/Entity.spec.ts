@@ -145,6 +145,17 @@ describe("Entity", () => {
             assert.equal(entity.components.length, 0);
         });
 
+        it("should add a child entity", () => {
+            const testChildEntity = ecsManager.createEntity({
+                name: "testChildEntity",
+            });
+            entity.addChild(testChildEntity);
+
+            assert.equal(entity.children.length, 1);
+            assert.equal(testChildEntity.parent, entity);
+            assert.equal(testChildEntity.name, "testChildEntity");
+        });
+
         it("should find a grandchild entity by its name ", () => {
             const entity = ecsManager.createEntity({
                 children: [
@@ -161,6 +172,18 @@ describe("Entity", () => {
 
             assert.isDefined(nestedEntity, "Grandchild entity not found");
             assert.equal(nestedEntity?.name, "grandchild");
+        });
+
+        it("should remove a child entity", () => {
+            const testChildEntity = ecsManager.createEntity({
+                name: "testChildEntity",
+            });
+
+            entity.addChild(testChildEntity);
+            entity.removeChild(testChildEntity);
+
+            assert.equal(entity.children.length, 0);
+            assert.equal(testChildEntity.parent, undefined);
         });
     });
 
