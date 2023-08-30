@@ -1,8 +1,14 @@
 import { vec3 } from "ts-gl-matrix";
-import Body, { PhysicsData } from "./Body";
+import Body, { BodyOptions, PhysicsData } from "./Body";
 import AxisAlignedBoundingBox from "../AxisAlignedBoundingBox";
 import { Transform } from "../../math";
 import { Component } from "../../core";
+
+type CubeBodyOptions = BodyOptions & {
+    width: number;
+    height: number;
+    depth: number;
+};
 
 export default class CubeBody extends Body {
     #width: number;
@@ -11,12 +17,12 @@ export default class CubeBody extends Body {
 
     #depth: number;
 
-    public constructor(width: number, height: number, depth: number) {
-        super(true);
+    public constructor(cubeBodyOptions: CubeBodyOptions) {
+        super(cubeBodyOptions);
 
-        this.#width = width;
-        this.#height = height;
-        this.#depth = depth;
+        this.#width = cubeBodyOptions.width;
+        this.#height = cubeBodyOptions.height;
+        this.#depth = cubeBodyOptions.depth;
     }
 
     public getBoundingBox(): AxisAlignedBoundingBox {

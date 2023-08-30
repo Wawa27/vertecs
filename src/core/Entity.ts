@@ -9,6 +9,7 @@ export interface EntityOptions {
     components?: Component[];
     children?: Entity[];
     ecsManager?: EcsManager;
+    parent?: Entity;
 }
 
 /**
@@ -35,16 +36,20 @@ export default class Entity {
         this.#id = options?.id ?? uuidv4();
         this.#children = [];
         this.#components = [];
+
+        this.#ecsManager = options?.ecsManager;
+
+        options?.parent?.addChild(this);
+
         this.#name = options?.name;
         this.#root = this;
         this.#tags = [];
-        this.#ecsManager = options?.ecsManager;
-
-        options?.children?.forEach((child) => this.addChild(child));
 
         if (this.#ecsManager) {
             this.#ecsManager.addEntity(this);
         }
+
+        options?.children?.forEach((child) => this.addChild(child));
 
         // Add components one by one to trigger events
         options?.components?.forEach((component) =>
@@ -242,13 +247,14 @@ export default class Entity {
     /**
      * Clone an entity's name, components, recursively
      */
-    public clone(): Entity {
+    public clone(id?: string): Entity {
         const clone = new Entity({
             name: this.#name,
             components: Array.from(this.#components.values()).map((component) =>
                 component.clone()
             ),
             ecsManager: this.#ecsManager,
+            id,
         });
 
         this.children.forEach((child) => {
@@ -269,6 +275,7 @@ export default class Entity {
             );
         }
         this.parent?.children.splice(this.parent.children.indexOf(this), 1);
+        this.#ecsManager?.removeEntity(this);
     }
 
     public get ecsManager(): EcsManager | undefined {
@@ -300,11 +307,11 @@ export default class Entity {
     }
 
     public set parent(entity: Entity | undefined) {
+        this.components.forEach((component) =>
+            component.onEntityNewParent(entity)
+        );
         this.#parent = entity;
         this.#root = entity?.root ?? this;
-        this.components.forEach((component) =>
-            component.onEntityParentChanged(entity)
-        );
     }
 
     public get name(): string | undefined {

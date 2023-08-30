@@ -1,10 +1,10 @@
 import type { ComponentClass } from "../../core/Component";
-import Component from "../../core/Component";
 import Entity from "../../core/Entity";
 import GameState from "../GameState";
 import NetworkSystem from "../NetworkSystem";
 import NetworkEntity from "../NetworkEntity";
 import IsNetworked from "../IsNetworked";
+import PrefabManager from "../../utils/prefabs/PrefabManager";
 
 /**
  * Entry point for the client-side networking.
@@ -61,12 +61,19 @@ export default abstract class ClientNetworkSystem extends NetworkSystem {
                 );
             }
         );
+
+        this.#webSocket.addEventListener("close", () => {
+            this.#connected = false;
+            this.onDisconnect();
+        });
     }
 
-    public onEntityEligible(
-        entity: Entity,
-        lastComponentAdded: Component | undefined
-    ) {}
+    public async onStop(): Promise<void> {
+        this.#webSocket?.close();
+        this.onDisconnect();
+    }
+
+    public onEntityEligible(entity: Entity) {}
 
     protected onLoop(
         components: [IsNetworked][],
@@ -82,7 +89,7 @@ export default abstract class ClientNetworkSystem extends NetworkSystem {
                 if (data.setup) {
                     this.setup(data.setup);
                 }
-                this.onCustomPrivateData(data);
+                this.onCustomData(data);
             });
 
             this.$serverSnapshot = undefined;
@@ -101,9 +108,16 @@ export default abstract class ClientNetworkSystem extends NetworkSystem {
             }
         });
 
-        if (deltaGameState.entities.size === 0) {
+        if (
+            deltaGameState.entities.size === 0 &&
+            this.$currentSnapshot.customData.length === 0
+        ) {
             return;
         }
+
+        deltaGameState.customData = this.$currentSnapshot.customData;
+
+        this.$currentSnapshot.customData = [];
 
         this.#webSocket?.send(JSON.stringify(deltaGameState));
     }
@@ -121,11 +135,32 @@ export default abstract class ClientNetworkSystem extends NetworkSystem {
 
         if (!targetEntity) {
             // New entity from server
-            targetEntity = this.ecsManager!.createEntity({
-                id: networkEntity.id,
-                name: networkEntity.name,
-            });
+            // TODO: Use the Prefab Component instead of NetworkEntity prefabName field
+            if (networkEntity.prefabName) {
+                targetEntity = PrefabManager.get(
+                    networkEntity.prefabName,
+                    networkEntity.id
+                );
+                if (!targetEntity) {
+                    console.warn(
+                        `Received entity with id ${networkEntity.id} but prefab ${networkEntity.prefabName} doesn't exist`
+                    );
+                    return;
+                }
+                this.ecsManager?.addEntity(targetEntity);
+            } else {
+                targetEntity = this.ecsManager!.createEntity({
+                    id: networkEntity.id,
+                    name: networkEntity.name,
+                });
+            }
             isNewEntity = true;
+        }
+
+        if (networkEntity.destroyed) {
+            this.onDeletedEntity(targetEntity);
+            targetEntity.destroy();
+            return;
         }
 
         super.deserializeEntity(networkEntity);
@@ -135,6 +170,10 @@ export default abstract class ClientNetworkSystem extends NetworkSystem {
         }
     }
 
+    /**
+     * Serialize the entity only if it is networked and owned by the client.
+     * @param entity
+     */
     public serializeEntity(entity: Entity): NetworkEntity | undefined {
         const isNetworked = entity.getComponent(IsNetworked);
 
@@ -145,6 +184,10 @@ export default abstract class ClientNetworkSystem extends NetworkSystem {
         return super.serializeEntity(entity);
     }
 
+    public sendCustomPrivateData(data: any): void {
+        this.$currentSnapshot.customData.push(data);
+    }
+
     /**
      * Called when the client is connected to the server.
      * @protected
@@ -152,12 +195,24 @@ export default abstract class ClientNetworkSystem extends NetworkSystem {
     protected abstract onConnect(): void;
 
     /**
+     * Called when the client is disconnected from the server.
+     * @protected
+     */
+    protected abstract onDisconnect(): void;
+
+    /**
      * Called when the client received a new entity from the server.
      * @protected
      */
     protected abstract onNewEntity(entity: Entity): void;
 
-    protected onCustomPrivateData(customPrivateData: any): void {}
+    /**
+     * Called when an entity is deleted from the server.
+     * @protected
+     */
+    protected abstract onDeletedEntity(entity: Entity): void;
+
+    protected onCustomData(customPrivateData: any): void {}
 
     public get networkId(): string | undefined {
         return this.#networkId;

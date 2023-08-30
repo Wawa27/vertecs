@@ -10,16 +10,16 @@ import {
     Vector3,
     WebGLRenderer,
 } from "three";
-import { Component, EcsManager, Entity, System } from "../core";
-import ThreeMesh from "./ThreeMesh";
+import { EcsManager, Entity, System } from "../core";
+import ThreeObject3D from "./ThreeObject3D";
 import { Transform } from "../math";
 import ThreeCameraSystem from "./camera/ThreeCameraSystem";
-import ThreeCameraComponent from "./camera/ThreeCameraComponent";
+import ThreeCamera from "./camera/ThreeCamera";
 import ThreeLightSystem from "./light/ThreeLightSystem";
 import ThreeCss3dSystem from "./css3d/ThreeCss3dSystem";
 import ThreeInstancedMesh from "./ThreeInstancedMesh";
 
-export default class ThreeSystem extends System<[Transform, ThreeMesh]> {
+export default class ThreeSystem extends System<[Transform, ThreeObject3D]> {
     #scene: Scene;
 
     #renderer: WebGLRenderer;
@@ -31,7 +31,7 @@ export default class ThreeSystem extends System<[Transform, ThreeMesh]> {
     #css3dSystem?: ThreeCss3dSystem;
 
     public constructor(tps?: number) {
-        super([Transform, ThreeMesh], tps);
+        super([Transform, ThreeObject3D], tps);
         this.#scene = new Scene();
 
         this.#renderer = new WebGLRenderer({ antialias: true });
@@ -65,16 +65,16 @@ export default class ThreeSystem extends System<[Transform, ThreeMesh]> {
 
     public onEntityEligible(
         entity: Entity,
-        lastComponentAdded: Component | undefined
+        components: [Transform, ThreeObject3D]
     ) {
-        const threeMesh = entity.getComponent(ThreeMesh);
+        const threeMesh = entity.getComponent(ThreeObject3D);
 
         if (!threeMesh) {
             throw new Error("ThreeMesh not found on eligible entity");
         }
 
         if (threeMesh instanceof ThreeInstancedMesh) {
-            const instancedMesh = threeMesh.object3d as InstancedMesh;
+            const instancedMesh = threeMesh.object3D as InstancedMesh;
 
             for (let i = 0; i < instancedMesh.count; i++) {
                 const matrix = new Matrix4();
@@ -88,19 +88,17 @@ export default class ThreeSystem extends System<[Transform, ThreeMesh]> {
             }
         }
 
-        this.#scene.add(threeMesh?.object3d);
+        this.#scene.add(threeMesh?.object3D);
     }
 
     public onEntityNoLongerEligible(
         entity: Entity,
-        lastComponentRemoved: Component
+        components: [Transform, ThreeObject3D]
     ) {
-        const threeComponent =
-            entity.getComponent(ThreeMesh) ??
-            (lastComponentRemoved as ThreeMesh | ThreeInstancedMesh);
+        const [transform, threeComponent] = components;
 
         if (threeComponent instanceof ThreeInstancedMesh) {
-            const instancedMesh = threeComponent.object3d as InstancedMesh;
+            const instancedMesh = threeComponent.object3D as InstancedMesh;
             const matrix = new Matrix4();
             matrix.compose(
                 new Vector3(0, 0, 0),
@@ -113,14 +111,14 @@ export default class ThreeSystem extends System<[Transform, ThreeMesh]> {
             );
             instancedMesh.instanceMatrix.needsUpdate = true;
         } else {
-            this.#scene.remove(threeComponent?.object3d);
+            this.#scene.remove(threeComponent?.object3D);
         }
     }
 
     public async onStart(): Promise<void> {}
 
     protected onLoop(
-        components: [Transform, ThreeMesh][],
+        components: [Transform, ThreeObject3D][],
         entities: Entity[],
         deltaTime: number
     ): void {
@@ -139,7 +137,7 @@ export default class ThreeSystem extends System<[Transform, ThreeMesh]> {
             const [sx, sy, sz] = transform.getWorldScale();
 
             if (threeMesh instanceof ThreeInstancedMesh) {
-                const object3d = threeMesh.object3d as InstancedMesh;
+                const object3d = threeMesh.object3D as InstancedMesh;
                 const index = threeMesh.getEntityIndex(entities[i].id);
 
                 object3d.getMatrixAt(index, matrix4);
@@ -153,28 +151,25 @@ export default class ThreeSystem extends System<[Transform, ThreeMesh]> {
                 object3d.setMatrixAt(index, matrix4);
                 object3d.instanceMatrix.needsUpdate = true;
             } else {
-                const { object3d } = threeMesh;
+                const { object3D } = threeMesh;
 
-                object3d.position.set(x, y, z);
-                object3d.quaternion.set(qx, qy, qz, qw);
-                object3d.scale.set(sx, sy, sz);
+                object3D.position.set(x, y, z);
+                object3D.quaternion.set(qx, qy, qz, qw);
+                object3D.scale.set(sx, sy, sz);
 
-                object3d.updateMatrix();
+                object3D.updateMatrix();
             }
         }
 
         this.#renderer.render(
             this.#scene,
-            this.#cameraSystem!.cameraEntity!.getComponent(
-                ThreeCameraComponent
-            )!.camera
+            this.#cameraSystem!.cameraEntity!.getComponent(ThreeCamera)!.camera
         );
     }
 
     public get camera(): Camera {
-        return this.#cameraSystem!.cameraEntity!.getComponent(
-            ThreeCameraComponent
-        )!.camera;
+        return this.#cameraSystem!.cameraEntity!.getComponent(ThreeCamera)!
+            .camera;
     }
 
     public get renderer(): WebGLRenderer {

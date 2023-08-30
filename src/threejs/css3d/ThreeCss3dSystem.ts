@@ -19,7 +19,7 @@ export default class ThreeCss3dSystem extends System<
     #camera: PerspectiveCamera;
 
     public constructor(threeSystem: ThreeSystem, tps?: number) {
-        super([ThreeCss3dComponent, Transform], tps);
+        super([ThreeCss3dComponent, Transform], tps, [ThreeSystem]);
 
         this.#threeSystem = threeSystem;
 
@@ -47,7 +47,7 @@ export default class ThreeCss3dSystem extends System<
 
     public onEntityEligible(
         entity: Entity,
-        lastComponentAdded: Component | undefined
+        components: [ThreeCss3dComponent, Transform]
     ) {
         const { css3dObject } = entity.getComponent(ThreeCss3dComponent)!;
         this.#scene.add(css3dObject);
@@ -55,12 +55,10 @@ export default class ThreeCss3dSystem extends System<
 
     public onEntityNoLongerEligible(
         entity: Entity,
-        lastComponentRemoved: Component
+        components: [ThreeCss3dComponent, Transform]
     ) {
-        const css3dComponent =
-            entity.getComponent(ThreeCss3dComponent) ??
-            (lastComponentRemoved as ThreeCss3dComponent);
-        this.#scene.remove(css3dComponent.css3dObject);
+        const [threeCss3dComponent] = components;
+        this.#scene.remove(threeCss3dComponent.css3dObject);
     }
 
     protected onLoop(

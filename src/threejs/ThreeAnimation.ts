@@ -1,6 +1,6 @@
 import { AnimationAction, AnimationClip, AnimationMixer } from "three";
 import { Component, Entity } from "../core";
-import ThreeMesh from "./ThreeMesh";
+import ThreeObject3D from "./ThreeObject3D";
 
 export default class ThreeAnimation extends Component {
     #mixer?: AnimationMixer;
@@ -18,7 +18,7 @@ export default class ThreeAnimation extends Component {
     }
 
     public onAddedToEntity(entity: Entity) {
-        const component = entity.getComponent(ThreeMesh);
+        const component = entity.getComponent(ThreeObject3D);
         if (!component) {
             return;
         }
@@ -26,14 +26,14 @@ export default class ThreeAnimation extends Component {
     }
 
     public onComponentAddedToAttachedEntity(component: Component) {
-        if (component instanceof ThreeMesh) {
+        if (component instanceof ThreeObject3D) {
             this.createMixer(component);
         }
     }
 
-    private createMixer(meshComponent: ThreeMesh) {
-        this.#mixer = new AnimationMixer(meshComponent.object3d);
-        this.#clips = meshComponent.object3d.animations;
+    private createMixer(meshComponent: ThreeObject3D) {
+        this.#mixer = new AnimationMixer(meshComponent.object3D);
+        this.#clips = meshComponent.object3D.animations;
         this.#clips.forEach((clip) => {
             const action = this.#mixer?.clipAction(clip);
             if (action) {
@@ -62,17 +62,14 @@ export default class ThreeAnimation extends Component {
             return;
         }
 
-        // Fade out current animation
-        if (action) {
-            action.enabled = true;
-            action.setEffectiveTimeScale(1);
-            action.setEffectiveWeight(1);
+        action.enabled = true;
+        action.setEffectiveTimeScale(1);
+        action.setEffectiveWeight(1);
 
-            if (this.#currentAnimation) {
-                this.#currentAnimation.time = 0;
-                this.#currentAnimation.weight = 1;
-                this.#currentAnimation.crossFadeTo(action, 0.2, false);
-            }
+        if (this.#currentAnimation) {
+            this.#currentAnimation.time = 0;
+            this.#currentAnimation.weight = 1;
+            this.#currentAnimation.crossFadeTo(action, 0.2, false);
         }
 
         this.#currentAnimation = action;

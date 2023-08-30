@@ -10,9 +10,9 @@ import { quat } from "ts-gl-matrix";
 import {
     OimoComponent,
     OimoSystem,
-    ThreeCameraComponent,
+    ThreeCamera,
     ThreeLightComponent,
-    ThreeMesh,
+    ThreeObject3D,
     Transform,
 } from "../../src";
 import { initializeBoilerplate } from "./Boilerplate";
@@ -22,7 +22,7 @@ const ecsManager = await initializeBoilerplate();
 const floor = ecsManager.createEntity();
 floor.addComponent(new Transform([0, -5, 0]));
 floor.addComponent(
-    new ThreeMesh(
+    new ThreeObject3D(
         new Mesh(
             new BoxGeometry(50, 10, 50),
             new MeshStandardMaterial({ color: 0x808080 })
@@ -39,7 +39,7 @@ floor.addComponent(
 
 const camera = ecsManager.createEntity({ name: "camera" });
 camera.addComponent(new Transform([40, 20, 0]));
-const threeCameraComponent = new ThreeCameraComponent(
+const threeCameraComponent = new ThreeCamera(
     new PerspectiveCamera(90, window.innerWidth / window.innerHeight, 1, 200),
     ecsManager.createEntity(),
     undefined,
@@ -96,7 +96,7 @@ const addTower = (towerOptions: {
                 )
             );
             brick.addComponent(
-                new ThreeMesh(
+                new ThreeObject3D(
                     new Mesh(
                         new BoxGeometry(sx, sy, sz),
                         new MeshStandardMaterial({ color: 0x808080 })
@@ -129,7 +129,7 @@ platform.addComponent(
     new Transform([-30, 10, 0], quat.fromEuler(quat.create(), 0, 0, 60))
 );
 platform.addComponent(
-    new ThreeMesh(
+    new ThreeObject3D(
         new Mesh(
             new BoxGeometry(2, 40, 50),
             new MeshStandardMaterial({ color: 0x808080 })
@@ -147,7 +147,7 @@ platform.addComponent(
 const ball = ecsManager.createEntity();
 ball.addComponent(new Transform([-45, 25, 0]));
 ball.addComponent(
-    new ThreeMesh(
+    new ThreeObject3D(
         new Mesh(
             new SphereGeometry(2, 64, 64),
             new MeshStandardMaterial({ color: 0x808080 })

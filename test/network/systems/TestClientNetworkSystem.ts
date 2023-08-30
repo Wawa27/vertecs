@@ -1,4 +1,4 @@
-import Component, { ComponentClass } from "../../../src/core/Component";
+import { ComponentClass } from "../../../src/core/Component";
 import { Entity } from "../../../src/core";
 import { ClientNetworkSystem } from "../../../src";
 
@@ -6,6 +6,8 @@ export default class TestClientNetworkSystem extends ClientNetworkSystem {
     #isConnected: boolean;
 
     #newEntities: Entity[];
+
+    #lastCustomData: any;
 
     public constructor(
         allowedNetworkComponents: ComponentClass[],
@@ -20,8 +22,26 @@ export default class TestClientNetworkSystem extends ClientNetworkSystem {
         this.#isConnected = true;
     }
 
+    protected onDisconnect(): void {
+        this.#isConnected = false;
+    }
+
+    protected onCustomData(customPrivateData: any) {
+        this.#lastCustomData = customPrivateData;
+    }
+
     protected onNewEntity(entity: Entity): void {
         this.#newEntities.push(entity);
+    }
+
+    protected onDeletedEntity(entity: Entity): void {
+        this.#newEntities = this.#newEntities.filter(
+            (newEntity) => newEntity.id !== entity.id
+        );
+    }
+
+    public get lastCustomData(): any {
+        return this.#lastCustomData;
     }
 
     public get isConnected(): boolean {

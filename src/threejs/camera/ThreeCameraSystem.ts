@@ -1,14 +1,14 @@
-import { Camera, WebGLRenderer } from "three";
+import { Camera, Quaternion, WebGLRenderer } from "three";
 import { vec3 } from "ts-gl-matrix";
 // @ts-ignore
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { Transform } from "../../math";
-import { ThreeCameraComponent } from "../index";
+import { ThreeCamera } from "../index";
 import { Component, Entity, System } from "../../core";
 import ThreeSystem from "../ThreeSystem";
 
 export default class ThreeCameraSystem extends System<
-    [ThreeCameraComponent, Transform]
+    [ThreeCamera, Transform]
 > {
     #cameraEntity?: Entity;
 
@@ -17,7 +17,7 @@ export default class ThreeCameraSystem extends System<
     #controls?: OrbitControls;
 
     public constructor(renderer: WebGLRenderer, tps?: number) {
-        super([ThreeCameraComponent, Transform], tps);
+        super([ThreeCamera, Transform], tps);
         this.#renderer = renderer;
     }
 
@@ -26,16 +26,16 @@ export default class ThreeCameraSystem extends System<
         const originEntity = this.ecsManager?.createEntity();
         originEntity?.addComponent(new Transform());
         this.cameraEntity?.addComponent(
-            new ThreeCameraComponent(new Camera(), originEntity)
+            new ThreeCamera(new Camera(), originEntity)
         );
         this.cameraEntity?.addComponent(new Transform());
     }
 
     public onEntityEligible(
         entity: Entity,
-        lastComponentAdded: Component | undefined
+        components: [ThreeCamera, Transform]
     ) {
-        const cameraComponent = entity.getComponent(ThreeCameraComponent);
+        const cameraComponent = entity.getComponent(ThreeCamera);
         const transform = entity.getComponent(Transform);
 
         if (!cameraComponent || !transform) {
@@ -43,7 +43,7 @@ export default class ThreeCameraSystem extends System<
         }
 
         if (this.#cameraEntity) {
-            this.#cameraEntity.removeComponent(ThreeCameraComponent);
+            this.#cameraEntity.removeComponent(ThreeCamera);
         }
 
         this.#cameraEntity = entity;
@@ -55,15 +55,11 @@ export default class ThreeCameraSystem extends System<
             );
         }
 
-        const lookAtWorldPosition =
-            cameraComponent.lookAt?.getComponent(Transform)?.position;
+        const lookAtWorldPosition = cameraComponent.lookAt
+            ?.getComponent(Transform)
+            ?.getWorldPosition();
 
-        const worldPosition = transform.position;
-
-        if (lookAtWorldPosition) {
-            vec3.add(worldPosition, worldPosition, lookAtWorldPosition);
-            vec3.add(worldPosition, worldPosition, [0, 1, 2]);
-        }
+        const worldPosition = transform.getWorldPosition();
 
         cameraComponent.camera.position.set(
             worldPosition[0],
@@ -71,16 +67,23 @@ export default class ThreeCameraSystem extends System<
             worldPosition[2]
         );
 
+        if (lookAtWorldPosition) {
+            cameraComponent.camera.lookAt(
+                lookAtWorldPosition[0],
+                lookAtWorldPosition[1],
+                lookAtWorldPosition[2]
+            );
+        }
+
         this.#controls?.update();
     }
 
     protected onLoop(
-        components: [ThreeCameraComponent, Transform][],
+        components: [ThreeCamera, Transform][],
         entities: Entity[],
         deltaTime: number
     ): void {
-        const cameraComponent =
-            this.#cameraEntity?.getComponent(ThreeCameraComponent);
+        const cameraComponent = this.#cameraEntity?.getComponent(ThreeCamera);
         const camera = cameraComponent?.camera;
         const transform = this.#cameraEntity?.getComponent(Transform);
         const lookAtTransform =
@@ -97,11 +100,20 @@ export default class ThreeCameraSystem extends System<
         }
 
         const worldPosition = transform.getWorldPosition();
+        const worldRotation = transform.getWorldRotation();
 
         camera.position.set(
             worldPosition[0],
             worldPosition[1],
             worldPosition[2]
+        );
+        camera.rotation.setFromQuaternion(
+            new Quaternion(
+                worldRotation[0],
+                worldRotation[1],
+                worldRotation[2],
+                worldRotation[3]
+            )
         );
 
         if (lookAtTransform) {

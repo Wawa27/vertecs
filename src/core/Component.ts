@@ -43,10 +43,11 @@ export default abstract class Component {
     public onRemovedFromEntity(entity: Entity): void {}
 
     /**
-     * Called whenever the attached entity parent change
+     * Called when the attached entity has a new parent
+     * This method is called before the parent is updated
      * @param entity The new parent entity
      */
-    public onEntityParentChanged(entity?: Entity): void {}
+    public onEntityNewParent(entity?: Entity): void {}
 
     /**
      * Called when another component is added to the attached entity

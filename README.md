@@ -1,14 +1,23 @@
-# Vertecs
+<h1 align="center">
+    Vertecs
+</h1>
 
-## A typescript entity-component-system framework
+Vertecs (Word contraction of Vertex and ECS)  is a robust TypeScript library designed around the ECS (Entity Component System) pattern. It's tailored for game development and beyond.
 
-### Installation
+## 🚀 Features
 
-    npm install vertecs
+- Three.js Integration: Render any Three.js object seamlessly.
+- Prefabs: Easily instantiate entities multiple times.
+- System Dependencies: Define dependencies between systems for ordered updates.
+- Networking: Built-in networking system using Websockets for real-time synchronization.
 
-### Usage
+## 📦 Installation
 
-Start by creating a component class.
+`npm install vertecs`
+
+## 🎮 Getting Started
+
+### 1. Create a Component
 
 ```typescript
 import { Component } from "vertecs";
@@ -25,13 +34,13 @@ export default class PositionComponent extends Component {
 }
 ```
 
-Now, create a system that updates the position of a component.
+### 2. Define a System
 
 ```typescript
 import { System } from "vertecs";
 import PositionComponent from "./PositionComponent";
 
-export default class PositionSystem extends System<PositionComponent> {
+export default class PositionSystem extends System<[PositionComponent]> {
 
     public constructor() {
         super([PositionComponent], 60);
@@ -43,12 +52,11 @@ export default class PositionSystem extends System<PositionComponent> {
             positionComponent.x += 1 * deltaTime;
             console.log("Position:", positionComponent.x, positionComponent.y);
         }
-        ;
     }
 }
 ```
 
-Finally, add the system to the ecs manager, create an entity and start the ecs manager
+### 3. Integrate with ECS Manager
 
 ```typescript
 import { SystemManager, Entity, EcsManager } from "vertecs";
@@ -67,67 +75,29 @@ ecsManager.addEntity(entity)
 ecsManager.start(); // -> Position: .., ..
 ```
 
-### Hello world
+## 🎨 Examples
 
-```typescript
-import { BoxGeometry, Mesh, MeshBasicMaterial, PerspectiveCamera } from "three";
-import { EcsManager, ThreeCameraComponent, Transform, ThreeSystem, ThreeMesh } from "vertecs";
+Explore the examples folder for practical implementations of Vertecs. To run:
 
-const ecsManager = new EcsManager();
+1. Clone the repository.
+2. Install dependencies with `npm install`.
+3. Build examples using `npm run build:examples`.
+4. Open the .html files in the examples folder with your browser.
 
-await ecsManager.addSystem(new ThreeSystem());
+## 🤝 Contributing
 
-const cube = ecsManager.createEntity({ name: "cube" });
-cube.addComponent(new Transform([0, 0, 0]));
-cube.addComponent(
-    new ThreeMesh(
-        new Mesh(
-            new BoxGeometry(1, 1, 1),
-            new MeshBasicMaterial({ color: 0x00ff00 })
-        )
-    )
-);
+Contributions, issues and feature requests are all welcome !
 
-const camera = ecsManager.createEntity({ name: "camera" });
-camera.addComponent(new Transform([0, 0, 2]));
-camera.addComponent(
-    new ThreeCameraComponent(
-        new PerspectiveCamera(
-            90,
-            window.innerWidth / window.innerHeight,
-            1,
-            1000
-        ),
-        undefined,
-        undefined,
-        undefined,
-        true
-    )
-);
+### To contribute :
 
-await ecsManager.start();
-```
+1. Fork the repository.
+2. Create your feature branch (git checkout -b feature/YourFeatureName).
+3. Commit your changes.
+4. Push to the branch (git push origin feature/YourFeatureName).
+5. Open a pull request.
 
-This example will create a green cube in the center of the screen.
+Pull requests must follow the [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/) specification.
 
-### Features
+## 📜 License
 
-#### System dependencies
-
-Systems can be dependent on other systems, this means that a system will only be updated if all of its dependencies are updated.
-
-```typescript
-const ecsManager = new EcsManager();
-
-ecsManager.addSystem(new SystemA());
-ecsManager.addSystem(new SystemB(), [SystemA]);
-ecsManager.addSystem(new SystemC(), [SystemA, SystemB]);
-
-ecsManager.start();
-```
-
-In this example, `SystemA` will be updated first, then `SystemB` and finally `SystemC`.
-
-#### Networking
-
-Work in progress
+This project is licensed under the MIT License - see the [LICENSE](LICENSE.md) file for details.

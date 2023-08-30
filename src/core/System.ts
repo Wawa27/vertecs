@@ -1,5 +1,5 @@
-import Component, { ComponentClassConstructor } from "./Component";
 import type { ComponentClass } from "./Component";
+import Component from "./Component";
 import Entity from "./Entity";
 import EcsManager from "./EcsManager";
 
@@ -25,6 +25,8 @@ export default abstract class System<T extends Component[] = []> {
 
     $dependencies: SystemConstructor<Component[]>[];
 
+    #sleepTime: number;
+
     /**
      * Create a new system with the given component group filter and the given tps
      */
@@ -39,15 +41,20 @@ export default abstract class System<T extends Component[] = []> {
         this.#hasStarted = false;
         this.#loopTime = 0;
         this.$dependencies = dependencies ?? [];
+        this.#sleepTime = 0;
     }
 
     /**
      * Called every frame, you should not call this method directly but instead use the {@see onLoop} method
      */
     public loop(components: T[], entities: Entity[]): void {
-        this.#loopTime = performance.now();
+        this.#sleepTime -= this.getDeltaTime();
+        if (this.#sleepTime > 0) {
+            return;
+        }
+        const startLoopTime = performance.now();
         this.onLoop(components, entities, this.getDeltaTime());
-        this.#loopTime = performance.now() - this.#loopTime;
+        this.#loopTime = performance.now() - startLoopTime;
         this.#lastUpdateTime = performance.now();
     }
 
@@ -60,6 +67,10 @@ export default abstract class System<T extends Component[] = []> {
     public async stop(): Promise<void> {
         this.#hasStarted = false;
         await this.onStop();
+    }
+
+    public sleep(milliseconds: number): void {
+        this.#sleepTime = milliseconds;
     }
 
     /**
@@ -88,18 +99,12 @@ export default abstract class System<T extends Component[] = []> {
      * An entity becomes eligible when a component is added to an entity making it eligible to a group,
      * or when a new system is added and an entity was already eligible to the new system's group
      */
-    public onEntityEligible(
-        entity: Entity,
-        lastComponentAdded: Component | undefined
-    ): void {}
+    public onEntityEligible(entity: Entity, components: T): void {}
 
     /**
      * Called when an entity becomes ineligible to a system, and before it is removed from the system
      */
-    public onEntityNoLongerEligible(
-        entity: Entity,
-        lastComponentRemoved: Component
-    ): void {}
+    public onEntityNoLongerEligible(entity: Entity, components: T): void {}
 
     /**
      * Called every frame

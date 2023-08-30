@@ -9,9 +9,9 @@ import EmptyComponent from "./components/EmptyComponent";
 chai.use(spies);
 
 describe("EcsManager", () => {
-    describe("Eligibility", () => {
-        let ecsManager: EcsManager;
+    let ecsManager: EcsManager;
 
+    describe("Eligibility", () => {
         beforeEach(() => {
             ecsManager = new EcsManager();
         });

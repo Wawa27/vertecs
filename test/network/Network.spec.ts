@@ -3,15 +3,14 @@ import NetworkCounter from "./components/NetworkCounter";
 import TestClientNetworkSystem from "./systems/TestClientNetworkSystem";
 import TestClientHandler from "./systems/TestClientHandler";
 import CounterComponent from "../components/CounterComponent";
-import { Entity, EcsManager } from "../../src/core";
+import { EcsManager } from "../../src/core";
 import { IsNetworked, ServerNetworkSystem } from "../../src";
 
-describe("Networking", () => {
+describe("Networking", async () => {
     const allowedNetworkComponents = [NetworkCounter];
 
     let serverNetworkSystem: ServerNetworkSystem;
     const serverEcsManager = new EcsManager();
-    let serverCounterEntity: Entity;
 
     let clientANetworkSystem: TestClientNetworkSystem;
     const clientAEcsManager = new EcsManager();
@@ -24,8 +23,11 @@ describe("Networking", () => {
             allowedNetworkComponents,
             TestClientHandler
         );
+
         await serverEcsManager.addSystem(serverNetworkSystem);
         await serverEcsManager.start();
+
+        assert.ok(serverNetworkSystem.hasStarted);
     });
 
     it("should connect to server", async () => {
@@ -46,13 +48,6 @@ describe("Networking", () => {
     });
 
     it("should send the newly created entity to client", async () => {
-        serverCounterEntity = serverEcsManager.createEntity();
-        serverCounterEntity.addComponent(new CounterComponent());
-        serverCounterEntity.addComponent(new NetworkCounter());
-        const isNetworked = new IsNetworked();
-        isNetworked.ownerId = clientANetworkSystem.networkId as string;
-        isNetworked.scope = "public";
-        serverCounterEntity.addComponent(isNetworked);
         await new Promise((resolve) => setTimeout(resolve, 100));
         const newClientEntity = clientANetworkSystem.entities[0];
 
@@ -67,8 +62,10 @@ describe("Networking", () => {
 
     it("should update and send the new count", async () => {
         const clientACounterEntity = clientANetworkSystem.entities[0];
+        const serverCounterComponent =
+            serverEcsManager.entities[0].getComponent(CounterComponent);
 
-        serverCounterEntity.getComponent(CounterComponent)?.increment();
+        serverCounterComponent?.increment();
         await new Promise((resolve) => setTimeout(resolve, 100));
 
         assert.equal(clientANetworkSystem.entities.length, 1);
@@ -90,7 +87,7 @@ describe("Networking", () => {
         await new Promise((resolve) => setTimeout(resolve, 250));
 
         const newClientEntity = clientBNetworkSystem.entities[0];
-        assert.equal(clientBNetworkSystem.entities.length, 1);
+        assert.equal(clientBNetworkSystem.entities.length, 2);
         assert.exists(newClientEntity);
         assert.equal(newClientEntity.getComponent(CounterComponent)?.count, 1);
     });
@@ -100,15 +97,14 @@ describe("Networking", () => {
         const counterComponent = newClientEntity.getComponent(CounterComponent);
         const clientBCounterComponent =
             clientBNetworkSystem.entities[0].getComponent(CounterComponent);
+        const serverCounterComponent =
+            serverEcsManager.entities[0].getComponent(CounterComponent);
 
         counterComponent?.increment();
         await new Promise((resolve) => setTimeout(resolve, 100));
 
         assert.equal(counterComponent?.count, 2);
-        assert.equal(
-            serverCounterEntity.getComponent(CounterComponent)?.count,
-            2
-        );
+        assert.equal(serverCounterComponent?.count, 2);
 
         assert.equal(clientBCounterComponent?.count, 2);
     });
@@ -116,20 +112,45 @@ describe("Networking", () => {
     it("should not allow clientB to update the count", async () => {
         const newClientEntity = clientBNetworkSystem.entities[0];
         const counterComponent = newClientEntity.getComponent(CounterComponent);
+        const serverCounterComponent =
+            serverEcsManager.entities[0].getComponent(CounterComponent);
 
         counterComponent?.increment();
         await new Promise((resolve) => setTimeout(resolve, 100));
 
         assert.equal(counterComponent?.count, 3);
-        assert.equal(
-            serverCounterEntity.getComponent(CounterComponent)?.count,
-            2
+        assert.equal(serverCounterComponent?.count, 2);
+    });
+
+    it("should disconnect clientA and remove clientA entity from server", async () => {
+        await clientAEcsManager.stop();
+
+        await new Promise((resolve) => setTimeout(resolve, 100));
+
+        assert.isFalse(clientANetworkSystem.isConnected);
+    });
+
+    it("should disconnect clientA and remove clientA entity from server", async () => {
+        await new Promise((resolve) => setTimeout(resolve, 100));
+
+        assert.equal(serverEcsManager.entities.length, 1);
+        assert.equal(clientBNetworkSystem.entities.length, 1);
+    });
+
+    it("should send private data to clientB", async () => {
+        const message = "Hello, client B!";
+        serverNetworkSystem.sendCustomDataToClient(
+            clientBNetworkSystem.networkId ?? "",
+            message
         );
+        await new Promise((resolve) => setTimeout(resolve, 100));
+
+        assert.equal(clientBNetworkSystem.lastCustomData, message);
+        assert.notEqual(clientANetworkSystem.lastCustomData, message);
     });
 
     after(async () => {
         await serverEcsManager.stop();
-        await clientAEcsManager.stop();
         await clientBEcsManager.stop();
     });
 });

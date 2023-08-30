@@ -18,6 +18,8 @@ export default class NetworkSphereBody extends NetworkComponent<SphereBodyData> 
             entity.addComponent(
                 new SphereBody({
                     radius: 0.5,
+                    movable: true,
+                    mass: 1,
                 })
             );
         }
@@ -27,7 +29,7 @@ export default class NetworkSphereBody extends NetworkComponent<SphereBodyData> 
         return false;
     }
 
-    public shouldUpdate(): boolean {
+    public isDirty(): boolean {
         return this.updateTimestamp === -1;
     }
 

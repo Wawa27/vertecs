@@ -9,6 +9,7 @@ import SphereBody from "./bodies/SphereBody";
 import { Component, Entity, System } from "../core";
 import { Transform } from "../math";
 import QuadtreeBroadphase from "./broadphase/quadtree/QuadtreeBroadphase";
+import BruteForceBroadphase from "./broadphase/BruteForceBroadphase";
 
 export default class PhysicsSystem extends System<[Body, Transform]> {
     #broadphase: Broadphase;
@@ -19,26 +20,20 @@ export default class PhysicsSystem extends System<[Body, Transform]> {
 
     public constructor(tps?: number) {
         super([Body, Transform], tps);
-        this.#broadphase = new QuadtreeBroadphase(
-            vec3.fromValues(-10_000, -10_000, -10_000),
-            vec3.fromValues(10_000, 10_000, 10_000)
-        );
+        this.#broadphase = new BruteForceBroadphase();
         this.#narrowphase = new DefaultNarrowphase();
         this.#solver = new DefaultSolver();
     }
 
-    public onEntityEligible(
-        entity: Entity,
-        lastComponentAdded: Component | undefined
-    ) {
-        this.#broadphase.onEntityAdded(entity);
+    public onEntityEligible(entity: Entity, components: [Body, Transform]) {
+        this.#broadphase.onEntityAdded(entity, components);
     }
 
     public onEntityNoLongerEligible(
         entity: Entity,
-        lastComponentRemoved: Component
+        components: [Body, Transform]
     ) {
-        this.#broadphase.onEntityRemoved(entity);
+        this.#broadphase.onEntityRemoved(entity, components);
     }
 
     protected onLoop(
@@ -55,7 +50,7 @@ export default class PhysicsSystem extends System<[Body, Transform]> {
             const [body, transform] = components[i];
 
             if (body.hasMoved()) {
-                this.#broadphase.onEntityMoved(entities[i]);
+                this.#broadphase.onEntityMoved(entities[i], components[i]);
             }
         }
 
@@ -136,7 +131,7 @@ export default class PhysicsSystem extends System<[Body, Transform]> {
         transform: Transform,
         deltaTime: number
     ): void {
-        if (!body.movable) {
+        if (!body.movable || body.mass === 0) {
             return;
         }
 

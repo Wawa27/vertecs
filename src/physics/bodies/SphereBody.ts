@@ -1,18 +1,17 @@
 import { vec3 } from "ts-gl-matrix";
-import Body, { PhysicsData } from "./Body";
+import Body, { BodyOptions, PhysicsData } from "./Body";
 import AxisAlignedBoundingBox from "../AxisAlignedBoundingBox";
 import { Transform } from "../../math";
 
-type SphereBodyOptions = {
+type SphereBodyOptions = BodyOptions & {
     radius: number;
-    movable?: boolean;
 };
 
 export default class SphereBody extends Body {
     #radius: number;
 
     public constructor(sphereBodyOptions: SphereBodyOptions) {
-        super(sphereBodyOptions.movable ?? true);
+        super(sphereBodyOptions);
         this.#radius = sphereBodyOptions.radius;
     }
 
@@ -55,6 +54,7 @@ export default class SphereBody extends Body {
         return {
             movable: this.$movable,
             radius: this.#radius,
+            mass: this.$mass,
         };
     }
 
@@ -62,6 +62,7 @@ export default class SphereBody extends Body {
         return new SphereBody({
             radius: this.#radius,
             movable: this.$movable,
+            mass: this.$mass,
         });
     }
 }

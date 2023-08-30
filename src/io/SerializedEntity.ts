@@ -15,18 +15,22 @@ export default class SerializedEntity {
 
     protected $parent?: string;
 
+    protected $prefabName?: string;
+
     public constructor(
         id: string,
         components: Map<string, SerializedNetworkComponent<any>>,
         name?: string,
         destroyed?: boolean,
-        parent?: string
+        parent?: string,
+        prefabName?: string
     ) {
         this.$id = id;
         this.$components = components;
         this.$name = name;
         this.$destroyed = destroyed;
         this.$parent = parent;
+        this.$prefabName = prefabName;
     }
 
     toJSON(): any {
@@ -35,6 +39,8 @@ export default class SerializedEntity {
             name: this.$name,
             components: Array.from(this.$components.entries()),
             destroyed: this.$destroyed,
+            parent: this.$parent,
+            prefabName: this.$prefabName,
         };
     }
 
@@ -52,6 +58,18 @@ export default class SerializedEntity {
 
     public set destroyed(value: boolean | undefined) {
         this.$destroyed = value;
+    }
+
+    public get parent(): string | undefined {
+        return this.$parent;
+    }
+
+    public set parent(value: string | undefined) {
+        this.$parent = value;
+    }
+
+    public get prefabName(): string | undefined {
+        return this.$prefabName;
     }
 
     public get id(): string {

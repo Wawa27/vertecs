@@ -1,4 +1,3 @@
-import { Vec3 } from "ts-gl-matrix";
 import { Component, Entity } from "../../core";
 import { Transform } from "../../math";
 import NetworkComponent from "../NetworkComponent";
@@ -10,11 +9,8 @@ export type TransformData = {
 };
 
 export default class NetworkTransform extends NetworkComponent<TransformData> {
-    #lastPosition: Vec3;
-
     public constructor() {
         super();
-        this.#lastPosition = new Vec3(Infinity, Infinity, Infinity);
     }
 
     public onAddedToEntity(entity: Entity) {
@@ -29,12 +25,6 @@ export default class NetworkTransform extends NetworkComponent<TransformData> {
     }
 
     public read(data: TransformData): void {
-        this.#lastPosition = new Vec3(
-            data.position[0],
-            data.position[1],
-            data.position[2]
-        );
-
         const transform = this.entity?.getComponent(Transform);
 
         if (!transform) {
@@ -47,7 +37,7 @@ export default class NetworkTransform extends NetworkComponent<TransformData> {
         transform.setScale(data.scale);
     }
 
-    public shouldUpdate(): boolean {
+    public isDirty(lastData: TransformData): boolean {
         const position = this.entity
             ?.getComponent(Transform)
             ?.getWorldPosition();
@@ -56,18 +46,7 @@ export default class NetworkTransform extends NetworkComponent<TransformData> {
             throw new Error("TransformNetworkComponent: Position not found");
         }
 
-        const distance = this.#lastPosition.distance(position);
-
-        if (distance > 0.01) {
-            this.#lastPosition = new Vec3(
-                position[0],
-                position[1],
-                position[2]
-            );
-            this.$updateTimestamp = Date.now();
-        }
-
-        return distance > 0.01;
+        return position.distance(lastData.position) > 0.1;
     }
 
     public write(): TransformData {

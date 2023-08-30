@@ -25,14 +25,9 @@ export default class OimoSystem extends System<[OimoComponent, Transform]> {
 
     public onEntityEligible(
         entity: Entity,
-        lastComponentAdded: Component | undefined
+        components: [OimoComponent, Transform]
     ) {
-        const oimoComponent = entity.getComponent(OimoComponent);
-        const transform = entity.getComponent(Transform);
-
-        if (!oimoComponent || !transform) {
-            throw new Error("OimoComponent or Transform not found");
-        }
+        const [oimoComponent, transform] = components;
 
         const worldPosition = transform?.position ?? [0, 0, 0];
 

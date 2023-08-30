@@ -4,6 +4,7 @@ import { Entity } from "../../../core";
 import Quadtree from "./Quadtree";
 import AxisAlignedBoundingBox from "../../AxisAlignedBoundingBox";
 import Body from "../../bodies/Body";
+import { Transform } from "../../../math";
 
 export default class QuadtreeBroadphase extends Broadphase {
     private quadtree: Quadtree;
@@ -15,18 +16,20 @@ export default class QuadtreeBroadphase extends Broadphase {
         );
     }
 
-    public onEntityAdded(entity: Entity): void {
+    public onEntityAdded(entity: Entity, components: [Body, Transform]): void {
         this.quadtree.addEntity(entity);
     }
 
-    public onEntityRemoved(entity: Entity): void {
-        this.quadtree.removeEntity(entity);
+    public onEntityRemoved(
+        entity: Entity,
+        components: [Body, Transform]
+    ): void {
+        this.quadtree.removeEntity(entity, components);
     }
 
-    public onEntityMoved(entity: Entity): void {
-        // You can simply remove and then re-add the entity to handle movement
-        this.onEntityRemoved(entity);
-        this.onEntityAdded(entity);
+    public onEntityMoved(entity: Entity, components: [Body, Transform]): void {
+        this.onEntityRemoved(entity, components);
+        this.onEntityAdded(entity, components);
     }
 
     public getCollisionPairs(entities: Entity[]): [Entity, Entity][] {

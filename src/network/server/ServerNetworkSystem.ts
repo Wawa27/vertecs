@@ -6,11 +6,10 @@ import ClientHandler from "./ClientHandler";
 import NetworkSystem from "../NetworkSystem";
 import GameState from "../GameState";
 import type { ComponentClass } from "../../core/Component";
-import Component, { ComponentClassConstructor } from "../../core/Component";
+import { ComponentClassConstructor } from "../../core/Component";
 import NetworkComponent, {
     SerializedNetworkComponent,
 } from "../NetworkComponent";
-import NetworkEntity from "../NetworkEntity";
 import IsNetworked from "../IsNetworked";
 
 type ClientHandlerConstructor = new (
@@ -68,16 +67,16 @@ export default class ServerNetworkSystem extends NetworkSystem {
             "connection",
             (webSocket, request: IncomingMessage) => {
                 console.log(`New connection : ${request.socket.remoteAddress}`);
-                const playerEntity = this.ecsManager!.createEntity();
-                playerEntity.addComponent(new ClientComponent());
+                const clientEntity = this.ecsManager!.createEntity();
+                clientEntity.addComponent(new ClientComponent());
                 const clientHandler = new this.#ClientHandlerConstructor(
-                    playerEntity,
+                    clientEntity,
                     this.ecsManager!,
                     webSocket
                 );
                 this.$clientHandlers.push(clientHandler);
                 clientHandler.onConnect();
-                clientHandler.sendPrivateCustomData({
+                clientHandler.sendCustomData({
                     setup: {
                         clientId: clientHandler.clientEntity.id,
                     },
@@ -102,22 +101,21 @@ export default class ServerNetworkSystem extends NetworkSystem {
         );
     }
 
-    public onEntityEligible(
-        entity: Entity,
-        lastComponentAdded: Component | undefined
-    ) {
+    public async onStop(): Promise<void> {
+        this.#webSocketServer?.close();
+    }
+
+    public onEntityEligible(entity: Entity, components: [IsNetworked]) {
         // TODO: The delta game state shoud be a class field and this method should add the entity to it.
     }
 
-    public onEntityNoLongerEligible(
-        entity: Entity,
-        lastComponentRemoved: Component
-    ) {
-        const networkEntity =
-            this.$currentSnapshot.entities.get(entity.id) ??
-            new NetworkEntity(entity.id, new Map());
-        networkEntity.destroyed = true;
-        this.$currentSnapshot.entities.set(entity.id, networkEntity);
+    public onEntityNoLongerEligible(entity: Entity, components: [IsNetworked]) {
+        const networkEntity = this.$currentSnapshot.entities.get(entity.id);
+
+        if (networkEntity) {
+            networkEntity.destroyed = true;
+            this.$currentSnapshot.entities.set(entity.id, networkEntity);
+        }
     }
 
     protected onLoop(
@@ -132,6 +130,9 @@ export default class ServerNetworkSystem extends NetworkSystem {
                     this.deserializeEntity(serializedEntity);
                 }
             );
+            clientHandler.clientSnapshot?.customData.forEach((data) => {
+                clientHandler.onPrivateCustomData(data);
+            });
             clientHandler.clientSnapshot = undefined;
         });
 
@@ -175,19 +176,19 @@ export default class ServerNetworkSystem extends NetworkSystem {
         });
 
         this.$clientHandlers.forEach((clientHandler) => {
+            deltaGameState.customData.push(...clientHandler.customData);
             if (clientHandler.forceUpdate) {
-                this.$currentSnapshot.customData = clientHandler.privateData;
+                this.$currentSnapshot.customData = clientHandler.customData;
                 clientHandler.sendMessage(this.$currentSnapshot);
                 this.$currentSnapshot.customData = [];
             } else if (
                 deltaGameState.customData.length > 0 ||
                 deltaGameState.entities.size > 0
             ) {
-                deltaGameState.customData = clientHandler.privateData;
                 clientHandler.sendMessage(deltaGameState);
-                deltaGameState.customData = [];
             }
-            clientHandler.privateData.length = 0;
+            deltaGameState.customData.length = 0;
+            clientHandler.customData.length = 0;
             clientHandler.forceUpdate = false;
         });
     }
@@ -211,6 +212,29 @@ export default class ServerNetworkSystem extends NetworkSystem {
 
             // Update all clients
             component.forceUpdate = true;
+        }
+    }
+
+    /**
+     * Broadcasts custom data to all clients.
+     * @param data
+     */
+    public broadcastCustomData(data: any) {
+        this.$clientHandlers.forEach((clientHandler) => {
+            clientHandler.sendCustomData(data);
+        });
+    }
+
+    public sendCustomDataToClient(clientId: string, data: any) {
+        const clientHandler = this.$clientHandlers.find(
+            (clientHandler) => clientHandler.clientEntity.id === clientId
+        );
+        if (clientHandler) {
+            clientHandler.sendCustomData(data);
+        } else {
+            console.warn(
+                `Client ${clientId} not found. Cannot send custom data.`
+            );
         }
     }
 }

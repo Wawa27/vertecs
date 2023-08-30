@@ -1,13 +1,17 @@
 import type { SerializedNetworkComponent } from "./NetworkComponent";
 import { SerializedEntity } from "../io";
 
+/**
+ * JSON representation of an entity that is synchronized over the network.
+ */
 export default class NetworkEntity extends SerializedEntity {
     public constructor(
         id: string,
         components: Map<string, SerializedNetworkComponent<any>>,
-        name?: string
+        name?: string,
+        prefabName?: string
     ) {
-        super(id, components, name);
+        super(id, components, name, false, undefined, prefabName);
     }
 
     toJSON(): any {
@@ -16,6 +20,7 @@ export default class NetworkEntity extends SerializedEntity {
             components: Array.from(this.components.entries()),
             name: this.$name,
             destroyed: this.$destroyed,
+            prefabName: this.$prefabName,
         };
     }
 

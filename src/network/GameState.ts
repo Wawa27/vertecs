@@ -44,7 +44,9 @@ export default class GameState {
                         entity[1].id,
                         new Map(entity[1].components),
                         entity[1].name,
-                        entity[1].destroyed
+                        entity[1].destroyed,
+                        entity[1].parent,
+                        entity[1].prefabName
                     ),
                 ])
             );

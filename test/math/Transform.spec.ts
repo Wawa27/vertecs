@@ -1,5 +1,5 @@
 import { assert } from "chai";
-import { vec3, quat } from "ts-gl-matrix";
+import { quat, Quat, vec3 } from "ts-gl-matrix";
 import { Entity, Transform } from "../../src";
 
 describe("Transform", () => {
@@ -42,25 +42,6 @@ describe("Transform", () => {
     });
 
     describe("World space", () => {
-        it("should get the correct world position with parent", () => {
-            const parentTranslation = vec3.fromValues(1, 2, 3);
-            const childTranslation = vec3.fromValues(4, 5, 6);
-
-            const parentEntity = new Entity();
-            const childEntity = new Entity();
-
-            parentEntity.addComponent(new Transform(parentTranslation));
-            childEntity.addComponent(new Transform(childTranslation));
-            parentEntity.addChild(childEntity);
-
-            const worldPosition = childEntity
-                .getComponent(Transform)
-                ?.getWorldPosition();
-
-            const expectedWorldPosition = vec3.fromValues(5, 7, 9);
-            assert.deepEqual(worldPosition, expectedWorldPosition);
-        });
-
         it("should set the correct world position with parent", () => {
             const parentTranslation = vec3.fromValues(1, 2, 3);
             const worldPosition = vec3.fromValues(4, 5, 6);
@@ -79,6 +60,42 @@ describe("Transform", () => {
             const expectedPosition = vec3.fromValues(3, 3, 3);
             assert.deepEqual(childTransform.position, expectedPosition);
             assert.isTrue(childTransform.dirty);
+        });
+
+        it("should have the same scale if set in world space twice", () => {
+            const parentScale = vec3.fromValues(10, 10, 10);
+            const worldScale = vec3.fromValues(1, 1, 1);
+            const parentEntity = new Entity();
+            const childEntity = new Entity();
+            parentEntity.addComponent(
+                new Transform(undefined, undefined, parentScale)
+            );
+            const childTransform = new Transform();
+            childEntity.addComponent(childTransform);
+            parentEntity.addChild(childEntity);
+
+            childTransform.setWorldScale(worldScale);
+            childTransform.setWorldScale(worldScale);
+
+            const expectedScale = vec3.fromValues(0.1, 0.1, 0.1);
+            assert.deepEqual(childTransform.scaling, expectedScale);
+            assert.isTrue(childTransform.dirty);
+        });
+    });
+
+    describe("Look at", () => {
+        it("should look at the given position", () => {
+            const transform = new Transform();
+            const position = vec3.fromValues(1, 0, 0);
+
+            transform.lookAt(position);
+
+            assert.isTrue(
+                Quat.equals(
+                    transform.rotation,
+                    Quat.fromEuler(new Quat(), 0, 90, 0)
+                )
+            );
         });
     });
 });

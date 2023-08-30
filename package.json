@@ -1,17 +1,17 @@
 {
   "name": "vertecs",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "A typescript entity-component-system framework",
   "type": "module",
-  "main": "src/index.ts",
-  "module": "src/index.ts",
+  "main": "dist/src/index.js",
+  "module": "dist/src/index.js",
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
     "start:example-network-server": "ts-node --esm --experimental-specifier-resolution=node examples/network/hello-network/server/Main",
     "start:example-network-client": "ts-node --esm --experimental-specifier-resolution=node examples/network/hello-network/client/Main",
     "test": "mocha --experimental-specifier-resolution=node --loader=ts-node/esm test/**/*.spec.ts --exit --recursive",
-    "lint": "eslint --ext .ts src test examples --fix",
+    "lint": "eslint 'src/**/*.ts' 'test/**/*.ts' 'examples/**/*.ts' --ignore-pattern dist/ --fix",
     "build:examples": "rollup -c rollup.config.ts --configPlugin typescript",
     "dev:examples": "rollup -c rollup.config.ts --configPlugin typescript --watch",
     "prepare": "husky install"
@@ -26,15 +26,15 @@
     "game-loop"
   ],
   "dependencies": {
-    "chai-spies": "^1.0.0",
-    "ts-gl-matrix": "4.0.3",
     "oimo-esm": "^1.0.10",
     "performance-now": "^2.1.0",
     "three": "^0.155",
+    "ts-gl-matrix": "4.0.3",
     "uuid": "^8.3.2",
     "ws": "^8.9.0"
   },
   "devDependencies": {
+    "chai-spies": "^1.0.0",
     "@rollup/plugin-commonjs": "^23.0.3",
     "@rollup/plugin-node-resolve": "^15.0.1",
     "@rollup/plugin-typescript": "^10.0.0",
@@ -63,9 +63,9 @@
     "typescript": "^5.0.4"
   },
   "peerDependencies": {
-    "ts-gl-matrix": "4.0.3",
     "performance-now": "^2.1.0",
     "three": "^0.155",
+    "ts-gl-matrix": "4.0.3",
     "uuid": "^8.3.2",
     "ws": "^8.9.0"
   }

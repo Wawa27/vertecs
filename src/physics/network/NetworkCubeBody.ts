@@ -17,7 +17,13 @@ export default class NetworkSphereBody extends NetworkComponent<CubeBodyData> {
     public onAddedToEntity(entity: Entity) {
         const cubeBody = entity.getComponent(CubeBody);
         if (!cubeBody) {
-            entity.addComponent(new CubeBody(1, 1, 1));
+            entity.addComponent(
+                new CubeBody({
+                    width: 1,
+                    height: 1,
+                    depth: 1,
+                })
+            );
         }
     }
 
@@ -25,7 +31,7 @@ export default class NetworkSphereBody extends NetworkComponent<CubeBodyData> {
         return false;
     }
 
-    public shouldUpdate(): boolean {
+    public isDirty(): boolean {
         return this.updateTimestamp === -1;
     }
 

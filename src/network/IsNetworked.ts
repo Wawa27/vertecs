@@ -1,19 +1,20 @@
 import NetworkComponent from "./NetworkComponent";
+import { Entity } from "../core";
 
 type NetworkData = {
-    ownerId: string;
-    scope: NetworkScope;
+    parent: string;
 };
 
-type NetworkScope = "public" | "private";
+export type NetworkScope = "public" | "private";
 
+/**
+ * This component is used to mark an entity as networked, it is used by the network systems to determine which entities to send to which clients.
+ */
 export default class IsNetworked extends NetworkComponent<NetworkData> {
-    #ownerId?: string;
+    #parent?: Entity;
 
-    #scope?: NetworkScope;
-
-    public constructor() {
-        super();
+    public constructor(ownerId?: string, scope?: NetworkScope) {
+        super(ownerId, scope);
     }
 
     public accept(data: NetworkData): boolean {
@@ -21,34 +22,26 @@ export default class IsNetworked extends NetworkComponent<NetworkData> {
     }
 
     public read(data: NetworkData) {
-        this.#ownerId = data.ownerId;
-        this.#scope = data.scope;
+        if (this.#parent?.id !== data.parent && this.entity?.ecsManager) {
+            const parentEntity = this.entity.ecsManager.entities.find(
+                (entity) => entity.id === data.parent
+            );
+            if (parentEntity) {
+                parentEntity.addChild(this.entity);
+            }
+        }
+
+        this.#parent = this.entity?.parent;
     }
 
     public write(): NetworkData {
+        this.#parent = this.entity?.parent;
         return {
-            ownerId: this.#ownerId ?? "*",
-            scope: this.#scope ?? "public",
+            parent: this.#parent?.id ?? "*",
         };
     }
 
-    public shouldUpdate(): boolean {
+    public isDirty(): boolean {
         return false;
-    }
-
-    public get ownerId(): string {
-        return this.#ownerId ?? "*";
-    }
-
-    public set ownerId(value: string) {
-        this.#ownerId = value;
-    }
-
-    public get scope(): NetworkScope {
-        return this.#scope ?? "public";
-    }
-
-    public set scope(value: NetworkScope) {
-        this.#scope = value;
     }
 }

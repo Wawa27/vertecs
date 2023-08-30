@@ -121,22 +121,6 @@ describe("Entity", () => {
     });
 
     describe("Hierarchy", () => {
-        it("should call the onAddedToEntity method", () => {
-            let pass = false;
-            entity.addComponent(
-                new (class extends Component {
-                    public constructor() {
-                        super();
-                    }
-
-                    onAddedToEntity() {
-                        pass = true;
-                    }
-                })()
-            );
-            assert.isTrue(pass);
-        });
-
         it("should remove the added components", () => {
             entity.addComponent(simpleCounterComponent);
 

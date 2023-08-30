@@ -5,26 +5,28 @@ import type { ComponentClass } from "./Component";
 import Component from "./Component";
 import DependencyGraph from "./DependencyGraph";
 
+type EcsGroup = {
+    entities: Entity[];
+    components: Component[][];
+    systems: System<any>[];
+};
+
+export type SystemConstructor<T extends System> = new (...args: any[]) => T;
+
 /**
  * The system manager is responsible for managing all the systems
  */
 export default class EcsManager {
     #entities: Entity[] = [];
 
-    readonly entityGroups: Map<ComponentClass[], Entity[]>;
-
-    readonly systemGroups: Map<ComponentClass[], System<any>[]>;
-
-    readonly componentGroups: Map<ComponentClass[], Component[][]>;
+    readonly ecsGroups: Map<ComponentClass[], EcsGroup>;
 
     isStarted: boolean;
 
     #loopTime: number;
 
     public constructor() {
-        this.systemGroups = new Map<ComponentClass[], System<any>[]>();
-        this.entityGroups = new Map<ComponentClass[], Entity[]>();
-        this.componentGroups = new Map<ComponentClass[], Component[][]>();
+        this.ecsGroups = new Map();
         this.isStarted = false;
         this.#loopTime = 0;
     }
@@ -43,40 +45,63 @@ export default class EcsManager {
     public async addSystem(system: System<any>): Promise<void> {
         system.onAddedToEcsManager(this);
 
-        const systems = this.systemGroups.get(system.filter);
-        const entities = this.entityGroups.get(system.filter);
-        const components = this.componentGroups.get(system.filter);
+        let ecsGroup = this.ecsGroups.get(system.filter);
 
         if (!system.hasStarted) {
             await system.start(this);
         }
 
-        if (!systems || !entities) {
-            this.systemGroups.set(system.filter, [system]);
-            this.entityGroups.set(system.filter, []);
-            this.componentGroups.set(system.filter, []);
-
-            const entities = this.entityGroups.get(system.filter);
-            const systems = this.systemGroups.get(system.filter);
-            const components = this.componentGroups.get(system.filter);
-
-            this.entities?.forEach((entity) => {
-                if (this.isEntityEligibleToGroup(system.filter, entity)) {
-                    system.onEntityEligible(entity, undefined);
-                    entities!.push(entity);
-                    components!.push(entity.getComponents(system.filter));
-                }
-            });
-        } else {
-            systems.push(system);
-
-            // Make old eligible entities trigger the eligible event
-            entities.forEach((entity) =>
-                system.onEntityEligible(entity, undefined)
-            );
+        if (!ecsGroup) {
+            ecsGroup = {
+                entities: [],
+                components: [],
+                systems: [system],
+            };
+            this.ecsGroups.set(system.filter, ecsGroup);
         }
 
+        this.#entities?.forEach((entity) => {
+            if (
+                ecsGroup &&
+                this.isEntityEligibleToGroup(system.filter, entity)
+            ) {
+                const components = entity.getComponents(system.filter);
+                system.onEntityEligible(entity, components);
+                ecsGroup.entities.push(entity);
+                ecsGroup.components.push(components);
+            }
+        });
+
         await system.initialize();
+    }
+
+    public removeSystem(SystemConstructor: SystemConstructor<any>): void {
+        const system = this.findSystem(SystemConstructor);
+
+        if (!system) {
+            return;
+        }
+
+        const ecsGroup = this.ecsGroups.get(system.filter);
+        if (!ecsGroup) {
+            return;
+        }
+        const systemIndex = ecsGroup.systems.indexOf(system);
+        if (systemIndex === -1) {
+            return;
+        }
+
+        ecsGroup.systems.splice(systemIndex, 1);
+        if (ecsGroup.systems.length === 0) {
+            this.ecsGroups.delete(system.filter);
+        }
+
+        ecsGroup.entities.forEach((entity, i) => {
+            const components = ecsGroup.components[i];
+            system.onEntityNoLongerEligible(entity, components);
+        });
+
+        system.stop();
     }
 
     /**
@@ -85,8 +110,8 @@ export default class EcsManager {
     public async start(): Promise<void> {
         this.isStarted = true;
 
-        Array.from(this.systemGroups.values()).forEach((systems) => {
-            systems.forEach(async (system) => {
+        Array.from(this.ecsGroups.values()).forEach((ecsGroup) => {
+            ecsGroup.systems.forEach(async (system) => {
                 if (!system.hasStarted) {
                     await system.start(this);
                 }
@@ -96,13 +121,14 @@ export default class EcsManager {
     }
 
     public async stop(): Promise<void> {
-        Array.from(this.systemGroups.values()).forEach((systems) => {
-            systems.forEach(async (system) => {
+        Array.from(this.ecsGroups.values()).forEach((ecsGroup) => {
+            ecsGroup.systems.forEach(async (system) => {
                 if (system.hasStarted) {
                     await system.stop();
                 }
             });
         });
+        this.isStarted = false;
     }
 
     /**
@@ -120,24 +146,23 @@ export default class EcsManager {
      * Add an entity to the system manager
      */
     public addEntity(newEntity: Entity) {
-        if (this.entities.find((entity) => entity.id === newEntity.id)) {
+        if (this.#entities.find((entity) => entity.id === newEntity.id)) {
             throw new Error(`Entity found with same ID: ${newEntity.id}`);
         }
 
         newEntity.ecsManager = this;
 
-        Array.from(this.entityGroups.keys()).forEach((group) => {
-            if (this.isEntityEligibleToGroup(group, newEntity)) {
-                const entities = this.entityGroups.get(group);
-                const systems = this.systemGroups.get(group);
-                const components = this.componentGroups.get(group);
-                if (entities && systems && components) {
-                    entities.push(newEntity);
-                    systems.forEach((system) =>
-                        system.onEntityEligible(newEntity, undefined)
-                    );
-                    components.push(newEntity.getComponents(group));
-                }
+        Array.from(this.ecsGroups.entries()).forEach(([filter, ecsGroup]) => {
+            if (
+                this.isEntityEligibleToGroup(filter, newEntity) &&
+                !ecsGroup.entities.includes(newEntity)
+            ) {
+                ecsGroup.entities.push(newEntity);
+                const components = newEntity.getComponents(filter);
+                ecsGroup.systems.forEach((system) =>
+                    system.onEntityEligible(newEntity, components)
+                );
+                ecsGroup.components.push(components);
             }
         });
 
@@ -146,6 +171,25 @@ export default class EcsManager {
         }
 
         this.#entities.push(newEntity);
+    }
+
+    public removeEntity(entity: Entity) {
+        const entityIndex = this.#entities.indexOf(entity);
+        if (entityIndex === -1) {
+            return;
+        }
+        this.#entities.splice(entityIndex, 1);
+        Array.from(this.ecsGroups.entries()).forEach(([filter, ecsGroup]) => {
+            const entityIndex = ecsGroup.entities.indexOf(entity);
+            if (entityIndex !== -1) {
+                const components = ecsGroup.components[entityIndex];
+                ecsGroup.systems.forEach((system) =>
+                    system.onEntityNoLongerEligible(entity, components)
+                );
+                ecsGroup.entities.splice(entityIndex, 1);
+                ecsGroup.components.splice(entityIndex, 1);
+            }
+        });
     }
 
     public destroyEntity(entityId: string): void {
@@ -161,7 +205,7 @@ export default class EcsManager {
      */
     public loop() {
         const start = performance.now();
-        if (this.systemGroups.size === 0) {
+        if (this.ecsGroups.size === 0) {
             throw new Error("No system found");
         }
 
@@ -171,21 +215,20 @@ export default class EcsManager {
 
         // Make a tree of systems based on their dependencies
         const systemsToUpdate: System<any>[] = [];
-        this.systemGroups.forEach((systems, group) => {
-            systems
+        this.ecsGroups.forEach((ecsGroup, group) => {
+            ecsGroup.systems
                 .filter((system) => system.hasEnoughTimePassed())
                 .forEach((system) => systemsToUpdate.push(system));
         });
 
         DependencyGraph.getOrderedSystems(systemsToUpdate).forEach((system) => {
-            const group = this.componentGroups.get(system.filter);
-            const entities = this.entityGroups.get(system.filter);
+            const ecsGroup = this.ecsGroups.get(system.filter);
 
-            if (!group || !entities) {
-                throw new Error("Group or entities not found");
+            if (!ecsGroup) {
+                return;
             }
 
-            system.loop(group as [][], entities);
+            system.loop(ecsGroup.components as [][], ecsGroup.entities);
         });
 
         this.#loopTime = performance.now() - start;
@@ -218,38 +261,34 @@ export default class EcsManager {
         entity: Entity,
         component: Component
     ): void {
-        Array.from(this.entityGroups.keys()).forEach((group) => {
+        Array.from(this.ecsGroups.keys()).forEach((group) => {
             if (this.isEntityEligibleToGroup(group, entity)) {
-                const entities = this.entityGroups.get(group);
-                const systems = this.systemGroups.get(group);
-                const components = this.componentGroups.get(group);
-                if (
-                    entities &&
-                    systems &&
-                    components &&
-                    !entities.includes(entity)
-                ) {
-                    entities.push(entity);
-                    systems.forEach((system) =>
-                        system.onEntityEligible(entity, component)
+                const ecsGroup = this.ecsGroups.get(group);
+                if (ecsGroup && !ecsGroup.entities.includes(entity)) {
+                    const components = entity.getComponents(group);
+                    ecsGroup.entities.push(entity);
+                    ecsGroup.systems.forEach((system) =>
+                        system.onEntityEligible(entity, components)
                     );
-                    components.push(entity.getComponents(group));
+                    ecsGroup.components.push(components);
                 }
             }
         });
     }
 
     public findSystem<T extends System<any>>(
-        SystemClass: new () => T
+        SystemConstructor: SystemConstructor<T>
     ): T | undefined {
-        return Array.from(this.systemGroups.values())
-            .flat()
-            .find((system) => system instanceof SystemClass) as T;
+        return Array.from(this.ecsGroups.values())
+            .flatMap((ecsGroup) => ecsGroup.systems)
+            .find((system) => system instanceof SystemConstructor) as
+            | T
+            | undefined;
     }
 
     /**
      * Called after a component is removed from an entity
-     * This method will check if the entity is still eligible to the groups
+     * This method will check if the entity is still eligible to the groups and flag it for deletion if not
      * @param entity
      * @param component
      */
@@ -257,23 +296,20 @@ export default class EcsManager {
         entity: Entity,
         component: Component
     ): void {
-        Array.from(this.entityGroups.keys()).forEach((group) => {
-            const entities = this.entityGroups.get(group);
-            const components = this.componentGroups.get(group);
-            const systems = this.systemGroups.get(group);
-
+        Array.from(this.ecsGroups.entries()).forEach(([filter, ecsGroup]) => {
             if (
-                !this.isEntityEligibleToGroup(group, entity) &&
-                entities?.includes(entity)
+                !this.isEntityEligibleToGroup(filter, entity) &&
+                ecsGroup.entities?.includes(entity)
             ) {
-                entities.splice(entities.indexOf(entity), 1);
-                components?.splice(
-                    components.indexOf(entity.getComponents(group)),
-                    1
+                const entityToDeleteIndex = ecsGroup.entities.indexOf(entity);
+                const components = ecsGroup.components[entityToDeleteIndex];
+
+                ecsGroup.systems.forEach((system) =>
+                    system.onEntityNoLongerEligible(entity, components)
                 );
-                systems?.forEach((system) =>
-                    system.onEntityNoLongerEligible(entity, component)
-                );
+
+                ecsGroup.entities.splice(entityToDeleteIndex, 1);
+                ecsGroup.components.splice(entityToDeleteIndex, 1);
             }
         });
     }

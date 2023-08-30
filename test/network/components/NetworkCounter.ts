@@ -47,7 +47,7 @@ export default class NetworkCounter extends NetworkComponent<CounterComponentDat
         };
     }
 
-    public shouldUpdate(): boolean {
+    public isDirty(): boolean {
         const shouldUpdate =
             this.#lastCount !==
             this.entity?.findComponent(CounterComponent)?.count;

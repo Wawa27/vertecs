@@ -46,7 +46,8 @@ export default class Quadtree {
         const quadrant = this.#quadrants[quadrantIndex];
 
         if (quadrant instanceof Entity) {
-            this.replaceWithQuadtree(quadrantIndex);
+            const quadtree = this.replaceWithQuadtree(quadrantIndex);
+            quadtree.addEntity(entity);
         } else if (quadrant instanceof Quadtree) {
             quadrant.addEntity(entity);
         } else {
@@ -54,11 +55,8 @@ export default class Quadtree {
         }
     }
 
-    public removeEntity(entity: Entity): void {
-        const transform = entity.getComponent(Transform);
-        if (!transform) {
-            throw new Error("Transform not found");
-        }
+    public removeEntity(entity: Entity, components: [Body, Transform]): void {
+        const [body, transform] = components;
 
         const worldPosition = transform.getWorldPosition();
 
@@ -81,11 +79,11 @@ export default class Quadtree {
         if (quadrant instanceof Entity) {
             this.#quadrants[quadrantIndex] = undefined;
         } else if (quadrant instanceof Quadtree) {
-            quadrant.removeEntity(entity);
+            quadrant.removeEntity(entity, components);
         }
     }
 
-    private replaceWithQuadtree(index: number): void {
+    private replaceWithQuadtree(index: number): Quadtree {
         const entity = this.#quadrants[index] as Entity;
 
         const halfWidth =
@@ -110,6 +108,8 @@ export default class Quadtree {
         const quadtree = new Quadtree(quadrantBounds);
         this.#quadrants[index] = quadtree;
         quadtree.addEntity(entity);
+
+        return quadtree;
     }
 
     public getIntersectedEntities(range: AxisAlignedBoundingBox): Entity[] {

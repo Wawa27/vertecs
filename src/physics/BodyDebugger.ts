@@ -1,7 +1,7 @@
-import { BoxGeometry, Mesh, MeshBasicMaterial, SphereGeometry } from "three";
+import { Mesh, MeshBasicMaterial, SphereGeometry } from "three";
 import { vec3 } from "ts-gl-matrix";
 import { Component, Entity } from "../core";
-import { ThreeMesh } from "../threejs";
+import { ThreeObject3D } from "../threejs";
 import { Transform } from "../math";
 import SphereBody from "./bodies/SphereBody";
 
@@ -27,7 +27,7 @@ export default class BodyDebugger extends Component {
         );
 
         boundingBoxDebugEntity.addComponent(
-            new ThreeMesh(
+            new ThreeObject3D(
                 new Mesh(
                     new SphereGeometry(sphereBody?.radius || 1, 32, 32),
                     new MeshBasicMaterial({ color: 0xff0000 })

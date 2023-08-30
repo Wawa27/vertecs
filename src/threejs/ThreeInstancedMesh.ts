@@ -1,8 +1,8 @@
-import { DynamicDrawUsage, InstancedMesh, StaticDrawUsage } from "three";
-import ThreeMesh from "./ThreeMesh";
+import { InstancedMesh, StaticDrawUsage } from "three";
+import ThreeObject3D from "./ThreeObject3D";
 import { Entity } from "../core";
 
-export default class ThreeInstancedMesh extends ThreeMesh {
+export default class ThreeInstancedMesh extends ThreeObject3D {
     #entities: string[];
 
     public constructor(instancedMesh: InstancedMesh, id?: string) {
@@ -32,11 +32,10 @@ export default class ThreeInstancedMesh extends ThreeMesh {
 
     public clone(): ThreeInstancedMesh {
         if (this.entities.length > 1024) {
-            console.debug("Cloning instanced mesh");
             return new ThreeInstancedMesh(
                 new InstancedMesh(
-                    (super.object3d as InstancedMesh).geometry,
-                    (super.object3d as InstancedMesh).material,
+                    (super.object3D as InstancedMesh).geometry,
+                    (super.object3D as InstancedMesh).material,
                     this.entities.length
                 ),
                 this.id

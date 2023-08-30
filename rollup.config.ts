@@ -9,7 +9,6 @@ export default {
         "./examples/oimo/Basic.ts",
         "./examples/oimo/Rotation.ts",
         "./examples/oimo/Tower.ts",
-        "./examples/network/pong/client/Main.ts",
     ],
     output: {
         dir: "./dist/",

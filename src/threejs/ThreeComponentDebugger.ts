@@ -1,7 +1,7 @@
 import { BufferGeometry, Line, LineBasicMaterial, Vector3 } from "three";
 import { vec3 } from "ts-gl-matrix";
 import { Component, Entity } from "../core";
-import ThreeMesh from "./ThreeMesh";
+import ThreeObject3D from "./ThreeObject3D";
 import { Transform } from "../math";
 
 export default class ThreeComponentDebugger extends Component {
@@ -21,7 +21,7 @@ export default class ThreeComponentDebugger extends Component {
 
         const line = new Line(geometry, material);
 
-        forwardLineEntity.addComponent(new ThreeMesh(line));
+        forwardLineEntity.addComponent(new ThreeObject3D(line));
         const transform = entity.getComponent(Transform);
         forwardLineEntity.addComponent(
             new Transform(
