@@ -1,8 +1,8 @@
 import { Scene } from "three";
-import { Component, Entity, System } from "../../core";
+import { Entity, System } from "../../core";
 import ThreeLightComponent from "./ThreeLightComponent";
 import { Transform } from "../../math";
-import ThreeMesh from "../ThreeMesh";
+import ThreeObject3D from "../ThreeObject3D";
 
 export default class ThreeLightSystem extends System<
     [ThreeLightComponent, Transform]
@@ -16,7 +16,7 @@ export default class ThreeLightSystem extends System<
 
     public onEntityEligible(
         entity: Entity,
-        lastComponentAdded: Component | undefined
+        components: [ThreeLightComponent, Transform]
     ) {
         const lightComponent = entity.getComponent(ThreeLightComponent);
 
@@ -29,8 +29,21 @@ export default class ThreeLightSystem extends System<
         if (lightComponent.target) {
             // @ts-ignore
             lightComponent.light.target =
-                lightComponent.target.getComponent(ThreeMesh)?.object3d;
+                lightComponent.target.getComponent(ThreeObject3D)?.object3D;
         }
+    }
+
+    public onEntityNoLongerEligible(
+        entity: Entity,
+        components: [ThreeLightComponent, Transform]
+    ) {
+        const [threeLightComponent] = components;
+
+        if (!threeLightComponent) {
+            throw new Error("Entity is missing a ThreeLightComponent");
+        }
+
+        this.#scene.remove(threeLightComponent.light);
     }
 
     protected onLoop(

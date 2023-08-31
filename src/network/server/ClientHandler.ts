@@ -8,7 +8,7 @@ export default class ClientHandler {
 
     protected $webSocket: WebSocket;
 
-    readonly #privateData: CustomData[];
+    readonly #customData: CustomData[];
 
     readonly $clientEntity: Entity;
 
@@ -17,11 +17,11 @@ export default class ClientHandler {
     #forceUpdate: boolean;
 
     public constructor(
-        playerEntity: Entity,
+        clientEntity: Entity,
         ecsManager: EcsManager,
         webSocket: WebSocket
     ) {
-        this.$clientEntity = playerEntity;
+        this.$clientEntity = clientEntity;
         this.ecsManager = ecsManager;
         this.$webSocket = webSocket;
         this.#forceUpdate = true;
@@ -31,7 +31,7 @@ export default class ClientHandler {
                 GameState.reviver
             );
         });
-        this.#privateData = [];
+        this.#customData = [];
         this.#forceUpdate = true;
     }
 
@@ -43,9 +43,11 @@ export default class ClientHandler {
         this.webSocket.send(JSON.stringify(message));
     }
 
-    public sendPrivateCustomData(data: any): void {
-        this.privateData.push(data);
+    public sendCustomData(data: any): void {
+        this.customData.push(data);
     }
+
+    public onPrivateCustomData(data: any): void {}
 
     public get webSocket(): WebSocket {
         return this.$webSocket;
@@ -71,7 +73,7 @@ export default class ClientHandler {
         return this.$clientEntity;
     }
 
-    public get privateData(): CustomData[] {
-        return this.#privateData;
+    public get customData(): CustomData[] {
+        return this.#customData;
     }
 }

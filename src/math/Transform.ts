@@ -4,7 +4,15 @@
  * Global position, rotation and scale are only updated when dirty and queried,
  * parents are updated from the current transform up to the root transform.
  */
-import { Mat4, Mat4Like, Quat, QuatLike, Vec3, Vec3Like } from "ts-gl-matrix";
+import {
+    mat4,
+    Mat4,
+    Mat4Like,
+    Quat,
+    QuatLike,
+    Vec3,
+    Vec3Like,
+} from "ts-gl-matrix";
 import { Component, Entity } from "../core";
 
 export default class Transform extends Component {
@@ -67,7 +75,8 @@ export default class Transform extends Component {
      * Creates a new transform
      * @param translation Specifies the translation, will be copied using {@link Vec3.copy}
      * @param rotation Specifies the rotation, will be copied using {@link Quat.copy}
-     * @param scaling Specifies the scale, will be copied using {@param forward @link Vec3.copy}
+     * @param scaling Specifies the scale, will be copied using {@link Vec3.copy}
+     * @param forward Specifies the forward vector, will be copied using {@link Vec3.copy}
      */
     public constructor(
         translation?: Vec3Like,
@@ -118,7 +127,7 @@ export default class Transform extends Component {
      * Called whenever the attached entity parent change
      * @param parent The new parent entity
      */
-    public onEntityParentChanged(parent: Entity): void {
+    public onEntityNewParent(parent: Entity): void {
         this.setNewParent(parent);
     }
 
@@ -220,7 +229,9 @@ export default class Transform extends Component {
 
     public setWorldScale(scale: Vec3Like): void {
         const inverseScale = Vec3.inverse(Vec3.create(), this.getWorldScale());
-        Vec3.mul(this.scaling, scale, inverseScale);
+        Vec3.mul(this.scaling, this.scaling, inverseScale);
+        Vec3.mul(this.scaling, this.scaling, scale);
+        this.dirty = true;
     }
 
     public scale(scale: Vec3Like): void {
@@ -331,14 +342,21 @@ export default class Transform extends Component {
         return out;
     }
 
+    /**
+     * Make this transform look at the specified position
+     * @param x
+     * @param y
+     * @param z
+     */
     public lookAtXyz(x: number, y: number, z: number): void {
-        const lookAt = Mat4.targetTo(
-            Mat4.create(),
-            this.position,
+        const lookAtMatrix = Mat4.create();
+        mat4.targetTo(
+            lookAtMatrix,
             [x, y, z],
+            this.getWorldPosition(),
             [0, 1, 0]
         );
-        Mat4.getRotation(this.rotation, lookAt);
+        Mat4.getRotation(this.rotation, lookAtMatrix);
         this.dirty = true;
     }
 
@@ -373,6 +391,11 @@ export default class Transform extends Component {
      */
     public setPosition(position: Vec3Like) {
         Vec3.copy(this.position, position);
+        this.dirty = true;
+    }
+
+    public setForward(forward: Vec3Like): void {
+        Vec3.copy(this.forward, forward);
         this.dirty = true;
     }
 

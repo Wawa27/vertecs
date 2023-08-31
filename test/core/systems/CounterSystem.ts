@@ -15,10 +15,7 @@ export default class CounterSystem extends System<[CounterComponent]> {
         this.counter = 0;
     }
 
-    public onEntityEligible(
-        entity: Entity,
-        lastComponentAdded: Component | undefined
-    ) {
+    public onEntityEligible(entity: Entity, components: [CounterComponent]) {
         this.counter++;
     }
 

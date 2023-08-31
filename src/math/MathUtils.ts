@@ -1,4 +1,4 @@
-import { quat, QuatLike, vec3, Vec3Like } from "ts-gl-matrix";
+import { QuatLike, vec3, Vec3Like } from "ts-gl-matrix";
 
 export default class MathUtils {
     public static getEulerToDegrees(radians: number): number {

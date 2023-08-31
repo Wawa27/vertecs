@@ -8,9 +8,9 @@ import {
 import { quat } from "ts-gl-matrix";
 import {
     OimoComponent,
-    ThreeCameraComponent,
+    ThreeCamera,
     ThreeLightComponent,
-    ThreeMesh,
+    ThreeObject3D,
     Transform,
 } from "../../src";
 import { initializeBoilerplate, spawnSphere } from "./Boilerplate";
@@ -29,7 +29,7 @@ platform1.addComponent(
     })
 );
 platform1.addComponent(
-    new ThreeMesh(
+    new ThreeObject3D(
         new Mesh(
             new BoxGeometry(50, 10, 20),
             new MeshStandardMaterial({ color: 0x6fbbd3 })
@@ -49,7 +49,7 @@ platform2.addComponent(
     })
 );
 platform2.addComponent(
-    new ThreeMesh(
+    new ThreeObject3D(
         new Mesh(
             new BoxGeometry(50, 10, 20),
             new MeshStandardMaterial({ color: 0x6fbbd3 })
@@ -62,7 +62,7 @@ spawnSphere([0, 20, -12], 2);
 
 const camera = ecsManager.createEntity({ name: "camera" });
 camera.addComponent(new Transform([90, 20, 0]));
-const threeCameraComponent = new ThreeCameraComponent(
+const threeCameraComponent = new ThreeCamera(
     new PerspectiveCamera(90, window.innerWidth / window.innerHeight, 1, 200),
     ecsManager.createEntity(),
     undefined,

@@ -21,7 +21,7 @@ export default class PositionComponentSynchronizer extends SerializableComponent
         }
     }
 
-    public shouldUpdate() {
+    public isDirty() {
         // In this example, we update the client/server every second
         if (Date.now() - this.#lastUpdate > 1000) {
             this.#lastUpdate = Date.now();

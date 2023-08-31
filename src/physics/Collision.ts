@@ -11,4 +11,12 @@ export default class Collision extends Component {
         this.#position = position;
         this.#collidingWith = collidingWith;
     }
+
+    public get position(): Vec3Like {
+        return this.#position;
+    }
+
+    public get collidingWith(): Entity {
+        return this.#collidingWith;
+    }
 }

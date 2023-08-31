@@ -15,9 +15,9 @@ import {
     OimoComponent,
     OimoSystem,
     System,
-    ThreeCameraComponent,
+    ThreeCamera,
     ThreeLightComponent,
-    ThreeMesh,
+    ThreeObject3D,
     ThreeSystem,
     Transform,
 } from "../../src";
@@ -32,7 +32,7 @@ export const spawnCube = (
     const cube = ecsManager.createEntity({ name: "cube" });
     cube.addComponent(new Transform(position, undefined, undefined));
     cube.addComponent(
-        new ThreeMesh(
+        new ThreeObject3D(
             new Mesh(
                 new BoxGeometry(scale[0], scale[1], scale[2]),
                 new MeshStandardMaterial({ color: 0x808080 })
@@ -56,7 +56,7 @@ export const spawnSphere = (
     const sphere = ecsManager.createEntity();
     sphere.addComponent(new Transform(position, undefined, undefined));
     sphere.addComponent(
-        new ThreeMesh(
+        new ThreeObject3D(
             new Mesh(
                 new SphereGeometry(radius, 64, 64),
                 new MeshStandardMaterial({ color: 0x808080 })
@@ -93,7 +93,7 @@ export const initializeBoilerplate = async (): Promise<EcsManager> => {
 
     const camera = ecsManager.createEntity();
     camera.addComponent(new Transform([0, 0, 20]));
-    const threeCameraComponent = new ThreeCameraComponent(
+    const threeCameraComponent = new ThreeCamera(
         new PerspectiveCamera(
             90,
             window.innerWidth / window.innerHeight,
@@ -110,7 +110,7 @@ export const initializeBoilerplate = async (): Promise<EcsManager> => {
     const light = ecsManager.createEntity();
     light.addComponent(new Transform([0, 100, 100]));
     light.addComponent(
-        new ThreeMesh(
+        new ThreeObject3D(
             new Mesh(
                 new SphereGeometry(0.1, 64, 64),
                 new MeshBasicMaterial({ color: 0xffffff })

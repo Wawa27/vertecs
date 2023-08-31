@@ -2,7 +2,7 @@ import { Vec3 } from "ts-gl-matrix";
 import { Component } from "../core";
 
 export type ParticleOptions = {
-    direction: Vec3;
+    getDirection: () => Vec3;
     startScale: number;
     endScale: number;
     lifeTime: number;
@@ -26,16 +26,19 @@ export default class Particle extends Component {
 
     #endColor: Vec3;
 
+    readonly #getDirection: () => Vec3;
+
     public constructor(options: ParticleOptions) {
         super();
 
         this.#startScale = options.startScale;
         this.#endScale = options.endScale;
-        this.#direction = options.direction;
+        this.#direction = options.getDirection();
         this.#lifeTime = options.lifeTime;
         this.#timeAlive = options.timeAlive;
         this.#startColor = options.startColor;
         this.#endColor = options.endColor;
+        this.#getDirection = options.getDirection;
     }
 
     public get startColor(): Vec3 {
@@ -76,17 +79,13 @@ export default class Particle extends Component {
 
     public clone(): Particle {
         return new Particle({
-            direction: new Vec3(
-                Math.random() * 0.2,
-                0.2 + Math.random(),
-                Math.random() * 0.2
-            ),
-            startScale: Math.random() * 0.2,
-            endScale: 0.2 + Math.random() * 0.8,
-            lifeTime: Math.random() * 2 * 1000,
+            getDirection: this.#getDirection,
+            startScale: Math.random() * 0.1,
+            endScale: 0.1 + Math.random() * 0.1,
+            lifeTime: this.lifeTime,
             timeAlive: 0,
-            startColor: Vec3.clone(this.#startColor),
-            endColor: Vec3.clone(this.#endColor),
+            startColor: new Vec3(this.startColor),
+            endColor: new Vec3(this.endColor),
         });
     }
 }

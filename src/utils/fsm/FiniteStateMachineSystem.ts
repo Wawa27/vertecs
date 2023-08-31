@@ -8,14 +8,15 @@ export default class FiniteStateMachineSystem extends System<
         super([FiniteStateMachine], tps);
     }
 
+    public onEntityEligible(entity: Entity, components: [FiniteStateMachine]) {
+        const [finiteStateMachine] = components;
+
+        finiteStateMachine.setNextState(finiteStateMachine.initialStateName);
+    }
+
     protected onLoop(
         components: [FiniteStateMachine][],
         entities: Entity[],
         deltaTime: number
-    ): void {
-        for (let i = 0; i < components.length; i++) {
-            const [finiteStateMachine] = components[i];
-            finiteStateMachine.onLoop(deltaTime);
-        }
-    }
+    ): void {}
 }

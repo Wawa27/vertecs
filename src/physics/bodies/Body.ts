@@ -8,18 +8,26 @@ export type PhysicsData = {
     [key: string]: any;
 };
 
+export type BodyOptions = {
+    movable?: boolean;
+    mass?: number;
+};
+
 export default abstract class Body extends SerializableComponent<PhysicsData> {
     protected $movable: boolean;
 
     protected $boundingBox: AxisAlignedBoundingBox;
 
-    protected constructor(movable: boolean) {
+    protected $mass: number;
+
+    protected constructor(bodyOptions?: BodyOptions) {
         super();
-        this.$movable = movable;
+        this.$movable = bodyOptions?.movable ?? true;
         this.$boundingBox = new AxisAlignedBoundingBox(
             vec3.create(),
             vec3.create()
         );
+        this.$mass = bodyOptions?.mass ?? 0;
     }
 
     public abstract getBoundingBox(): AxisAlignedBoundingBox;
@@ -38,6 +46,10 @@ export default abstract class Body extends SerializableComponent<PhysicsData> {
             return true;
         }
         return false;
+    }
+
+    public get mass(): number {
+        return this.$mass;
     }
 
     public get movable(): boolean {

@@ -1,17 +1,17 @@
-import * as net from "net";
 import { Entity, System } from "../core";
 import { SerializedEntity } from "../io";
 import type {
     ComponentClass,
     ComponentClassConstructor,
 } from "../core/Component";
+import Component from "../core/Component";
 import GameState from "./GameState";
 import NetworkComponent, {
     SerializedNetworkComponent,
 } from "./NetworkComponent";
 import NetworkEntity from "./NetworkEntity";
 import IsNetworked from "./IsNetworked";
-import Component from "../core/Component";
+import IsPrefab from "../utils/prefabs/IsPrefab";
 
 /**
  * The networking system is responsible for sending and receiving entities over the networking.
@@ -124,7 +124,8 @@ export default class NetworkSystem extends System<[IsNetworked]> {
         const serializedEntity = new NetworkEntity(
             entity.id,
             new Map(),
-            entity.name
+            entity.name,
+            entity.getComponent(IsPrefab)?.prefabName
         );
 
         const networkComponents: NetworkComponent<any>[] = entity
@@ -157,10 +158,14 @@ export default class NetworkSystem extends System<[IsNetworked]> {
     protected serializeComponent(
         component: NetworkComponent<any>
     ): SerializedNetworkComponent<any> | undefined {
-        if (!component.shouldUpdate() && !component.forceUpdate) {
-            return undefined;
+        if (component.forceUpdate) {
+            return component.serialize(true);
         }
-        return component.serialize();
+        if (component.isDirty(component.lastData)) {
+            component.updateTimestamp = Date.now();
+            return component.serialize();
+        }
+        return undefined;
     }
 
     /**

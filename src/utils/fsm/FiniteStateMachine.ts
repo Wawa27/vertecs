@@ -1,42 +1,31 @@
 import { Component } from "../../core";
 import State from "./State";
-import { SerializableComponent } from "../../io";
 
-type FiniteStateMachineData = {
-    currentStateName: string;
-    states: { name: string; data: string }[];
-    transitions: {
-        stateName: string;
-        nextStates: { name: string; data: string }[];
-    }[];
-};
+export default class FiniteStateMachine extends Component {
+    protected $inialStateName: string;
 
-export default class FiniteStateMachine extends SerializableComponent<FiniteStateMachineData> {
-    public static readonly States: (typeof State)[] = [];
+    protected $currentStateName?: string;
 
-    #currentStateName: string;
+    protected $states: Map<string, State>;
 
-    #states: Map<string, State>;
-
-    #transitions: Map<string, Map<string, State>>;
+    protected $transitions: Map<string, Map<string, State>>;
 
     public constructor(
         initialStateName: string,
-        states?: Map<string, State>,
-        transitions?: Map<string, Map<string, State>>
+        states?: { name: string; state: State }[],
+        transitions?: { stateName: string; nextStateNames: string[] }[]
     ) {
         super();
-        this.#currentStateName = initialStateName;
-        this.#states = states ?? new Map();
-        this.#transitions = transitions ?? new Map();
-    }
+        this.$inialStateName = initialStateName;
 
-    public start(): void {
-        this.#states.get(this.#currentStateName)?.onEnter(this.entity);
+        this.$states = new Map();
+        this.addStates(states ?? []);
+        this.$transitions = new Map();
+        this.addTransitions(transitions ?? []);
     }
 
     public addState(name: string, state: State): void {
-        this.#states.set(name, state);
+        this.$states.set(name, state);
     }
 
     public addStates(states: { name: string; state: State }[]): void {
@@ -44,10 +33,10 @@ export default class FiniteStateMachine extends SerializableComponent<FiniteStat
     }
 
     public addTransition(stateName: string, nextStateNames: string[]): void {
-        const state = this.#states.get(stateName);
+        const state = this.$states.get(stateName);
 
         nextStateNames.forEach((nextStateName) => {
-            const nextState = this.#states.get(nextStateName);
+            const nextState = this.$states.get(nextStateName);
 
             if (!state || !nextState) {
                 console.warn(
@@ -56,10 +45,10 @@ export default class FiniteStateMachine extends SerializableComponent<FiniteStat
                 return;
             }
 
-            let transitions = this.#transitions.get(stateName);
+            let transitions = this.$transitions.get(stateName);
             if (!transitions) {
-                this.#transitions.set(stateName, new Map());
-                transitions = this.#transitions.get(stateName);
+                this.$transitions.set(stateName, new Map());
+                transitions = this.$transitions.get(stateName);
             }
             transitions?.set(nextStateName, nextState);
         });
@@ -74,107 +63,65 @@ export default class FiniteStateMachine extends SerializableComponent<FiniteStat
     }
 
     public setNextState(nextStateName: string): void {
-        if (nextStateName === this.#currentStateName) {
+        if (!this.$currentStateName) {
+            this.$currentStateName = nextStateName;
+            this.entity?.addComponent(this.getCurrentState()!);
             return;
         }
 
-        const transitions = this.#transitions.get(this.#currentStateName);
+        if (nextStateName === this.$currentStateName) {
+            return;
+        }
+
+        const transitions = this.$transitions.get(this.$currentStateName);
 
         if (!transitions) {
             throw new Error(
-                `State "${
-                    this.#currentStateName
-                }" has no transitions to other states`
+                `State "${this.$currentStateName}" has no transitions to other states`
             );
         }
 
         const nextState = transitions.get(nextStateName);
         if (!nextState) {
             throw new Error(
-                `State "${
-                    this.#currentStateName
-                }" has no transition to "${nextStateName}"`
+                `State "${this.$currentStateName}" has no transition to "${nextStateName}"`
             );
         }
 
-        const currentState = this.#states.get(this.#currentStateName);
-        currentState?.onLeave(this.entity);
-        this.#currentStateName = nextStateName;
-        nextState.onEnter(this.entity);
+        this.entity?.removeComponent(this.getCurrentState()!.constructor);
+        this.$currentStateName = nextStateName;
+        this.entity?.addComponent(this.getCurrentState()!);
     }
 
-    public onLoop(deltaTime: number): void {
-        const currentState = this.#states.get(this.#currentStateName);
-        currentState?.onLoop(deltaTime, this.entity);
+    public getCurrentState(): State | undefined {
+        return this.$states.get(this.$currentStateName ?? "");
     }
 
-    public write() {
-        return {
-            currentStateName: this.#currentStateName,
-            states: [...this.#states].map(([name, state]) => ({
-                name,
-                data: state.serialize(),
-            })),
-            transitions: [...this.#transitions].map(([name, state]) => ({
-                stateName: name,
-                nextStates: [...state].map(([nextStateName, nextState]) => ({
-                    name: nextStateName,
-                    data: nextState.serialize(),
-                })),
-            })),
-        };
+    public get initialStateName(): string {
+        return this.$inialStateName;
     }
 
-    public read(data: any): void {
-        this.#currentStateName = data.currentState;
-        this.#states = new Map();
-        data.states.forEach((stateJson: any) => {
-            const state = FiniteStateMachine.States.find(
-                (State) => State.constructor.name === stateJson.name
-            )?.deserialize(stateJson);
-            if (!state) {
-                throw new Error(`State not found : ${stateJson.name}`);
-            }
-            this.#states.set(stateJson.name, state);
-        });
-        this.#transitions = new Map();
-        data.transitions.forEach(
-            (transition: {
-                stateName: string;
-                nextStates: { name: string; data: string }[];
-            }) => {
-                const state = this.#states.get(transition.stateName);
-                if (!state) {
-                    throw new Error(
-                        `State not found : ${transition.stateName}`
-                    );
-                }
-                const nextStates = new Map();
-                this.#transitions.set(transition.stateName, nextStates);
-                transition.nextStates.forEach((nextStateJson: any) => {
-                    const nextState = FiniteStateMachine.States.find(
-                        (State) => State.constructor.name === nextStateJson.name
-                    )?.deserialize(nextStateJson);
-                    if (!nextState) {
-                        throw new Error(
-                            `State not found : ${nextStateJson.name}`
-                        );
-                    }
-                    nextStates.set(nextStateJson.name, nextState);
-                });
-            }
-        );
+    public set currentStateName(currentStateName: string) {
+        this.$currentStateName = currentStateName;
     }
 
-    public get currentStateName(): string {
-        return this.#currentStateName;
+    public get currentStateName(): string | undefined {
+        return this.$currentStateName;
     }
 
     public clone(): Component {
         return new FiniteStateMachine(
-            this.#currentStateName,
-            this.#states,
-            this.#transitions
+            this.$inialStateName,
+            Array.from(this.$states.entries()).map(([name, state]) => ({
+                name,
+                state: state.clone(),
+            })),
+            Array.from(this.$transitions.entries()).map(
+                ([stateName, transitions]) => ({
+                    stateName,
+                    nextStateNames: Array.from(transitions.keys()),
+                })
+            )
         );
     }
 }

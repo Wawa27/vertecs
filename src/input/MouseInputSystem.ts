@@ -13,7 +13,7 @@ export default abstract class MouseInputSystem extends System<[]> {
 
     async initialize(): Promise<void> {
         if (this.#canvasId) {
-            const canvas = document.getElementById(this.#canvasId);
+            const canvas = document.getElementsByTagName("canvas")[0];
             if (!canvas) {
                 throw new Error(`Canvas not found with id: ${this.#canvasId}`);
             }

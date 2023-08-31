@@ -8,7 +8,9 @@ export default class ExampleClientNetworkSystem extends ClientNetworkSystem {
 
     protected onConnect(): void {}
 
-    protected onNewEntity(entity: Entity): void {
-        console.log("Received new entity from server");
-    }
+    protected onDisconnect(): void {}
+
+    protected onDeletedEntity(entity: Entity): void {}
+
+    protected onNewEntity(entity: Entity): void {}
 }
