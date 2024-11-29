@@ -1,12 +1,15 @@
-import chai, { assert, expect } from "chai";
-import spies from "chai-spies";
-import { EcsManager, Entity } from "../../src";
+import * as chaiModule from "chai";
+import chaiSpies from "chai-spies";
+import { EcsManager } from "../../src";
 import CounterComponent from "../components/CounterComponent";
 import CounterSystem from "./systems/CounterSystem";
 import CounterComponentSubclass from "./components/CounterComponentSubclass";
 import EmptyComponent from "./components/EmptyComponent";
 
-chai.use(spies);
+const chai = { ...chaiModule };
+
+// @ts-ignore
+chaiSpies(chai, chai.util);
 
 describe("EcsManager", () => {
     let ecsManager: EcsManager;
@@ -23,7 +26,7 @@ describe("EcsManager", () => {
 
             counterEntity.addComponent(counterComponent);
 
-            assert.isTrue(
+            chai.assert.isTrue(
                 ecsManager.isEntityEligibleToGroup(
                     counterSystem.filter,
                     counterEntity
@@ -39,7 +42,7 @@ describe("EcsManager", () => {
 
             counterEntity.addComponent(counterSubclassComponent);
 
-            assert.isTrue(
+            chai.assert.isTrue(
                 ecsManager.isEntityEligibleToGroup(
                     counterSystem.filter,
                     counterEntity
@@ -57,7 +60,7 @@ describe("EcsManager", () => {
             counterEntity.addComponent(new EmptyComponent()); // Add unrelated component
             counterEntity.removeComponent(EmptyComponent); // Remove unrelated component
 
-            expect(spy).to.not.have.been.called();
+            chai.expect(spy).to.not.have.been.called();
         });
     });
 });

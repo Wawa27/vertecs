@@ -81,6 +81,12 @@ export default class CubeBody extends Body {
     }
 
     public clone(): Component {
-        throw new Error("Method not implemented.");
+        return new CubeBody({
+            depth: this.#depth,
+            height: this.#height,
+            width: this.#width,
+            mass: this.$mass,
+            movable: this.$movable,
+        });
     }
 }

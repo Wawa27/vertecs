@@ -1,20 +1,22 @@
 import { WebSocket } from "ws";
-import { EcsManager, Entity } from "../../../src/core";
+import { EcsManager } from "../../../src/core";
 import ClientHandler from "../../../src/network/server/ClientHandler";
 import CounterComponent from "../../components/CounterComponent";
 import NetworkCounter from "../components/NetworkCounter";
-import { IsNetworked } from "../../../src";
+import { IsNetworked, ServerNetworkSystem } from "../../../src";
 
 export default class TestClientHandler extends ClientHandler {
     public constructor(
-        clientEntity: Entity,
         ecsManager: EcsManager,
-        webSocket: WebSocket
+        webSocket: WebSocket,
+        serverNetworkSystem: ServerNetworkSystem
     ) {
-        super(clientEntity, ecsManager, webSocket);
+        super(ecsManager, webSocket, serverNetworkSystem);
     }
 
     public onConnect() {
+        super.onConnect();
+
         this.$clientEntity.addComponent(new CounterComponent());
         this.$clientEntity.addComponent(new NetworkCounter());
         this.$clientEntity.addComponent(
@@ -23,6 +25,6 @@ export default class TestClientHandler extends ClientHandler {
     }
 
     public onDisconnect() {
-        this.$clientEntity.destroy();
+        super.onDisconnect();
     }
 }

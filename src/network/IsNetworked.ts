@@ -1,11 +1,11 @@
 import NetworkComponent from "./NetworkComponent";
-import { Entity } from "../core";
-
-type NetworkData = {
-    parent: string;
-};
+import { Component, Entity } from "../core";
 
 export type NetworkScope = "public" | "private";
+
+type NetworkData = {
+    parentId: string;
+};
 
 /**
  * This component is used to mark an entity as networked, it is used by the network systems to determine which entities to send to which clients.
@@ -22,9 +22,9 @@ export default class IsNetworked extends NetworkComponent<NetworkData> {
     }
 
     public read(data: NetworkData) {
-        if (this.#parent?.id !== data.parent && this.entity?.ecsManager) {
+        if (this.#parent?.id !== data.parentId && this.entity?.ecsManager) {
             const parentEntity = this.entity.ecsManager.entities.find(
-                (entity) => entity.id === data.parent
+                (entity) => entity.id === data.parentId
             );
             if (parentEntity) {
                 parentEntity.addChild(this.entity);
@@ -37,11 +37,15 @@ export default class IsNetworked extends NetworkComponent<NetworkData> {
     public write(): NetworkData {
         this.#parent = this.entity?.parent;
         return {
-            parent: this.#parent?.id ?? "*",
+            parentId: this.#parent?.id ?? "*",
         };
     }
 
-    public isDirty(): boolean {
-        return false;
+    public isDirty(lastSnapshot: NetworkData): boolean {
+        return (this.#parent?.id ?? "*") !== lastSnapshot.parentId;
+    }
+
+    public clone(): Component {
+        return new IsNetworked();
     }
 }

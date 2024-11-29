@@ -1,17 +1,20 @@
 import { assert } from "chai";
-import { EcsManager, Entity, IoUtils } from "../../src";
+import { EcsManager, IoUtils } from "../../src";
 import SerializableCounter from "./SerializableCounter";
+import counterEntityJson from "./counterEntity.json";
 
 describe("io", () => {
     const ecsManager = new EcsManager();
-    const counterEntityJson = `{ "id": "0", "components": [[ "SerializableCounter", { "data": { "count": 4 }, "className": "SerializableCounter" } ] ] }`;
     const ComponentClasses = [SerializableCounter];
 
     describe("import", () => {
         it("should import the entity with the correct component", () => {
             const ecsManager = new EcsManager();
 
-            const entity = IoUtils.import(ComponentClasses, counterEntityJson);
+            const entity = IoUtils.import(
+                ComponentClasses,
+                JSON.stringify(counterEntityJson)
+            );
 
             assert.equal(entity.id, "0");
             assert.exists(entity.getComponent(SerializableCounter));
@@ -28,10 +31,7 @@ describe("io", () => {
 
             const exportedEntity = IoUtils.export(entityToExport);
 
-            assert.deepEqual(
-                JSON.parse(exportedEntity),
-                JSON.parse(counterEntityJson)
-            );
+            assert.deepEqual(JSON.parse(exportedEntity), counterEntityJson);
         });
     });
 });

@@ -40,13 +40,14 @@ export default class GameState {
             return new Map(
                 value.map((entity: any) => [
                     entity[0],
-                    new SerializedEntity(
+                    new NetworkEntity(
                         entity[1].id,
                         new Map(entity[1].components),
+                        entity[1].isDestroyed,
+                        entity[1].tags,
+                        entity[1].prefabName,
                         entity[1].name,
-                        entity[1].destroyed,
-                        entity[1].parent,
-                        entity[1].prefabName
+                        entity[1].parentId
                     ),
                 ])
             );

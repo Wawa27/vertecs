@@ -5,8 +5,15 @@ import { Component } from "../../core";
 export default class ThreeCss3dComponent extends Component {
     #css3dObject: CSS3DObject;
 
-    public constructor(htmlElement: HTMLElement, id?: string) {
+    protected $props: Map<string, any>;
+
+    public constructor(
+        htmlElement: HTMLElement,
+        id?: string,
+        props?: Map<string, any>
+    ) {
         super();
+        this.$props = props ?? new Map();
 
         if (id) {
             htmlElement.setAttribute(
@@ -15,6 +22,10 @@ export default class ThreeCss3dComponent extends Component {
             );
         }
         this.#css3dObject = new CSS3DObject(htmlElement);
+    }
+
+    public get props() {
+        return this.$props;
     }
 
     public get css3dObject(): CSS3DObject {

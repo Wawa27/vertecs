@@ -2,7 +2,7 @@ import ServerNetworkSystem from "./server/ServerNetworkSystem";
 import ClientNetworkSystem from "./client/ClientNetworkSystem";
 import NetworkComponent from "./NetworkComponent";
 import ClientHandler from "./server/ClientHandler";
-import ClientComponent from "./ClientComponent";
+import IsPlayer from "./IsPlayer";
 import type { CustomData } from "./GameState";
 import NetworkTransform from "./components/NetworkTransform";
 import NetworkAnimation from "./components/NetworkAnimation";
@@ -15,7 +15,7 @@ export {
     ClientNetworkSystem,
     NetworkComponent,
     ClientHandler,
-    ClientComponent,
+    IsPlayer,
     NetworkTransform,
     IsNetworked,
     NetworkAnimation,

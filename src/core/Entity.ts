@@ -155,6 +155,16 @@ export default class Entity {
     }
 
     /**
+     * Check if the entity has the specified component
+     * @param componentClass The component's class or subclass constructor
+     */
+    public hasComponent<T extends Component>(
+        componentClass: ComponentClass<T>
+    ): boolean {
+        return this.getComponent(componentClass) !== undefined;
+    }
+
+    /**
      * Return the first component found in an entity hierarchy
      * @param componentConstructor The component's class or subclass constructor
      */
@@ -195,7 +205,7 @@ export default class Entity {
             newComponent.onAddedToEntity(this);
             this.#components.forEach((component) => {
                 if (component !== newComponent) {
-                    component.onComponentAddedToAttachedEntity(component);
+                    component.onComponentAddedToAttachedEntity(newComponent);
                 }
             });
         }
@@ -233,12 +243,25 @@ export default class Entity {
     public removeComponent<T extends Component>(
         componentClass: ComponentClass<T>
     ): T | undefined {
-        const component = this.getComponent(componentClass);
-        if (component) {
-            this.#components.splice(this.#components.indexOf(component), 1);
-            this.#ecsManager?.onComponentRemovedFromEntity(this, component);
-            component.onRemovedFromEntity(this);
-            return component;
+        const componentToRemove = this.getComponent(componentClass);
+        if (componentToRemove) {
+            this.#components.splice(
+                this.#components.indexOf(componentToRemove),
+                1
+            );
+            this.#ecsManager?.onComponentRemovedFromEntity(
+                this,
+                componentToRemove
+            );
+            componentToRemove.onRemovedFromEntity(this);
+            this.#components.forEach((component) => {
+                if (component !== componentToRemove) {
+                    component.onComponentRemovedFromAttachedEntity(
+                        componentToRemove
+                    );
+                }
+            });
+            return componentToRemove;
         }
 
         return undefined;

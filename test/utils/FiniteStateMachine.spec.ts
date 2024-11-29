@@ -45,8 +45,8 @@ describe("FiniteStateMachine", async () => {
         );
         entity.addComponent(finiteStateMachine);
 
-        ecsManager.addSystem(new FiniteStateMachineSystem());
-        ecsManager.addSystem(new TimedStateSystem());
+        await ecsManager.addSystem(new FiniteStateMachineSystem());
+        await ecsManager.addSystem(new TimedStateSystem());
 
         await ecsManager.start();
     });

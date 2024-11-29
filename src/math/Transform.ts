@@ -10,6 +10,7 @@ import {
     Mat4Like,
     Quat,
     QuatLike,
+    vec3,
     Vec3,
     Vec3Like,
 } from "ts-gl-matrix";
@@ -316,6 +317,17 @@ export default class Transform extends Component {
         return this.#worldRotation;
     }
 
+    /**
+     * Return the world space distance from the specified transform
+     * @param transform
+     */
+    public getWorldDistanceFrom(transform: Transform): number {
+        return vec3.distance(
+            this.getWorldPosition(),
+            transform.getWorldPosition()
+        );
+    }
+
     public getWorldForwardVector(out: Vec3): Vec3 {
         const worldRotation = this.getWorldRotation();
         Vec3.normalize(
@@ -348,7 +360,23 @@ export default class Transform extends Component {
      * @param y
      * @param z
      */
-    public lookAtXyz(x: number, y: number, z: number): void {
+    public targetToXyz(x: number, y: number, z: number): void {
+        const lookAtMatrix = Mat4.create();
+        mat4.targetTo(
+            lookAtMatrix,
+            this.getWorldPosition(),
+            [x, y, z],
+            [0, 1, 0]
+        );
+        Mat4.getRotation(this.rotation, lookAtMatrix);
+        this.dirty = true;
+    }
+
+    public targetTo(position: Vec3): void {
+        this.targetToXyz(position[0], position[1], position[2]);
+    }
+
+    public lookAtXyz(x: number, y: number, z: number) {
         const lookAtMatrix = Mat4.create();
         mat4.targetTo(
             lookAtMatrix,
@@ -360,8 +388,8 @@ export default class Transform extends Component {
         this.dirty = true;
     }
 
-    public lookAt(position: Vec3): void {
-        this.lookAtXyz(position[0], position[1], position[2]);
+    public lookAt(target: Vec3) {
+        return this.lookAtXyz(target[0], target[1], target[2]);
     }
 
     public setWorldUnitScale(): void {

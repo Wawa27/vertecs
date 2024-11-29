@@ -1,4 +1,4 @@
-import { vec3, Vec3Like } from "ts-gl-matrix";
+import { Vec3Like } from "ts-gl-matrix";
 
 export default class AxisAlignedBoundingBox {
     #minimum: Vec3Like;

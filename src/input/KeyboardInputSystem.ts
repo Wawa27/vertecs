@@ -16,7 +16,7 @@ export default abstract class KeyboardInputSystem extends System<[Component]> {
         canvasId: string,
         tps?: number
     ) {
-        super(filter, tps);
+        super(filter, tps, []);
         this.#keyDownEvents = [];
         this.#keyUpEvents = [];
         this.#canvasId = canvasId;

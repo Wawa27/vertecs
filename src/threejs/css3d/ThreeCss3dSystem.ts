@@ -1,8 +1,7 @@
 import { PerspectiveCamera, Scene } from "three";
 // @ts-ignore
 import { CSS3DRenderer } from "three/addons/renderers/CSS3DRenderer.js";
-import { vec3 } from "ts-gl-matrix";
-import { Component, Entity, System } from "../../core";
+import { Entity, System } from "../../core";
 import ThreeCss3dComponent from "./ThreeCss3dComponent";
 import ThreeSystem from "../ThreeSystem";
 import { Transform } from "../../math";
@@ -24,10 +23,10 @@ export default class ThreeCss3dSystem extends System<
         this.#threeSystem = threeSystem;
 
         this.#camera = new PerspectiveCamera(
-            90,
+            75,
             window.innerWidth / window.innerHeight,
-            1,
-            2000
+            0.1,
+            1000
         );
 
         this.#renderer = new CSS3DRenderer();
@@ -66,8 +65,8 @@ export default class ThreeCss3dSystem extends System<
         entities: Entity[],
         deltaTime: number
     ): void {
-        this.#camera.position.copy(this.#threeSystem.camera.position);
-        this.#camera.quaternion.copy(this.#threeSystem.camera.quaternion);
+        this.#camera.position.copy(this.#threeSystem.getCamera().position);
+        this.#camera.quaternion.copy(this.#threeSystem.getCamera().quaternion);
 
         for (let i = 0; i < components.length; i++) {
             const [css3dComponent, transform] = components[i];
@@ -78,6 +77,10 @@ export default class ThreeCss3dSystem extends System<
             css3dComponent.css3dObject.position.x = worldPosition[0] * 100;
             css3dComponent.css3dObject.position.y = worldPosition[1] * 100;
             css3dComponent.css3dObject.position.z = worldPosition[2] * 100;
+
+            css3dComponent.props.forEach((value, key) => {
+                css3dComponent.css3dObject.element.setAttribute(key, value);
+            });
 
             css3dComponent.css3dObject.lookAt(this.#camera.position);
         }

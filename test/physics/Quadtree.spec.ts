@@ -14,8 +14,7 @@ describe("Quadtree", () => {
             const quadtree = new Quadtree(bounds);
 
             const entity = new Entity(); // Create or mock an Entity
-            const transform = new Transform(); // Create or mock a Transform
-            transform.setPosition(vec3.fromValues(50, 50, 50));
+            const transform = new Transform([50, 50, 50]); // Create or mock a Transform
             entity.addComponent(transform);
             entity.addComponent(
                 new SphereBody({

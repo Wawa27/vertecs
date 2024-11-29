@@ -12,10 +12,6 @@ export default class PositionComponent extends Component {
         this.#y = y;
     }
 
-    public onAddedToEntity(entity: Entity) {
-        console.debug("PositionComponent added to entity");
-    }
-
     public get x(): number {
         return this.#x;
     }

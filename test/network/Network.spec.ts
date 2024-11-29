@@ -130,7 +130,7 @@ describe("Networking", async () => {
         assert.isFalse(clientANetworkSystem.isConnected);
     });
 
-    it("should disconnect clientA and remove clientA entity from server", async () => {
+    it("should remove clientA entity from clientB", async () => {
         await new Promise((resolve) => setTimeout(resolve, 100));
 
         assert.equal(serverEcsManager.entities.length, 1);

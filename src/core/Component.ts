@@ -56,6 +56,12 @@ export default abstract class Component {
     public onComponentAddedToAttachedEntity(component: Component): void {}
 
     /**
+     * Called when another component is removed from the attached entity
+     * @param component
+     */
+    public onComponentRemovedFromAttachedEntity(component: Component): void {}
+
+    /**
      * This method is called when the {@see destroy} method is called
      */
     public onDestroyed(): void {}

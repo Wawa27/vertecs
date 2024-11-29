@@ -34,24 +34,20 @@ export default class Quadtree {
             return;
         }
 
-        const halfWidth =
-            (this.#bounds.maximum[0] - this.#bounds.minimum[0]) / 2;
-        const halfHeight =
-            (this.#bounds.maximum[1] - this.#bounds.minimum[1]) / 2;
-
-        const quadrantIndex =
-            (worldPosition[0] > this.#bounds.minimum[0] + halfWidth ? 1 : 0) +
-            (worldPosition[1] > this.#bounds.minimum[1] + halfHeight ? 2 : 0);
-
+        const quadrantIndex = this.getEntityQuadrantIndex(entity);
         const quadrant = this.#quadrants[quadrantIndex];
 
-        if (quadrant instanceof Entity) {
+        if (!quadrant) {
+            this.#quadrants[quadrantIndex] = entity;
+        } else if (quadrant instanceof Entity) {
+            if (quadrant === entity) {
+                console.warn("Tried to add the same entity twice");
+                return;
+            }
             const quadtree = this.replaceWithQuadtree(quadrantIndex);
             quadtree.addEntity(entity);
-        } else if (quadrant instanceof Quadtree) {
-            quadrant.addEntity(entity);
         } else {
-            this.#quadrants[quadrantIndex] = entity;
+            quadrant.addEntity(entity);
         }
     }
 
@@ -136,6 +132,30 @@ export default class Quadtree {
         }
 
         return found;
+    }
+
+    public getEntityQuadrantIndex(entity: Entity): number {
+        const entityWorldPosition = entity
+            .getComponent(Transform)
+            ?.getWorldPosition();
+
+        if (!entityWorldPosition) {
+            throw new Error("Entity has no transform");
+        }
+
+        const halfWidth =
+            (this.#bounds.maximum[0] - this.#bounds.minimum[0]) / 2;
+        const halfHeight =
+            (this.#bounds.maximum[1] - this.#bounds.minimum[1]) / 2;
+
+        return (
+            (entityWorldPosition[0] > this.#bounds.minimum[0] + halfWidth
+                ? 1
+                : 0) +
+            (entityWorldPosition[1] > this.#bounds.minimum[1] + halfHeight
+                ? 2
+                : 0)
+        );
     }
 
     public get quadrants(): [Quadrant, Quadrant, Quadrant, Quadrant] {

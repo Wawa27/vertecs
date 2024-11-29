@@ -1,6 +1,8 @@
 import {
+    ACESFilmicToneMapping,
     Camera,
     ColorManagement,
+    Fog,
     InstancedMesh,
     Matrix4,
     PCFSoftShadowMap,
@@ -10,6 +12,7 @@ import {
     Vector3,
     WebGLRenderer,
 } from "three";
+import Stats from "three/examples/jsm/libs/stats.module";
 import { EcsManager, Entity, System } from "../core";
 import ThreeObject3D from "./ThreeObject3D";
 import { Transform } from "../math";
@@ -18,6 +21,7 @@ import ThreeCamera from "./camera/ThreeCamera";
 import ThreeLightSystem from "./light/ThreeLightSystem";
 import ThreeCss3dSystem from "./css3d/ThreeCss3dSystem";
 import ThreeInstancedMesh from "./ThreeInstancedMesh";
+import { SystemConstructor } from "../core/EcsManager";
 
 export default class ThreeSystem extends System<[Transform, ThreeObject3D]> {
     #scene: Scene;
@@ -30,16 +34,25 @@ export default class ThreeSystem extends System<[Transform, ThreeObject3D]> {
 
     #css3dSystem?: ThreeCss3dSystem;
 
-    public constructor(tps?: number) {
-        super([Transform, ThreeObject3D], tps);
+    #stats?: Stats;
+
+    public constructor(tps?: number, dependencies?: SystemConstructor<any>[]) {
+        super([Transform, ThreeObject3D], tps, dependencies);
         this.#scene = new Scene();
 
-        this.#renderer = new WebGLRenderer({ antialias: true });
+        const canvas = document.getElementById("canvas");
+
+        if (!canvas) {
+            throw new Error("Canvas not found");
+        }
+
+        this.#renderer = new WebGLRenderer({ antialias: true, canvas });
         this.#renderer.setPixelRatio(window.devicePixelRatio);
         this.#renderer.setSize(window.innerWidth, window.innerHeight);
         this.#renderer.setClearColor(0x323336);
         this.#renderer.shadowMap.enabled = true;
         this.#renderer.shadowMap.type = PCFSoftShadowMap;
+        this.#renderer.domElement.id = "game";
 
         ColorManagement.enabled = true;
 
@@ -49,18 +62,45 @@ export default class ThreeSystem extends System<[Transform, ThreeObject3D]> {
     }
 
     public onAddedToEcsManager(ecsManager: EcsManager) {
-        this.#lightSystem = new ThreeLightSystem(this.#scene, this.tps);
+        this.#lightSystem = new ThreeLightSystem(
+            this.#scene,
+            this.tps,
+            this.$dependencies
+        );
         ecsManager.addSystem(this.#lightSystem);
 
-        this.#cameraSystem = new ThreeCameraSystem(this.renderer, this.tps);
+        if (!this.#cameraSystem) {
+            this.#cameraSystem = new ThreeCameraSystem(this.renderer, this.tps);
+        }
         ecsManager.addSystem(this.#cameraSystem);
 
-        this.$dependencies = [ThreeCameraSystem, ThreeLightSystem];
+        this.$dependencies = [
+            ...this.$dependencies,
+            ThreeCameraSystem,
+            ThreeLightSystem,
+        ];
 
         if (document.getElementById("hud")) {
             this.#css3dSystem = new ThreeCss3dSystem(this, this.tps);
             ecsManager.addSystem(this.#css3dSystem);
         }
+
+        this.#renderer.toneMapping = ACESFilmicToneMapping;
+    }
+
+    public addFog(fog: Fog) {
+        this.#scene.fog = fog;
+        this.#renderer.setClearColor(this.#scene.fog.color);
+    }
+
+    public enableStats() {
+        this.#stats = new Stats();
+        document.body.appendChild(this.#stats.dom);
+    }
+
+    public disableStats() {
+        document.body.removeChild(this.#stats?.dom!);
+        this.#stats = undefined;
     }
 
     public onEntityEligible(
@@ -161,13 +201,12 @@ export default class ThreeSystem extends System<[Transform, ThreeObject3D]> {
             }
         }
 
-        this.#renderer.render(
-            this.#scene,
-            this.#cameraSystem!.cameraEntity!.getComponent(ThreeCamera)!.camera
-        );
+        this.#renderer.render(this.#scene, this.getCamera());
+
+        this.#stats?.update();
     }
 
-    public get camera(): Camera {
+    public getCamera(): Camera {
         return this.#cameraSystem!.cameraEntity!.getComponent(ThreeCamera)!
             .camera;
     }

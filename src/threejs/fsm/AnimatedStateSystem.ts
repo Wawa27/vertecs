@@ -1,7 +1,6 @@
 import { Entity, System } from "../../core";
-import { ThreeAnimation } from "../index";
+import ThreeAnimation from "../ThreeAnimation";
 import AnimatedState from "./AnimatedState";
-import TimedStateSystem from "../../utils/fsm/TimedStateSystem";
 import { Animation } from "../../utils";
 
 /**
@@ -13,12 +12,27 @@ export default class AnimatedStateSystem extends System<[AnimatedState]> {
     }
 
     public onEntityEligible(entity: Entity, components: [AnimatedState]) {
-        const meshEntity = entity?.root.findWithComponent(ThreeAnimation);
+        const meshEntity = entity.findWithComponent(ThreeAnimation);
+
         if (!meshEntity) {
+            console.warn("Animation not found for ", entity);
             return;
         }
 
         const [animatedState] = components;
+
+        if (animatedState.duration === 0) {
+            const clip = meshEntity
+                .getComponent(ThreeAnimation)
+                ?.clips?.find((clip) => clip.name === animatedState.name);
+            if (!clip) {
+                console.warn(
+                    "Clip duration not found for : ",
+                    animatedState.name
+                );
+            }
+            animatedState.duration = (clip?.duration ?? 0) * 1000;
+        }
 
         meshEntity.removeComponent(Animation);
         meshEntity.addComponent(
