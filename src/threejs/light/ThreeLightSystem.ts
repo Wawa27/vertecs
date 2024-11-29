@@ -3,14 +3,19 @@ import { Entity, System } from "../../core";
 import ThreeLightComponent from "./ThreeLightComponent";
 import { Transform } from "../../math";
 import ThreeObject3D from "../ThreeObject3D";
+import { SystemConstructor } from "../../core/EcsManager";
 
 export default class ThreeLightSystem extends System<
     [ThreeLightComponent, Transform]
 > {
     #scene: Scene;
 
-    public constructor(scene: Scene, tps?: number) {
-        super([ThreeLightComponent, Transform], tps);
+    public constructor(
+        scene: Scene,
+        tps?: number,
+        dependencies?: SystemConstructor<any>[]
+    ) {
+        super([ThreeLightComponent, Transform], tps, dependencies);
         this.#scene = scene;
     }
 

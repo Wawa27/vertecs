@@ -13,7 +13,7 @@ export type SerializedNetworkComponent<T> = SerializedComponent<T> & {
  * Components that inherit from this class will be synchronized over the network if they are attached to a networked entity.
  */
 export default abstract class NetworkComponent<
-    T
+    T,
 > extends SerializableComponent<T> {
     protected $updateTimestamp: number;
 
@@ -55,6 +55,7 @@ export default abstract class NetworkComponent<
         this.$updateTimestamp = serializedComponent.updateTimestamp ?? -1;
         this.#ownerId = serializedComponent.ownerId ?? this.ownerId;
         this.#scope = serializedComponent.scope ?? this.scope;
+        this.#lastData = serializedComponent.data;
         return this.read(serializedComponent.data);
     }
 

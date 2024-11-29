@@ -1,21 +1,21 @@
 import { IncomingMessage } from "http";
 import { WebSocket, WebSocketServer } from "ws";
-import ClientComponent from "../ClientComponent";
 import { EcsManager, Entity } from "../../core";
 import ClientHandler from "./ClientHandler";
 import NetworkSystem from "../NetworkSystem";
 import GameState from "../GameState";
 import type { ComponentClass } from "../../core/Component";
-import { ComponentClassConstructor } from "../../core/Component";
 import NetworkComponent, {
     SerializedNetworkComponent,
 } from "../NetworkComponent";
 import IsNetworked from "../IsNetworked";
+import NetworkEntity from "../NetworkEntity";
+import IsPrefab from "../../utils/prefabs/IsPrefab";
 
 type ClientHandlerConstructor = new (
-    playerEntity: Entity,
     ecsManager: EcsManager,
-    webSocket: WebSocket
+    webSocket: WebSocket,
+    serverNetworkSystem: ServerNetworkSystem
 ) => ClientHandler;
 
 /**
@@ -28,7 +28,7 @@ export default class ServerNetworkSystem extends NetworkSystem {
 
     readonly #ClientHandlerConstructor: ClientHandlerConstructor;
 
-    readonly #previousSnapshots: GameState[];
+    readonly #gameState: GameState;
 
     public constructor(
         allowedNetworkComponents: ComponentClass[],
@@ -39,7 +39,7 @@ export default class ServerNetworkSystem extends NetworkSystem {
 
         this.#ClientHandlerConstructor = clientHandlerConstructor;
         this.$clientHandlers = [];
-        this.#previousSnapshots = [];
+        this.#gameState = new GameState();
     }
 
     public async onStart(): Promise<void> {
@@ -67,12 +67,10 @@ export default class ServerNetworkSystem extends NetworkSystem {
             "connection",
             (webSocket, request: IncomingMessage) => {
                 console.log(`New connection : ${request.socket.remoteAddress}`);
-                const clientEntity = this.ecsManager!.createEntity();
-                clientEntity.addComponent(new ClientComponent());
                 const clientHandler = new this.#ClientHandlerConstructor(
-                    clientEntity,
                     this.ecsManager!,
-                    webSocket
+                    webSocket,
+                    this
                 );
                 this.$clientHandlers.push(clientHandler);
                 clientHandler.onConnect();
@@ -105,17 +103,68 @@ export default class ServerNetworkSystem extends NetworkSystem {
         this.#webSocketServer?.close();
     }
 
-    public onEntityEligible(entity: Entity, components: [IsNetworked]) {
-        // TODO: The delta game state shoud be a class field and this method should add the entity to it.
-    }
+    public onEntityEligible(entity: Entity, components: [IsNetworked]) {}
 
     public onEntityNoLongerEligible(entity: Entity, components: [IsNetworked]) {
-        const networkEntity = this.$currentSnapshot.entities.get(entity.id);
+        const networkEntity = this.#gameState.entities.get(entity.id);
 
         if (networkEntity) {
-            networkEntity.destroyed = true;
-            this.$currentSnapshot.entities.set(entity.id, networkEntity);
+            networkEntity.isDestroyed = true;
+            this.$clientHandlers.forEach((clientHandler) =>
+                clientHandler.sendEntity(networkEntity)
+            );
         }
+    }
+
+    protected serializeEntity(entity: Entity): NetworkEntity | undefined {
+        const serializedEntity = new NetworkEntity(
+            entity.id,
+            new Map(),
+            false,
+            entity.tags,
+            entity.getComponent(IsPrefab)?.prefabName,
+            entity.name,
+            entity.parent?.id
+        );
+
+        const networkComponents: NetworkComponent<any>[] = entity
+            .getComponents(this.$allowedNetworkComponents)
+            .filter((component) => component) as NetworkComponent<any>[];
+
+        if (networkComponents.length === 0) {
+            return undefined;
+        }
+
+        // Loop through all the network components and check if they should be updated.
+        // If they should be updated, serialize them and add them to the serialized entity.
+        networkComponents.forEach((serializableComponent) => {
+            const serializedData = this.serializeComponent(
+                serializableComponent
+            );
+            if (serializedData) {
+                const componentName = serializableComponent.constructor.name;
+                serializedEntity.components.set(componentName, serializedData);
+            }
+        });
+
+        if (serializedEntity.components.size > 0) {
+            return serializedEntity;
+        }
+
+        return undefined;
+    }
+
+    protected serializeComponent(
+        component: NetworkComponent<any>
+    ): SerializedNetworkComponent<any> | undefined {
+        if (component.forceUpdate) {
+            return component.serialize(true);
+        }
+        if (component.isDirty(component.lastData)) {
+            component.updateTimestamp = Date.now();
+            return component.serialize();
+        }
+        return undefined;
     }
 
     protected onLoop(
@@ -125,24 +174,16 @@ export default class ServerNetworkSystem extends NetworkSystem {
     ): void {
         // Process clients entities
         this.$clientHandlers.forEach((clientHandler) => {
-            clientHandler.clientSnapshot?.entities.forEach(
-                (serializedEntity) => {
-                    this.deserializeEntity(serializedEntity);
-                }
-            );
-            clientHandler.clientSnapshot?.customData.forEach((data) => {
-                clientHandler.onPrivateCustomData(data);
-            });
-            clientHandler.clientSnapshot = undefined;
+            clientHandler.processClientSnapshot();
         });
 
-        const deltaGameState = new GameState();
-
         // Add latest destroyed entities to the delta game state
-        this.$currentSnapshot.entities.forEach((networkEntity) => {
-            if (networkEntity.destroyed) {
-                deltaGameState.entities.set(networkEntity.id, networkEntity);
-                this.$currentSnapshot.entities.delete(networkEntity.id);
+        this.#gameState.entities.forEach((networkEntity) => {
+            if (networkEntity.isDestroyed) {
+                this.$clientHandlers.forEach((clientHandler) => {
+                    clientHandler.sendEntity(networkEntity);
+                });
+                this.#gameState.entities.delete(networkEntity.id);
             }
         });
 
@@ -150,69 +191,33 @@ export default class ServerNetworkSystem extends NetworkSystem {
             const serializedEntity = this.serializeEntity(entity);
 
             if (serializedEntity) {
-                deltaGameState.entities.set(
-                    serializedEntity.id,
-                    serializedEntity
+                this.$clientHandlers.forEach((clientHandler) => {
+                    clientHandler.sendEntity(serializedEntity);
+                });
+
+                // Update game state
+                const currentSnapshotEntity = this.#gameState.entities.get(
+                    serializedEntity.id
                 );
-
-                const currentSnapshotEntity =
-                    this.$currentSnapshot.entities.get(serializedEntity.id);
-
                 if (!currentSnapshotEntity) {
-                    this.$currentSnapshot.entities.set(
+                    this.#gameState.entities.set(
                         serializedEntity.id,
                         serializedEntity
                     );
-                    return;
+                } else {
+                    serializedEntity.components.forEach((networkComponent) => {
+                        currentSnapshotEntity.components.set(
+                            networkComponent.className,
+                            networkComponent
+                        );
+                    });
                 }
-
-                serializedEntity.components.forEach((networkComponent) => {
-                    currentSnapshotEntity.components.set(
-                        networkComponent.className,
-                        networkComponent
-                    );
-                });
             }
         });
 
         this.$clientHandlers.forEach((clientHandler) => {
-            deltaGameState.customData.push(...clientHandler.customData);
-            if (clientHandler.forceUpdate) {
-                this.$currentSnapshot.customData = clientHandler.customData;
-                clientHandler.sendMessage(this.$currentSnapshot);
-                this.$currentSnapshot.customData = [];
-            } else if (
-                deltaGameState.customData.length > 0 ||
-                deltaGameState.entities.size > 0
-            ) {
-                clientHandler.sendMessage(deltaGameState);
-            }
-            deltaGameState.customData.length = 0;
-            clientHandler.customData.length = 0;
-            clientHandler.forceUpdate = false;
+            clientHandler.updateClient();
         });
-    }
-
-    public deserializeComponent(
-        networkComponent: SerializedNetworkComponent<any>,
-        targetEntity: Entity
-    ) {
-        const ComponentConstructor = this.$allowedNetworkComponents.find(
-            (ComponentClass) =>
-                ComponentClass.name === networkComponent.className
-        ) as ComponentClassConstructor;
-
-        const component =
-            targetEntity.getComponent<NetworkComponent<any>>(
-                ComponentConstructor
-            );
-
-        if (component?.accept(networkComponent.data)) {
-            super.deserializeComponent(networkComponent, targetEntity);
-
-            // Update all clients
-            component.forceUpdate = true;
-        }
     }
 
     /**
@@ -236,5 +241,9 @@ export default class ServerNetworkSystem extends NetworkSystem {
                 `Client ${clientId} not found. Cannot send custom data.`
             );
         }
+    }
+
+    public get gameState(): GameState {
+        return this.#gameState;
     }
 }

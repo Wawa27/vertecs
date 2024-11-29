@@ -24,7 +24,7 @@ export default class TimedStateSystem extends System<
     ): void {
         for (let i = 0; i < components.length; i++) {
             const [finiteStateMachine, timedState] = components[i];
-            if (timedState.repeat > 0 && timedState.nextStateName) {
+            if (timedState.nextStateName) {
                 if (
                     new Date().getTime() - timedState.startTime >
                     timedState.duration

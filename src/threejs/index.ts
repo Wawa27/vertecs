@@ -12,8 +12,12 @@ import ThreeComponentDebugger from "./ThreeComponentDebugger";
 import ThreeInstancedMesh from "./ThreeInstancedMesh";
 import AnimatedState from "./fsm/AnimatedState";
 import AnimatedStateSystem from "./fsm/AnimatedStateSystem";
+import NetworkAsset from "./network/NetworkAsset";
+import AssetManager from "./AssetManager";
 
 export {
+    AssetManager,
+    NetworkAsset,
     ThreeCamera,
     ThreeObject3D,
     ThreeSystem,

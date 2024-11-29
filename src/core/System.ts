@@ -37,7 +37,7 @@ export default abstract class System<T extends Component[] = []> {
     ) {
         this.filter = filter;
         this.#lastUpdateTime = -1;
-        this.#tps = tps ?? 60;
+        this.#tps = tps ?? 144;
         this.#hasStarted = false;
         this.#loopTime = 0;
         this.$dependencies = dependencies ?? [];

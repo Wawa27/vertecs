@@ -9,6 +9,7 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "declaration": true,
+    "resolveJsonModule": true,
     "lib": [
       "esnext",
       "dom",
@@ -20,7 +21,7 @@
       "./src/oimojs/",
       "./types"
     ],
-    "baseUrl": "./src",
+    "baseUrl": "./src"
   },
   "include": [
     "src/**/*.ts",

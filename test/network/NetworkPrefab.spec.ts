@@ -6,6 +6,7 @@ import { EcsManager } from "../../src/core";
 import {
     Entity,
     IsNetworked,
+    IsPrefab,
     PrefabManager,
     ServerNetworkSystem,
 } from "../../src";
@@ -23,7 +24,8 @@ describe("Prefabs", async () => {
     before(async () => {
         const testPrefab = new Entity({ name: "testPrefab" });
         testPrefab.addComponent(new NetworkCounter());
-        PrefabManager.add("testPrefab", testPrefab);
+        testPrefab.addComponent(new IsPrefab("testPrefab"));
+        PrefabManager.set("testPrefab", testPrefab);
 
         serverNetworkSystem = new ServerNetworkSystem(
             allowedNetworkComponents,

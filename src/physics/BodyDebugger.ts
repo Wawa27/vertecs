@@ -1,9 +1,10 @@
-import { Mesh, MeshBasicMaterial, SphereGeometry } from "three";
+import { BoxGeometry, Mesh, MeshBasicMaterial, SphereGeometry } from "three";
 import { vec3 } from "ts-gl-matrix";
 import { Component, Entity } from "../core";
 import { ThreeObject3D } from "../threejs";
 import { Transform } from "../math";
 import SphereBody from "./bodies/SphereBody";
+import CubeBody from "./bodies/CubeBody";
 
 export default class BodyDebugger extends Component {
     public constructor() {
@@ -11,29 +12,24 @@ export default class BodyDebugger extends Component {
     }
 
     public onAddedToEntity(entity: Entity) {
-        const sphereBody = entity.getComponent(SphereBody);
-        const boundingBoxDebugEntity = entity.ecsManager?.createEntity({
+        const boundingBoxDebugEntity = entity.ecsManager!.createEntity({
             name: "bounding-box-debugger",
         });
-        if (!boundingBoxDebugEntity) {
-            return;
+
+        const sphereBody = entity.getComponent(SphereBody);
+        if (sphereBody) {
+            const sphereDebugger = this.getSphereDebugger(sphereBody);
+            boundingBoxDebugEntity.addComponent(sphereDebugger);
+        } else {
+            const cubeBody = entity.getComponent(CubeBody);
+            if (cubeBody) {
+                boundingBoxDebugEntity.addComponent(
+                    this.getCubeDebugger(cubeBody)
+                );
+            } else {
+                console.warn("Debugger not found for : ", entity);
+            }
         }
-
-        const boundingBox = sphereBody?.getBoundingBox();
-        const boundingBoxSize = vec3.subtract(
-            vec3.create(),
-            boundingBox?.maximum || [0, 0, 0],
-            boundingBox?.minimum || [0, 0, 0]
-        );
-
-        boundingBoxDebugEntity.addComponent(
-            new ThreeObject3D(
-                new Mesh(
-                    new SphereGeometry(sphereBody?.radius || 1, 32, 32),
-                    new MeshBasicMaterial({ color: 0xff0000 })
-                )
-            )
-        );
 
         const inverseScale = vec3.create();
         vec3.inverse(
@@ -46,6 +42,28 @@ export default class BodyDebugger extends Component {
         );
 
         entity.addChild(boundingBoxDebugEntity);
+    }
+
+    getSphereDebugger(sphereBody: SphereBody) {
+        return new ThreeObject3D(
+            new Mesh(
+                new SphereGeometry(sphereBody?.radius || 1, 32, 32),
+                new MeshBasicMaterial({ color: 0xff0000 })
+            )
+        );
+    }
+
+    getCubeDebugger(cubeBody: CubeBody) {
+        return new ThreeObject3D(
+            new Mesh(
+                new BoxGeometry(
+                    cubeBody.width,
+                    cubeBody.height,
+                    cubeBody.depth
+                ),
+                new MeshBasicMaterial({ color: 0xff0000 })
+            )
+        );
     }
 
     public onRemovedFromEntity(entity: Entity) {

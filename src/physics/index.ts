@@ -9,9 +9,11 @@ import DefaultSolver from "./solver/DefaultSolver";
 import Ray from "./Ray";
 import BodyDebugger from "./BodyDebugger";
 import NetworkSphereBody from "./network/NetworkSphereBody";
+import CubeBody from "./bodies/CubeBody";
 
 export {
     Body,
+    CubeBody,
     SphereBody,
     PhysicsSystem,
     DefaultNarrowphase,

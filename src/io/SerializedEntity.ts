@@ -11,26 +11,26 @@ export default class SerializedEntity {
 
     protected $name?: string;
 
-    protected $destroyed?: boolean;
-
-    protected $parent?: string;
+    protected $parentId?: string;
 
     protected $prefabName?: string;
+
+    protected $tags: string[];
 
     public constructor(
         id: string,
         components: Map<string, SerializedNetworkComponent<any>>,
         name?: string,
-        destroyed?: boolean,
-        parent?: string,
-        prefabName?: string
+        parentId?: string,
+        prefabName?: string,
+        tags?: string[]
     ) {
         this.$id = id;
         this.$components = components;
         this.$name = name;
-        this.$destroyed = destroyed;
-        this.$parent = parent;
+        this.$parentId = parentId;
         this.$prefabName = prefabName;
+        this.$tags = tags ?? [];
     }
 
     toJSON(): any {
@@ -38,9 +38,9 @@ export default class SerializedEntity {
             id: this.$id,
             name: this.$name,
             components: Array.from(this.$components.entries()),
-            destroyed: this.$destroyed,
-            parent: this.$parent,
+            parentId: this.$parentId,
             prefabName: this.$prefabName,
+            tags: this.$tags,
         };
     }
 
@@ -51,21 +51,12 @@ export default class SerializedEntity {
         return value;
     }
 
-    // TODO: Move to network entity
-    public get destroyed(): boolean | undefined {
-        return this.$destroyed;
+    public get parentId(): string | undefined {
+        return this.$parentId;
     }
 
-    public set destroyed(value: boolean | undefined) {
-        this.$destroyed = value;
-    }
-
-    public get parent(): string | undefined {
-        return this.$parent;
-    }
-
-    public set parent(value: string | undefined) {
-        this.$parent = value;
+    public set parentId(value: string | undefined) {
+        this.$parentId = value;
     }
 
     public get prefabName(): string | undefined {
@@ -82,5 +73,9 @@ export default class SerializedEntity {
 
     public get components(): Map<string, SerializedComponent<any>> {
         return this.$components;
+    }
+
+    public get tags(): string[] {
+        return this.$tags;
     }
 }

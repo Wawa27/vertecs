@@ -39,7 +39,7 @@ describe("QuadtreeBroadphase", () => {
         broadphase.onEntityAdded(entity1, [body1, transform1]);
 
         const entity2 = new Entity();
-        const transform2 = new Transform();
+        const transform2 = new Transform([1, 0, 0]);
         const body2 = new SphereBody({
             radius: 1,
         });

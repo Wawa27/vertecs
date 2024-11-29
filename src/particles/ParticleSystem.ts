@@ -1,6 +1,6 @@
 import { Vec3 } from "ts-gl-matrix";
-import { Color, Material } from "three";
-import { Component, EcsManager, Entity, System } from "../core";
+import { Color, Material, Mesh } from "three";
+import { EcsManager, Entity, System } from "../core";
 import Particle from "./Particle";
 import ParticleEmitter from "./ParticleEmitter";
 import { Transform } from "../math";
@@ -46,7 +46,7 @@ export default class ParticleSystem extends System<
                     particle.direction[2],
                 ]);
                 transform.setWorldPosition(worldPosition);
-                const material = (threeMesh.object3D as THREE.Mesh)
+                const material = (threeMesh.object3D as Mesh)
                     .material as Material;
                 // @ts-ignore
                 const color = material.color as Color;

@@ -1,3 +1,4 @@
+import { quat } from "ts-gl-matrix";
 import { Component, Entity } from "../../core";
 import { Transform } from "../../math";
 import NetworkComponent from "../NetworkComponent";
@@ -32,21 +33,24 @@ export default class NetworkTransform extends NetworkComponent<TransformData> {
             return;
         }
 
-        transform.setPosition(data.position);
-        transform.setRotationQuat(data.rotation);
-        transform.setScale(data.scale);
+        transform.setWorldPosition(data.position);
+        transform.setWorldRotation(data.rotation);
+        transform.setWorldScale(data.scale);
     }
 
     public isDirty(lastData: TransformData): boolean {
-        const position = this.entity
-            ?.getComponent(Transform)
-            ?.getWorldPosition();
+        const transform = this.entity?.getComponent(Transform);
 
-        if (!position) {
+        if (!transform) {
             throw new Error("TransformNetworkComponent: Position not found");
         }
 
-        return position.distance(lastData.position) > 0.1;
+        const position = transform.getWorldPosition();
+
+        return (
+            position.distance(lastData.position) > 0.1 ||
+            !quat.equals(lastData.rotation, transform.getWorldRotation())
+        );
     }
 
     public write(): TransformData {

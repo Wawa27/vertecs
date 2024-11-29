@@ -1,0 +1,15 @@
+{
+  "id": "0",
+  "components": [
+    [
+      "SerializableCounter",
+      {
+        "data": {
+          "count": 4
+        },
+        "className": "SerializableCounter"
+      }
+    ]
+  ],
+  "tags": []
+}
