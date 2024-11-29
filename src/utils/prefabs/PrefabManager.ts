@@ -6,14 +6,18 @@ export default class PrefabManager {
 
     private constructor() {}
 
-    static add(name: string, prefab: Entity) {
+    static set(name: string, prefab: Entity) {
         if (!prefab.getComponent(IsPrefab)) {
             prefab.addComponent(new IsPrefab(name));
         }
         this.#prefabs.set(name, prefab);
     }
 
-    static get(name: string, id?: string): Entity | undefined {
-        return this.#prefabs.get(name)?.clone(id);
+    static get(name: string, id?: string): Entity {
+        const prefab = this.#prefabs.get(name);
+        if (!prefab) {
+            throw new Error(`Cannot find prefab with id "${name}"`);
+        }
+        return prefab?.clone(id);
     }
 }

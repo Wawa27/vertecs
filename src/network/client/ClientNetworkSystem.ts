@@ -1,10 +1,17 @@
-import type { ComponentClass } from "../../core/Component";
+import type {
+    ComponentClass,
+    ComponentClassConstructor,
+} from "../../core/Component";
 import Entity from "../../core/Entity";
 import GameState from "../GameState";
 import NetworkSystem from "../NetworkSystem";
 import NetworkEntity from "../NetworkEntity";
 import IsNetworked from "../IsNetworked";
 import PrefabManager from "../../utils/prefabs/PrefabManager";
+import NetworkComponent, {
+    SerializedNetworkComponent,
+} from "../NetworkComponent";
+import IsPrefab from "../../utils/prefabs/IsPrefab";
 
 /**
  * Entry point for the client-side networking.
@@ -15,6 +22,8 @@ export default abstract class ClientNetworkSystem extends NetworkSystem {
     #webSocket?: WebSocket;
 
     protected $serverSnapshot?: GameState;
+
+    protected $clientSnapshot: GameState;
 
     #address: string;
 
@@ -31,6 +40,7 @@ export default abstract class ClientNetworkSystem extends NetworkSystem {
 
         this.#address = address;
         this.#connected = false;
+        this.$clientSnapshot = new GameState();
     }
 
     public async onStart(): Promise<void> {
@@ -81,15 +91,15 @@ export default abstract class ClientNetworkSystem extends NetworkSystem {
         deltaTime: number
     ): void {
         if (this.$serverSnapshot) {
-            this.$serverSnapshot.entities.forEach((serializedEntity) => {
-                this.deserializeEntity(serializedEntity);
-            });
-
             this.$serverSnapshot.customData.forEach((data) => {
                 if (data.setup) {
                     this.setup(data.setup);
                 }
                 this.onCustomData(data);
+            });
+
+            this.$serverSnapshot.entities.forEach((serializedEntity) => {
+                this.deserializeEntity(serializedEntity);
             });
 
             this.$serverSnapshot = undefined;
@@ -110,14 +120,14 @@ export default abstract class ClientNetworkSystem extends NetworkSystem {
 
         if (
             deltaGameState.entities.size === 0 &&
-            this.$currentSnapshot.customData.length === 0
+            this.$clientSnapshot.customData.length === 0
         ) {
             return;
         }
 
-        deltaGameState.customData = this.$currentSnapshot.customData;
+        deltaGameState.customData = this.$clientSnapshot.customData;
 
-        this.$currentSnapshot.customData = [];
+        this.$clientSnapshot.customData = [];
 
         this.#webSocket?.send(JSON.stringify(deltaGameState));
     }
@@ -135,7 +145,6 @@ export default abstract class ClientNetworkSystem extends NetworkSystem {
 
         if (!targetEntity) {
             // New entity from server
-            // TODO: Use the Prefab Component instead of NetworkEntity prefabName field
             if (networkEntity.prefabName) {
                 targetEntity = PrefabManager.get(
                     networkEntity.prefabName,
@@ -147,27 +156,87 @@ export default abstract class ClientNetworkSystem extends NetworkSystem {
                     );
                     return;
                 }
+                targetEntity.name = networkEntity.name;
                 this.ecsManager?.addEntity(targetEntity);
             } else {
+                const parent = this.ecsManager?.entities.find(
+                    (entity) => entity.id === networkEntity.parentId
+                );
+
+                if (networkEntity.parentId && !parent) {
+                    console.warn(
+                        "Parent not found for entity : ",
+                        networkEntity.name
+                    );
+                }
+
                 targetEntity = this.ecsManager!.createEntity({
                     id: networkEntity.id,
                     name: networkEntity.name,
+                    parent,
                 });
             }
             isNewEntity = true;
         }
 
-        if (networkEntity.destroyed) {
+        if (!targetEntity) {
+            throw new Error("Target entity not found");
+        }
+
+        if (networkEntity.isDestroyed) {
             this.onDeletedEntity(targetEntity);
             targetEntity.destroy();
             return;
         }
 
-        super.deserializeEntity(networkEntity);
+        networkEntity.components.forEach((networkComponent) => {
+            this.deserializeComponent(networkComponent, targetEntity!);
+        });
 
         if (isNewEntity) {
             this.onNewEntity(targetEntity);
         }
+    }
+
+    private deserializeComponent(
+        networkComponent: SerializedNetworkComponent<any>,
+        targetEntity: Entity
+    ) {
+        const ComponentConstructor = this.$allowedNetworkComponents.find(
+            (ComponentClass) =>
+                ComponentClass.name === networkComponent.className
+        ) as ComponentClassConstructor;
+
+        if (!ComponentConstructor) {
+            console.warn(
+                `Received unknown component from server ${JSON.stringify(
+                    networkComponent
+                )}`
+            );
+            return;
+        }
+
+        let component = targetEntity!.getComponent(
+            ComponentConstructor
+        ) as NetworkComponent<any>;
+
+        if (!component) {
+            component = new ComponentConstructor();
+            targetEntity!.addComponent(component);
+        }
+
+        if (networkComponent.updateTimestamp > 0 && component.updateTimestamp) {
+            // If the component is older than the last update, ignore it
+            // Clients should check if the server component match with the old state of the entity
+            // If it doesn't match, the client should roll back the entity to this state
+            if (component.updateTimestamp >= networkComponent.updateTimestamp) {
+                // TODO: Out of sync resolution
+                console.warn("Component is out of sync");
+                return;
+            }
+        }
+
+        component.deserialize(networkComponent);
     }
 
     /**
@@ -181,11 +250,48 @@ export default abstract class ClientNetworkSystem extends NetworkSystem {
             return undefined;
         }
 
-        return super.serializeEntity(entity);
+        const networkEntity = new NetworkEntity(
+            entity.id,
+            new Map(),
+            false,
+            entity.tags,
+            entity.getComponent(IsPrefab)?.prefabName,
+            entity.name,
+            entity.parent?.id
+        );
+
+        const networkComponents: NetworkComponent<any>[] = entity
+            .getComponents(this.$allowedNetworkComponents)
+            .filter((component) => component) as NetworkComponent<any>[];
+
+        if (networkComponents.length === 0) {
+            return undefined;
+        }
+
+        // Loop through all the network components and check if they should be updated.
+        // If they should be updated, serialize them and add them to the serialized entity.
+        networkComponents.forEach((serializableComponent) => {
+            if (
+                serializableComponent.isDirty(serializableComponent.lastData) &&
+                (serializableComponent.ownerId === this.#networkId ||
+                    serializableComponent.ownerId === "*")
+            ) {
+                serializableComponent.updateTimestamp = Date.now();
+                const serializedData = serializableComponent.serialize();
+                const componentName = serializableComponent.constructor.name;
+                networkEntity.components.set(componentName, serializedData);
+            }
+        });
+
+        if (networkEntity.components.size > 0) {
+            return networkEntity;
+        }
+
+        return undefined;
     }
 
     public sendCustomPrivateData(data: any): void {
-        this.$currentSnapshot.customData.push(data);
+        this.$clientSnapshot.customData.push(data);
     }
 
     /**

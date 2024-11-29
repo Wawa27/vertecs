@@ -1,8 +1,9 @@
 import { Component } from "../../core";
 import State from "./State";
+import { NetworkComponent } from "../../network";
 
-export default class FiniteStateMachine extends Component {
-    protected $inialStateName: string;
+export default class FiniteStateMachine extends NetworkComponent<string> {
+    protected $initialStateName: string;
 
     protected $currentStateName?: string;
 
@@ -16,12 +17,42 @@ export default class FiniteStateMachine extends Component {
         transitions?: { stateName: string; nextStateNames: string[] }[]
     ) {
         super();
-        this.$inialStateName = initialStateName;
+        this.$initialStateName = initialStateName;
 
         this.$states = new Map();
         this.addStates(states ?? []);
         this.$transitions = new Map();
         this.addTransitions(transitions ?? []);
+    }
+
+    public accept(stateName: string): boolean {
+        // TODO: Check if state exists and if the transition is valid
+        return true;
+    }
+
+    public isDirty(lastStateName?: string): boolean {
+        const finiteStateMachine =
+            this.entity?.getComponent(FiniteStateMachine);
+
+        return lastStateName !== finiteStateMachine?.currentStateName;
+    }
+
+    public write(): string {
+        const finiteStateMachine =
+            this.entity?.getComponent(FiniteStateMachine);
+        return (
+            finiteStateMachine!.currentStateName ??
+            finiteStateMachine!.initialStateName
+        );
+    }
+
+    public read(stateName: string): void {
+        const finiteStateMachine =
+            this.entity?.getComponent(FiniteStateMachine);
+
+        if (!finiteStateMachine) return;
+
+        finiteStateMachine.setNextState(stateName);
     }
 
     public addState(name: string, state: State): void {
@@ -98,7 +129,7 @@ export default class FiniteStateMachine extends Component {
     }
 
     public get initialStateName(): string {
-        return this.$inialStateName;
+        return this.$initialStateName;
     }
 
     public set currentStateName(currentStateName: string) {
@@ -111,7 +142,7 @@ export default class FiniteStateMachine extends Component {
 
     public clone(): Component {
         return new FiniteStateMachine(
-            this.$inialStateName,
+            this.$initialStateName,
             Array.from(this.$states.entries()).map(([name, state]) => ({
                 name,
                 state: state.clone(),

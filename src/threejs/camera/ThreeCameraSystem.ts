@@ -1,11 +1,11 @@
-import { Camera, Quaternion, WebGLRenderer } from "three";
-import { vec3 } from "ts-gl-matrix";
+import { Camera, Quaternion, Vector3, WebGLRenderer } from "three";
+import { quat, Vec3, vec3 } from "ts-gl-matrix";
 // @ts-ignore
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { Transform } from "../../math";
 import { ThreeCamera } from "../index";
-import { Component, Entity, System } from "../../core";
-import ThreeSystem from "../ThreeSystem";
+import { Entity, System } from "../../core";
+import { SystemConstructor } from "../../core/EcsManager";
 
 export default class ThreeCameraSystem extends System<
     [ThreeCamera, Transform]
@@ -14,10 +14,12 @@ export default class ThreeCameraSystem extends System<
 
     #renderer: WebGLRenderer;
 
-    #controls?: OrbitControls;
-
-    public constructor(renderer: WebGLRenderer, tps?: number) {
-        super([ThreeCamera, Transform], tps);
+    public constructor(
+        renderer: WebGLRenderer,
+        tps?: number,
+        dependencies?: SystemConstructor<any>[]
+    ) {
+        super([ThreeCamera, Transform], tps, dependencies);
         this.#renderer = renderer;
     }
 
@@ -47,35 +49,6 @@ export default class ThreeCameraSystem extends System<
         }
 
         this.#cameraEntity = entity;
-
-        if (cameraComponent.orbitControls) {
-            this.#controls = new OrbitControls(
-                cameraComponent.camera,
-                this.#renderer.domElement
-            );
-        }
-
-        const lookAtWorldPosition = cameraComponent.lookAt
-            ?.getComponent(Transform)
-            ?.getWorldPosition();
-
-        const worldPosition = transform.getWorldPosition();
-
-        cameraComponent.camera.position.set(
-            worldPosition[0],
-            worldPosition[1],
-            worldPosition[2]
-        );
-
-        if (lookAtWorldPosition) {
-            cameraComponent.camera.lookAt(
-                lookAtWorldPosition[0],
-                lookAtWorldPosition[1],
-                lookAtWorldPosition[2]
-            );
-        }
-
-        this.#controls?.update();
     }
 
     protected onLoop(
@@ -85,58 +58,84 @@ export default class ThreeCameraSystem extends System<
     ): void {
         const cameraComponent = this.#cameraEntity?.getComponent(ThreeCamera);
         const camera = cameraComponent?.camera;
-        const transform = this.#cameraEntity?.getComponent(Transform);
-        const lookAtTransform =
+        const cameraTransform = this.#cameraEntity?.getComponent(Transform);
+
+        const targetTransform =
             cameraComponent?.lookAt?.getComponent(Transform);
 
-        if (!cameraComponent || !camera || !transform) {
+        if (!cameraComponent || !camera || !cameraTransform) {
             console.warn("Camera or transform not found");
             return;
         }
 
-        if (cameraComponent.orbitControls) {
-            this.#controls?.update();
-            return;
+        const targetWorldPosition = targetTransform?.getWorldPosition();
+
+        if (targetWorldPosition && targetTransform) {
+            const targetWorldRotation = targetTransform.getWorldRotation();
+            const targetWorldPosition = targetTransform.getWorldPosition();
+            const cameraWorldPosition = cameraTransform.getWorldPosition();
+
+            const currentOffset = vec3.sub(
+                vec3.create(),
+                cameraWorldPosition,
+                targetWorldPosition
+            );
+
+            const targetOffset = vec3.transformQuat(
+                vec3.create(),
+                cameraComponent.lookAtOffset,
+                targetWorldRotation
+            );
+
+            const currentWorldTargetOffset = vec3.lerp(
+                vec3.create(),
+                currentOffset,
+                targetOffset,
+                0.1
+            );
+
+            vec3.add(
+                currentWorldTargetOffset,
+                targetWorldPosition,
+                currentWorldTargetOffset
+            );
+            cameraTransform.setWorldPosition(currentWorldTargetOffset);
+            cameraTransform.targetTo(targetTransform.getWorldPosition());
         }
 
-        const worldPosition = transform.getWorldPosition();
-        const worldRotation = transform.getWorldRotation();
+        const cameraWorldPosition = cameraTransform.getWorldPosition();
+        const cameraWorldRotation = cameraTransform.getWorldRotation();
 
         camera.position.set(
-            worldPosition[0],
-            worldPosition[1],
-            worldPosition[2]
+            cameraWorldPosition[0],
+            cameraWorldPosition[1],
+            cameraWorldPosition[2]
         );
         camera.rotation.setFromQuaternion(
             new Quaternion(
-                worldRotation[0],
-                worldRotation[1],
-                worldRotation[2],
-                worldRotation[3]
+                cameraWorldRotation[0],
+                cameraWorldRotation[1],
+                cameraWorldRotation[2],
+                cameraWorldRotation[3]
             )
         );
-
-        if (lookAtTransform) {
-            const worldPosition = lookAtTransform.getWorldPosition();
-            camera.position.set(
-                worldPosition[0] + cameraComponent.lookAtOffset[0],
-                worldPosition[1] + cameraComponent.lookAtOffset[1],
-                worldPosition[2] + cameraComponent.lookAtOffset[2]
-            );
-
-            const lookAtWorldPosition = lookAtTransform?.getWorldPosition();
-
-            if (lookAtWorldPosition) {
-                camera.lookAt(
-                    lookAtWorldPosition[0],
-                    lookAtWorldPosition[1],
-                    lookAtWorldPosition[2]
-                );
-            }
-        }
     }
 
     public get cameraEntity(): Entity | undefined {
         return this.#cameraEntity;
+    }
+
+    public getForwardVector(): Vec3 {
+        const cameraComponent = this.#cameraEntity?.getComponent(ThreeCamera);
+        const camera = cameraComponent?.camera;
+
+        if (!camera) {
+            throw new Error("Camera not found");
+        }
+
+        const vector = new Vector3();
+        camera.getWorldDirection(vector);
+
+        return vec3.fromValues(vector.x, vector.y, vector.z);
     }
 }

@@ -37,9 +37,7 @@ export default class ThreeAnimationSystem extends System<
             const threeAnimationDuration =
                 threeAnimation.currentAnimation?.getClip().duration ?? 1;
 
-            const speed = (threeAnimationDuration * 1000) / animation.duration;
-
-            threeAnimation.mixer?.update((deltaTime * speed) / 1000);
+            threeAnimation.mixer?.update(deltaTime / 1000);
         }
     }
 }

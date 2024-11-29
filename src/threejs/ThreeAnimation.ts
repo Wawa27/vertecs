@@ -40,6 +40,8 @@ export default class ThreeAnimation extends Component {
                 this.#actions?.set(clip.name, action);
                 action.weight = 0;
                 action.play();
+            } else {
+                console.warn("No action found for clip ", clip);
             }
         });
     }
@@ -89,5 +91,9 @@ export default class ThreeAnimation extends Component {
 
     public get clips(): AnimationClip[] | undefined {
         return this.#clips;
+    }
+
+    public clone(): Component {
+        return new ThreeAnimation();
     }
 }

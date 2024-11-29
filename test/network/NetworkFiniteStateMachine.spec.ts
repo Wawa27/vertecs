@@ -5,7 +5,6 @@ import {
     FiniteStateMachine,
     FiniteStateMachineSystem,
     IsNetworked,
-    NetworkFiniteStateMachine,
     PrefabManager,
     ServerNetworkSystem,
     State,
@@ -34,7 +33,7 @@ class StateTest3 extends State {
 }
 
 describe("FiniteStateMachine", async () => {
-    const allowedNetworkComponents = [NetworkFiniteStateMachine];
+    const allowedNetworkComponents = [FiniteStateMachine];
 
     let serverNetworkSystem: ServerNetworkSystem;
     const serverEcsManager = new EcsManager();
@@ -79,12 +78,11 @@ describe("FiniteStateMachine", async () => {
             ]
         );
         testPrefab.addComponent(finiteStateMachine);
-        PrefabManager.add("testPrefab", testPrefab);
+        PrefabManager.set("testPrefab", testPrefab);
 
         serverEntity = PrefabManager.get("testPrefab");
         if (!serverEntity) throw new Error("Prefab not found");
         serverEntity.addComponent(new IsNetworked());
-        serverEntity.addComponent(new NetworkFiniteStateMachine());
         serverEcsManager.addEntity(serverEntity);
 
         await clientAEcsManager.start();
@@ -93,9 +91,11 @@ describe("FiniteStateMachine", async () => {
     it("should start with state1", async () => {
         await new Promise((resolve) => setTimeout(resolve, 100));
 
-        const clientAEntity = clientAEcsManager.entities[0];
+        const clientAEntity = clientAEcsManager.entities.find((entity) =>
+            entity.hasComponent(FiniteStateMachine)
+        );
         const finiteStateMachine =
-            clientAEntity.getComponent(FiniteStateMachine);
+            clientAEntity!.getComponent(FiniteStateMachine);
 
         assert.equal(finiteStateMachine?.currentStateName, "test1");
     });
@@ -103,9 +103,11 @@ describe("FiniteStateMachine", async () => {
     it("should move to state2 after a second", async () => {
         await new Promise((resolve) => setTimeout(resolve, 1000));
 
-        const clientAEntity = clientAEcsManager.entities[0];
+        const clientAEntity = clientAEcsManager.entities.find((entity) =>
+            entity.hasComponent(FiniteStateMachine)
+        );
         const clientAFiniteStateMachine =
-            clientAEntity.getComponent(FiniteStateMachine);
+            clientAEntity!.getComponent(FiniteStateMachine);
         const serverFiniteStateMachine =
             serverEcsManager.entities[0].getComponent(FiniteStateMachine);
 
@@ -114,8 +116,9 @@ describe("FiniteStateMachine", async () => {
     });
 
     it("should move to state3 after server moves to state3", async () => {
-        const serverFiniteStateMachine =
-            serverEcsManager.entities[0].getComponent(FiniteStateMachine);
+        const serverFiniteStateMachine = serverEcsManager.entities
+            .find((entity) => entity.hasComponent(FiniteStateMachine))!
+            .getComponent(FiniteStateMachine);
 
         serverFiniteStateMachine?.setNextState("test3");
 

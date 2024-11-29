@@ -25,6 +25,10 @@ export default class TimedState extends Component {
         return this.#duration;
     }
 
+    public set duration(duration: number) {
+        this.#duration = duration;
+    }
+
     public get repeat(): number {
         return this.#repeat;
     }
