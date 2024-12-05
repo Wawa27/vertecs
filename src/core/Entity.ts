@@ -229,6 +229,17 @@ export default class Entity {
     }
 
     /**
+     * Remove a child to this entity without destroying it
+     * @param entity The child
+     */
+    public removeChild(entity: Entity) {
+        const index = this.#children.indexOf(entity);
+        if (index !== -1) {
+            this.#children.splice(index, 1);
+        }
+    }
+
+    /**
      * Add a tag to an entity
      * @param tag The tag to add
      */
