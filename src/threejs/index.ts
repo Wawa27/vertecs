@@ -9,6 +9,8 @@ import ThreeLightComponent from "./light/ThreeLightComponent";
 import ThreeCss3dSystem from "./css3d/ThreeCss3dSystem";
 import ThreeCss3dComponent from "./css3d/ThreeCss3dComponent";
 import ThreeComponentDebugger from "./ThreeComponentDebugger";
+import EntityDebugger from "./EntityDebugger";
+import EntityDebuggerSystem from "./EntityDebuggerSystem";
 import ThreeInstancedMesh from "./ThreeInstancedMesh";
 import AnimatedState from "./fsm/AnimatedState";
 import AnimatedStateSystem from "./fsm/AnimatedStateSystem";
@@ -29,6 +31,8 @@ export {
     ThreeCss3dSystem,
     ThreeCss3dComponent,
     ThreeComponentDebugger,
+    EntityDebugger,
+    EntityDebuggerSystem,
     ThreeInstancedMesh,
     AnimatedState,
     AnimatedStateSystem,
