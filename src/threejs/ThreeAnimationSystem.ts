@@ -34,9 +34,6 @@ export default class ThreeAnimationSystem extends System<
         for (let i = components.length - 1; i >= 0; i--) {
             const [threeAnimation, animation] = components[i];
 
-            const threeAnimationDuration =
-                threeAnimation.currentAnimation?.getClip().duration ?? 1;
-
             threeAnimation.mixer?.update(deltaTime / 1000);
         }
     }

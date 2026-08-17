@@ -6,10 +6,8 @@ import CounterSystem from "./systems/CounterSystem";
 import CounterComponentSubclass from "./components/CounterComponentSubclass";
 import EmptyComponent from "./components/EmptyComponent";
 
-const chai = { ...chaiModule };
-
-// @ts-ignore
-chaiSpies(chai, chai.util);
+const chai = chaiModule.use(chaiSpies);
+const { expect } = chai;
 
 describe("EcsManager", () => {
     let ecsManager: EcsManager;
@@ -26,12 +24,12 @@ describe("EcsManager", () => {
 
             counterEntity.addComponent(counterComponent);
 
-            chai.assert.isTrue(
+            expect(
                 ecsManager.isEntityEligibleToGroup(
                     counterSystem.filter,
                     counterEntity
                 )
-            );
+            ).to.equal(true);
         });
 
         it("should allow use of component subclasses", () => {
@@ -42,12 +40,12 @@ describe("EcsManager", () => {
 
             counterEntity.addComponent(counterSubclassComponent);
 
-            chai.assert.isTrue(
+            expect(
                 ecsManager.isEntityEligibleToGroup(
                     counterSystem.filter,
                     counterEntity
                 )
-            );
+            ).to.equal(true);
         });
 
         it("should not call onEntityNoLongerEligible for unrelated component removal", () => {
@@ -60,7 +58,7 @@ describe("EcsManager", () => {
             counterEntity.addComponent(new EmptyComponent()); // Add unrelated component
             counterEntity.removeComponent(EmptyComponent); // Remove unrelated component
 
-            chai.expect(spy).to.not.have.been.called();
+            expect(spy).to.not.have.been.called();
         });
     });
 });

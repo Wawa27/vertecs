@@ -11,7 +11,7 @@
     "start:example-network-server": "tsx examples/network/hello-network/server/Main",
     "start:example-network-client": "tsx examples/network/hello-network/client/Main",
     "test": "mocha --import=tsx test/**/*.spec.ts --exit --recursive",
-    "lint": "eslint src/**/*.ts test/**/*.ts examples/**/*.ts --ignore-pattern dist/ --fix",
+    "lint": "tsc --noEmit && eslint src/**/*.ts test/**/*.ts examples/**/*.ts --ignore-pattern dist/ --fix && prettier --write src/**/*.ts test/**/*.ts examples/**/*.ts --ignore-pattern dist/",
     "build:examples": "rollup -c rollup.config.examples.js",
     "dev:examples": "rollup -c rollup.config.examples.js --watch",
     "prepare": "husky install"
@@ -28,9 +28,9 @@
   "dependencies": {
     "oimo-esm": "^1.0.10",
     "performance-now": "^2.1.0",
-    "three": "^0.170.0",
+    "three": "^0.182.0",
     "ts-gl-matrix": "4.0.3",
-    "uuid": "^11.0.3",
+    "uuid": "^8.3.2",
     "ws": "^8.18.0"
   },
   "devDependencies": {
@@ -40,7 +40,8 @@
     "@types/chai-spies": "^1.0.6",
     "@types/mocha": "^10.0.10",
     "@types/node": "^22.10.0",
-    "@types/three": "^0.170.0",
+    "@types/three": "^0.182.0",
+    "@types/uuid": "^8.3.4",
     "@types/ws": "^8.5.13",
     "@typescript-eslint/eslint-plugin": "^8.16.0",
     "@typescript-eslint/parser": "^8.16.0",
@@ -57,13 +58,12 @@
     "rollup": "^4.27.4",
     "rollup-plugin-polyfill-node": "^0.13.0",
     "rollup-plugin-ts": "^3.4.5",
-    "tsx": "^4.19.2",
     "tsconfig-paths": "^4.2.0",
+    "tsx": "^4.19.2",
     "typescript": "^5.7.2"
   },
   "peerDependencies": {
     "performance-now": "^2.1.0",
-    "three": "^0.155",
     "ts-gl-matrix": "4.0.3",
     "uuid": "^8.3.2",
     "ws": "^8.18.0"

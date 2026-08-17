@@ -1,7 +1,5 @@
 import { Camera, Quaternion, Vector3, WebGLRenderer } from "three";
-import { quat, Vec3, vec3 } from "ts-gl-matrix";
-// @ts-ignore
-import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { Vec3, vec3 } from "ts-gl-matrix";
 import { Transform } from "../../math";
 import { ThreeCamera } from "../index";
 import { Entity, System } from "../../core";
@@ -87,11 +85,12 @@ export default class ThreeCameraSystem extends System<
                 targetWorldRotation
             );
 
+            const clampedDeltaTime = Math.min(deltaTime, 33.33);
             const currentWorldTargetOffset = vec3.lerp(
                 vec3.create(),
                 currentOffset,
                 targetOffset,
-                0.1
+                1 - 0.9 ** (clampedDeltaTime * 0.06)
             );
 
             vec3.add(

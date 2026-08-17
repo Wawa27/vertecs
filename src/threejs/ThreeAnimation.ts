@@ -32,8 +32,18 @@ export default class ThreeAnimation extends Component {
     }
 
     private createMixer(meshComponent: ThreeObject3D) {
-        this.#mixer = new AnimationMixer(meshComponent.object3D);
-        this.#clips = meshComponent.object3D.animations;
+        const { object3D } = meshComponent;
+        const firstChild = object3D.children[0];
+        const animatedRoot =
+            object3D.children.length === 1 &&
+            firstChild &&
+            "animations" in firstChild &&
+            Array.isArray(firstChild.animations)
+                ? firstChild
+                : object3D;
+
+        this.#mixer = new AnimationMixer(animatedRoot);
+        this.#clips = animatedRoot.animations;
         this.#clips.forEach((clip) => {
             const action = this.#mixer?.clipAction(clip);
             if (action) {

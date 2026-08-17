@@ -60,14 +60,17 @@ export default class AssetManager {
             }
         });
 
-        const box = new Box3().setFromObject(gltf.scene);
+        const wrapper = new Group();
+        wrapper.add(gltf.scene);
+
+        const box = new Box3().setFromObject(wrapper);
         const size = box.getSize(new Vector3()).length();
 
         const entity = new Entity();
         entity.addComponent(
             new Transform(undefined, undefined, [2 / size, 2 / size, 2 / size])
         );
-        entity.addComponent(new ThreeObject3D(gltf.scene));
+        entity.addComponent(new ThreeObject3D(wrapper));
         if (gltf.animations.length > 0) {
             entity.addComponent(new ThreeAnimation());
         }
@@ -97,14 +100,17 @@ export default class AssetManager {
 
         group.updateMatrixWorld();
 
-        const box = new Box3().setFromObject(group);
+        const wrapper = new Group();
+        wrapper.add(group);
+
+        const box = new Box3().setFromObject(wrapper);
         const size = box.getSize(new Vector3()).length();
 
         const entity = new Entity();
         entity.addComponent(
             new Transform(undefined, undefined, [2 / size, 2 / size, 2 / size])
         );
-        entity.addComponent(new ThreeObject3D(group));
+        entity.addComponent(new ThreeObject3D(wrapper));
         if (group.animations.length > 0) {
             entity.addComponent(new ThreeAnimation());
         }
