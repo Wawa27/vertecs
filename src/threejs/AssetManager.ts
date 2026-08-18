@@ -1,4 +1,4 @@
-import { GLTF, GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
+import { GLTF, GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import {
     Box3,
     CubeTexture,
@@ -8,7 +8,7 @@ import {
     TextureLoader,
     Vector3,
 } from "three";
-import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader";
+import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader.js";
 import { Entity } from "../core";
 import { Transform } from "../math";
 import ThreeObject3D from "./ThreeObject3D";

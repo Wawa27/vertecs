@@ -71,10 +71,10 @@ export default class ThreeCss3dSystem extends System<
     }
 
     public onEntityNoLongerEligible(
-        entity: Entity,
+        _entity: Entity,
         components: [ThreeCss3dComponent, Transform]
     ) {
-        const css3dComponent = entity.getComponent(ThreeCss3dComponent)!;
+        const css3dComponent = components[0];
         if (css3dComponent.billboardMode === "screen" && this.#screenLayer) {
             const { element } = css3dComponent.css3dObject;
             if (element.parentElement === this.#screenLayer) {

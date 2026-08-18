@@ -5,7 +5,7 @@ declare module "oimo" {
 
     export type BodyOptions = {
         type?: "sphere" | "box" | "cylinder";
-        size?: [number] | [number, number, number];
+        size?: [number] | [number, number] | [number, number, number];
         pos?: [number, number, number];
         rot?: [number, number, number];
         move?: boolean;

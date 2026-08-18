@@ -12,7 +12,7 @@ import {
     Vector3,
     WebGLRenderer,
 } from "three";
-import Stats from "three/examples/jsm/libs/stats.module";
+import Stats from "three/examples/jsm/libs/stats.module.js";
 import { EcsManager, Entity, System } from "../core";
 import ThreeObject3D from "./ThreeObject3D";
 import { Transform } from "../math";
