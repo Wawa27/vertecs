@@ -1,6 +1,7 @@
 import { NetworkComponent } from "../../network";
 import AssetManager from "../AssetManager";
 import { Component } from "../../core";
+import { Transform } from "../../math";
 
 export default class NetworkAsset extends NetworkComponent<string> {
     #assetName: string;
@@ -19,7 +20,14 @@ export default class NetworkAsset extends NetworkComponent<string> {
     }
 
     read(assetName: string): void {
-        this.entity?.addChild(AssetManager.get(assetName));
+        if (this.#assetName === assetName) {
+            return;
+        }
+        this.#assetName = assetName;
+
+        const asset = AssetManager.get(assetName);
+        asset.getComponent(Transform)?.reset();
+        this.entity!.addChild(asset);
     }
 
     write(): string {
@@ -28,5 +36,9 @@ export default class NetworkAsset extends NetworkComponent<string> {
 
     public clone(): Component {
         return new NetworkAsset(this.#assetName);
+    }
+
+    public get assetName(): string {
+        return this.#assetName;
     }
 }

@@ -113,21 +113,6 @@ export default class ThreeSystem extends System<[Transform, ThreeObject3D]> {
             throw new Error("ThreeMesh not found on eligible entity");
         }
 
-        if (threeMesh instanceof ThreeInstancedMesh) {
-            const instancedMesh = threeMesh.object3D as InstancedMesh;
-
-            for (let i = 0; i < instancedMesh.count; i++) {
-                const matrix = new Matrix4();
-                matrix.compose(
-                    new Vector3(0, 0, 0),
-                    new Quaternion(0, 0, 0, 1),
-                    new Vector3(0, 0, 0)
-                );
-                instancedMesh.setMatrixAt(i, matrix);
-                instancedMesh.instanceMatrix.needsUpdate = true;
-            }
-        }
-
         this.#scene.add(threeMesh?.object3D);
     }
 

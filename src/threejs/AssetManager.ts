@@ -52,6 +52,9 @@ export default class AssetManager {
         const gltf = await AssetManager.asyncLoadGltf(url);
 
         gltf.scene.animations = gltf.animations;
+        gltf.scene.animations.forEach((clip) => {
+            clip.name = clip.name.split("|").pop()!;
+        });
         gltf.scene.traverse((child) => {
             // @ts-ignore
             if (child.isMesh) {
@@ -95,10 +98,18 @@ export default class AssetManager {
             );
         });
 
+    private static sanitizeClipNames(group: Group) {
+        group.animations.forEach((clip) => {
+            clip.name = clip.name.split("|").pop()!;
+        });
+    }
+
     public static async loadFbx(url: string, assetName: string) {
         const group = await AssetManager.asyncLoadFbx(url);
 
         group.updateMatrixWorld();
+
+        AssetManager.sanitizeClipNames(group);
 
         const wrapper = new Group();
         wrapper.add(group);
