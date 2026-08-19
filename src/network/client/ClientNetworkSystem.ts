@@ -1,17 +1,17 @@
-import type {
-    ComponentClass,
-    ComponentClassConstructor,
-} from "../../core/Component";
+import type { ComponentClass, ComponentClassConstructor, } from "../../core/Component";
 import Entity from "../../core/Entity";
 import GameState from "../GameState";
 import NetworkSystem from "../NetworkSystem";
 import NetworkEntity from "../NetworkEntity";
 import IsNetworked from "../IsNetworked";
 import PrefabManager from "../../utils/prefabs/PrefabManager";
-import NetworkComponent, {
-    SerializedNetworkComponent,
-} from "../NetworkComponent";
+import NetworkComponent, { SerializedNetworkComponent, } from "../NetworkComponent";
 import IsPrefab from "../../utils/prefabs/IsPrefab";
+import type Command from "../commands/Command";
+import type { SerializedCommand } from "../commands/Command";
+import CommandHandler, { CommandContext, } from "../commands/CommandHandler";
+import CommandRegistry from "../commands/CommandRegistry";
+import SetupCommand from "../commands/SetupCommand";
 
 /**
  * Entry point for the client-side networking.
@@ -31,9 +31,12 @@ export default abstract class ClientNetworkSystem extends NetworkSystem {
 
     #networkId?: string;
 
+    readonly #commandRegistry: CommandRegistry;
+
     protected constructor(
         allowedNetworkComponents: ComponentClass[],
         address: string,
+        commandRegistry?: CommandRegistry,
         tps?: number
     ) {
         super(allowedNetworkComponents, tps);
@@ -41,6 +44,7 @@ export default abstract class ClientNetworkSystem extends NetworkSystem {
         this.#address = address;
         this.#connected = false;
         this.$clientSnapshot = new GameState();
+        this.#commandRegistry = commandRegistry ?? new CommandRegistry();
     }
 
     public async onStart(): Promise<void> {
@@ -91,11 +95,8 @@ export default abstract class ClientNetworkSystem extends NetworkSystem {
         deltaTime: number
     ): void {
         if (this.$serverSnapshot) {
-            this.$serverSnapshot.customData.forEach((data) => {
-                if (data.setup) {
-                    this.setup(data.setup);
-                }
-                this.onCustomData(data);
+            this.$serverSnapshot.commands.forEach((serializedCommand) => {
+                this.onCommand(serializedCommand);
             });
 
             this.$serverSnapshot.entities.forEach((serializedEntity) => {
@@ -120,20 +121,71 @@ export default abstract class ClientNetworkSystem extends NetworkSystem {
 
         if (
             deltaGameState.entities.size === 0 &&
-            this.$clientSnapshot.customData.length === 0
+            this.$clientSnapshot.commands.length === 0
         ) {
             return;
         }
 
-        deltaGameState.customData = this.$clientSnapshot.customData;
+        deltaGameState.commands = this.$clientSnapshot.commands;
 
-        this.$clientSnapshot.customData = [];
+        this.$clientSnapshot.commands = [];
 
         this.#webSocket?.send(JSON.stringify(deltaGameState));
     }
 
     private setup(data: { clientId: string }) {
         this.#networkId = data.clientId;
+        this.onSetup(data.clientId);
+    }
+
+    /**
+     * Called when the client received its network id from the server.
+     * @param clientId
+     * @protected
+     */
+    protected onSetup(clientId: string): void {}
+
+    /**
+     * Dispatches a received command to its registered handler.
+     * The setup command is handled internally to configure the network id.
+     * @param serializedCommand
+     */
+    public onCommand(serializedCommand: SerializedCommand): void {
+        if (serializedCommand.type === SetupCommand.TYPE) {
+            const setupCommand = new SetupCommand();
+            setupCommand.deserialize(serializedCommand);
+            this.setup({ clientId: setupCommand.clientId });
+            return;
+        }
+
+        const handler = this.#commandRegistry.get(serializedCommand.type);
+        if (!handler) {
+            console.warn(
+                `Received unknown command ${serializedCommand.type}`
+            );
+            return;
+        }
+
+        const command = new handler.commandClass();
+        command.deserialize(serializedCommand);
+
+        const context: CommandContext = {
+            ecsManager: this.ecsManager!,
+        };
+
+        if (handler.accept(command, context)) {
+            handler.execute(command, context);
+        } else {
+            console.warn(`Command ${command.type} was rejected`);
+        }
+    }
+
+    /**
+     * Registers a command handler used to dispatch server commands.
+     * @param handler
+     */
+    public registerCommandHandler(handler: CommandHandler<any>): void {
+        this.#commandRegistry.register(handler);
     }
 
     public deserializeEntity(networkEntity: NetworkEntity): void {
@@ -272,6 +324,7 @@ export default abstract class ClientNetworkSystem extends NetworkSystem {
         // If they should be updated, serialize them and add them to the serialized entity.
         networkComponents.forEach((serializableComponent) => {
             if (
+                serializableComponent.lastData &&
                 serializableComponent.isDirty(serializableComponent.lastData) &&
                 (serializableComponent.ownerId === this.#networkId ||
                     serializableComponent.ownerId === "*")
@@ -290,8 +343,12 @@ export default abstract class ClientNetworkSystem extends NetworkSystem {
         return undefined;
     }
 
-    public sendCustomPrivateData(data: any): void {
-        this.$clientSnapshot.customData.push(data);
+    /**
+     * Sends a command to the server.
+     * @param command
+     */
+    public sendCommand(command: Command): void {
+        this.$clientSnapshot.commands.push(command.serialize());
     }
 
     /**
@@ -318,9 +375,11 @@ export default abstract class ClientNetworkSystem extends NetworkSystem {
      */
     protected abstract onDeletedEntity(entity: Entity): void;
 
-    protected onCustomData(customPrivateData: any): void {}
-
     public get networkId(): string | undefined {
         return this.#networkId;
+    }
+
+    public get commandRegistry(): CommandRegistry {
+        return this.#commandRegistry;
     }
 }

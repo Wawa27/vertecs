@@ -1,22 +1,18 @@
 import { SerializedEntity } from "../io";
 import NetworkEntity from "./NetworkEntity";
-
-export type CustomData = {
-    [key: string]: any;
-    scope: string;
-};
+import type { SerializedCommand } from "./commands";
 
 export default class GameState {
     #timestamp: number;
 
     #entities: Map<string, NetworkEntity>;
 
-    #customData: CustomData[];
+    #commands: SerializedCommand[];
 
     public constructor() {
         this.#timestamp = Date.now();
         this.#entities = new Map();
-        this.#customData = [];
+        this.#commands = [];
     }
 
     public clone(): GameState {
@@ -26,12 +22,12 @@ export default class GameState {
     public toJSON(): {
         timestamp: number;
         entities: [string, SerializedEntity][];
-        customData: any[];
+        commands: SerializedCommand[];
     } {
         return {
             timestamp: this.#timestamp,
             entities: Array.from(this.entities.entries()),
-            customData: this.customData,
+            commands: this.commands,
         };
     }
 
@@ -71,11 +67,11 @@ export default class GameState {
         this.#entities = value;
     }
 
-    public get customData(): CustomData[] {
-        return this.#customData;
+    public get commands(): SerializedCommand[] {
+        return this.#commands;
     }
 
-    public set customData(value: CustomData[]) {
-        this.#customData = value;
+    public set commands(value: SerializedCommand[]) {
+        this.#commands = value;
     }
 }

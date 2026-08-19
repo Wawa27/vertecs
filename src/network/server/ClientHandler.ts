@@ -9,6 +9,7 @@ import { ComponentClassConstructor } from "../../core/Component";
 import ServerNetworkSystem from "./ServerNetworkSystem";
 import IsPlayer from "../IsPlayer";
 import IsNetworked from "../IsNetworked";
+import type Command from "../commands/Command";
 
 export default class ClientHandler {
     #serverNetworkSystem: ServerNetworkSystem;
@@ -70,7 +71,7 @@ export default class ClientHandler {
             // TODO: send whole server state
             this.webSocket.send(snapshot);
         } else if (
-            this.#serverSnapshot.customData.length > 0 ||
+            this.#serverSnapshot.commands.length > 0 ||
             this.#serverSnapshot.entities.size > 0
         ) {
             this.webSocket.send(snapshot);
@@ -88,8 +89,8 @@ export default class ClientHandler {
         this.#clientSnapshot.entities.forEach((serializedEntity) => {
             this.deserializeEntity(serializedEntity);
         });
-        this.#clientSnapshot.customData.forEach((data) => {
-            this.onPrivateCustomData(data);
+        this.#clientSnapshot.commands.forEach((serializedCommand) => {
+            this.#serverNetworkSystem.onCommand(serializedCommand, this);
         });
 
         this.#clientSnapshot = undefined;
@@ -165,11 +166,9 @@ export default class ClientHandler {
         component.deserialize(serializedNetworkComponent);
     }
 
-    public sendCustomData(data: any): void {
-        this.#serverSnapshot.customData.push(data);
+    public sendCommand(command: Command): void {
+        this.#serverSnapshot.commands.push(command.serialize());
     }
-
-    public onPrivateCustomData(data: any): void {}
 
     public get webSocket(): WebSocket {
         return this.$webSocket;

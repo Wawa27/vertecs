@@ -3,8 +3,9 @@ import NetworkCounter from "./components/NetworkCounter";
 import TestClientNetworkSystem from "./systems/TestClientNetworkSystem";
 import TestClientHandler from "./systems/TestClientHandler";
 import CounterComponent from "../components/CounterComponent";
+import TestMessageCommand from "./commands/TestMessageCommand";
 import { EcsManager } from "../../src/core";
-import { IsNetworked, ServerNetworkSystem } from "../../src";
+import { CommandHandler, IsNetworked, ServerNetworkSystem } from "../../src";
 
 describe("Networking", async () => {
     const allowedNetworkComponents = [NetworkCounter];
@@ -122,6 +123,32 @@ describe("Networking", async () => {
         assert.equal(serverCounterComponent?.count, 2);
     });
 
+    it("should dispatch a client command on the server and echo it back", async () => {
+        serverNetworkSystem.registerCommandHandler(
+            new (class extends CommandHandler<TestMessageCommand> {
+                public constructor() {
+                    super(TestMessageCommand, TestMessageCommand.TYPE);
+                }
+
+                public accept(command: TestMessageCommand): boolean {
+                    return command.message.length > 0;
+                }
+
+                public execute(command: TestMessageCommand): void {
+                    serverNetworkSystem.broadcastCommand(
+                        new TestMessageCommand(`echo:${command.message}`)
+                    );
+                }
+            })()
+        );
+
+        clientANetworkSystem.sendCommand(new TestMessageCommand("ping"));
+        await new Promise((resolve) => setTimeout(resolve, 100));
+
+        assert.equal(clientBNetworkSystem.lastCommand, "echo:ping");
+        assert.equal(clientANetworkSystem.lastCommand, "echo:ping");
+    });
+
     it("should disconnect clientA and remove clientA entity from server", async () => {
         await clientAEcsManager.stop();
 
@@ -137,16 +164,16 @@ describe("Networking", async () => {
         assert.equal(clientBNetworkSystem.entities.length, 1);
     });
 
-    it("should send private data to clientB", async () => {
+    it("should send private command to clientB", async () => {
         const message = "Hello, client B!";
-        serverNetworkSystem.sendCustomDataToClient(
+        serverNetworkSystem.sendCommandToClient(
             clientBNetworkSystem.networkId ?? "",
-            message
+            new TestMessageCommand(message)
         );
         await new Promise((resolve) => setTimeout(resolve, 100));
 
-        assert.equal(clientBNetworkSystem.lastCustomData, message);
-        assert.notEqual(clientANetworkSystem.lastCustomData, message);
+        assert.equal(clientBNetworkSystem.lastCommand, message);
+        assert.notEqual(clientANetworkSystem.lastCommand, message);
     });
 
     after(async () => {

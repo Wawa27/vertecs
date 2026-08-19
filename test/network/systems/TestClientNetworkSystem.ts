@@ -1,13 +1,14 @@
 import { ComponentClass } from "../../../src/core/Component";
 import { Entity } from "../../../src/core";
-import { ClientNetworkSystem } from "../../../src";
+import { ClientNetworkSystem, CommandHandler } from "../../../src";
+import TestMessageCommand from "../commands/TestMessageCommand";
 
 export default class TestClientNetworkSystem extends ClientNetworkSystem {
     #isConnected: boolean;
 
     #newEntities: Entity[];
 
-    #lastCustomData: any;
+    #lastCommand: any;
 
     public constructor(
         allowedNetworkComponents: ComponentClass[],
@@ -16,6 +17,7 @@ export default class TestClientNetworkSystem extends ClientNetworkSystem {
         super(allowedNetworkComponents, address);
         this.#isConnected = false;
         this.#newEntities = [];
+        this.registerCommandHandler(new TestMessageCommandHandler(this));
     }
 
     protected onConnect(): void {
@@ -24,10 +26,6 @@ export default class TestClientNetworkSystem extends ClientNetworkSystem {
 
     protected onDisconnect(): void {
         this.#isConnected = false;
-    }
-
-    protected onCustomData(customPrivateData: any) {
-        this.#lastCustomData = customPrivateData;
     }
 
     protected onNewEntity(entity: Entity): void {
@@ -40,8 +38,12 @@ export default class TestClientNetworkSystem extends ClientNetworkSystem {
         );
     }
 
-    public get lastCustomData(): any {
-        return this.#lastCustomData;
+    public get lastCommand(): any {
+        return this.#lastCommand;
+    }
+
+    public set lastCommand(value: any) {
+        this.#lastCommand = value;
     }
 
     public get isConnected(): boolean {
@@ -66,5 +68,18 @@ export default class TestClientNetworkSystem extends ClientNetworkSystem {
 
     public set serverSnapshot(value: any) {
         this.$serverSnapshot = value;
+    }
+}
+
+class TestMessageCommandHandler extends CommandHandler<TestMessageCommand> {
+    #system: TestClientNetworkSystem;
+
+    public constructor(system: TestClientNetworkSystem) {
+        super(TestMessageCommand, TestMessageCommand.TYPE);
+        this.#system = system;
+    }
+
+    public execute(command: TestMessageCommand): void {
+        this.#system.lastCommand = command.message;
     }
 }

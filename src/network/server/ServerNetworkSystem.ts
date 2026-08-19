@@ -11,6 +11,13 @@ import NetworkComponent, {
 import IsNetworked from "../IsNetworked";
 import NetworkEntity from "../NetworkEntity";
 import IsPrefab from "../../utils/prefabs/IsPrefab";
+import type Command from "../commands/Command";
+import type { SerializedCommand } from "../commands/Command";
+import CommandHandler, {
+    CommandContext,
+} from "../commands/CommandHandler";
+import CommandRegistry from "../commands/CommandRegistry";
+import SetupCommand from "../commands/SetupCommand";
 
 type ClientHandlerConstructor = new (
     ecsManager: EcsManager,
@@ -30,9 +37,12 @@ export default class ServerNetworkSystem extends NetworkSystem {
 
     readonly #gameState: GameState;
 
+    readonly #commandRegistry: CommandRegistry;
+
     public constructor(
         allowedNetworkComponents: ComponentClass[],
         clientHandlerConstructor: ClientHandlerConstructor,
+        commandRegistry?: CommandRegistry,
         tps?: number
     ) {
         super(allowedNetworkComponents, tps);
@@ -40,6 +50,7 @@ export default class ServerNetworkSystem extends NetworkSystem {
         this.#ClientHandlerConstructor = clientHandlerConstructor;
         this.$clientHandlers = [];
         this.#gameState = new GameState();
+        this.#commandRegistry = commandRegistry ?? new CommandRegistry();
     }
 
     public async onStart(): Promise<void> {
@@ -74,11 +85,9 @@ export default class ServerNetworkSystem extends NetworkSystem {
                 );
                 this.$clientHandlers.push(clientHandler);
                 clientHandler.onConnect();
-                clientHandler.sendCustomData({
-                    setup: {
-                        clientId: clientHandler.clientEntity.id,
-                    },
-                });
+                clientHandler.sendCommand(
+                    new SetupCommand(clientHandler.clientEntity.id)
+                );
 
                 webSocket.on("close", () => {
                     console.log(
@@ -160,7 +169,7 @@ export default class ServerNetworkSystem extends NetworkSystem {
         if (component.forceUpdate) {
             return component.serialize(true);
         }
-        if (component.isDirty(component.lastData)) {
+        if (component.lastData && component.isDirty(component.lastData)) {
             component.updateTimestamp = Date.now();
             return component.serialize();
         }
@@ -221,29 +230,73 @@ export default class ServerNetworkSystem extends NetworkSystem {
     }
 
     /**
-     * Broadcasts custom data to all clients.
-     * @param data
+     * Dispatches a received command to its registered handler.
+     * @param serializedCommand
+     * @param clientHandler The client that sent the command.
      */
-    public broadcastCustomData(data: any) {
+    public onCommand(
+        serializedCommand: SerializedCommand,
+        clientHandler: ClientHandler
+    ): void {
+        const handler = this.#commandRegistry.get(serializedCommand.type);
+        if (!handler) {
+            console.warn(
+                `Received unknown command ${serializedCommand.type}`
+            );
+            return;
+        }
+
+        const command = new handler.commandClass();
+        command.deserialize(serializedCommand);
+
+        const context: CommandContext = {
+            ecsManager: this.ecsManager!,
+            senderId: clientHandler.clientEntity.id,
+        };
+
+        if (handler.accept(command, context)) {
+            handler.execute(command, context);
+        } else {
+            console.warn(`Command ${command.type} was rejected`);
+        }
+    }
+
+    /**
+     * Registers a command handler used to dispatch client commands.
+     * @param handler
+     */
+    public registerCommandHandler(handler: CommandHandler<any>): void {
+        this.#commandRegistry.register(handler);
+    }
+
+    /**
+     * Broadcasts a command to all clients.
+     * @param command
+     */
+    public broadcastCommand(command: Command) {
         this.$clientHandlers.forEach((clientHandler) => {
-            clientHandler.sendCustomData(data);
+            clientHandler.sendCommand(command);
         });
     }
 
-    public sendCustomDataToClient(clientId: string, data: any) {
+    public sendCommandToClient(clientId: string, command: Command) {
         const clientHandler = this.$clientHandlers.find(
             (clientHandler) => clientHandler.clientEntity.id === clientId
         );
         if (clientHandler) {
-            clientHandler.sendCustomData(data);
+            clientHandler.sendCommand(command);
         } else {
             console.warn(
-                `Client ${clientId} not found. Cannot send custom data.`
+                `Client ${clientId} not found. Cannot send command.`
             );
         }
     }
 
     public get gameState(): GameState {
         return this.#gameState;
+    }
+
+    public get commandRegistry(): CommandRegistry {
+        return this.#commandRegistry;
     }
 }
