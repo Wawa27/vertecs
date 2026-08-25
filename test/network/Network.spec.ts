@@ -22,7 +22,10 @@ describe("Networking", async () => {
     it("should start server", async () => {
         serverNetworkSystem = new ServerNetworkSystem(
             allowedNetworkComponents,
-            TestClientHandler
+            TestClientHandler,
+            undefined,
+            undefined,
+            8090
         );
 
         await serverEcsManager.addSystem(serverNetworkSystem);
@@ -38,7 +41,7 @@ describe("Networking", async () => {
         await new Promise((resolve) => setTimeout(resolve, 250));
         clientANetworkSystem = new TestClientNetworkSystem(
             allowedNetworkComponents,
-            "ws://localhost:8080"
+            "ws://localhost:8090"
         );
         await clientAEcsManager.addSystem(clientANetworkSystem);
         await clientAEcsManager.start();
@@ -80,7 +83,7 @@ describe("Networking", async () => {
     it("should send all up to date entities to new clients", async () => {
         clientBNetworkSystem = new TestClientNetworkSystem(
             allowedNetworkComponents,
-            "ws://localhost:8080"
+            "ws://localhost:8090"
         );
         await clientBEcsManager.addSystem(clientBNetworkSystem);
 

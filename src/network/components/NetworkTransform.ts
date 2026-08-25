@@ -46,10 +46,14 @@ export default class NetworkTransform extends NetworkComponent<TransformData> {
         }
 
         const position = transform.getWorldPosition();
+        const scale = transform.getWorldScale();
 
         return (
             position.distance(lastData.position) > 0.1 ||
-            !quat.equals(lastData.rotation, transform.getWorldRotation())
+            !quat.equals(lastData.rotation, transform.getWorldRotation()) ||
+            scale[0] !== lastData.scale[0] ||
+            scale[1] !== lastData.scale[1] ||
+            scale[2] !== lastData.scale[2]
         );
     }
 

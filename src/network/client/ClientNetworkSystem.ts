@@ -1,15 +1,20 @@
-import type { ComponentClass, ComponentClassConstructor, } from "../../core/Component";
+import type {
+    ComponentClass,
+    ComponentClassConstructor,
+} from "../../core/Component";
 import Entity from "../../core/Entity";
 import GameState from "../GameState";
 import NetworkSystem from "../NetworkSystem";
 import NetworkEntity from "../NetworkEntity";
 import IsNetworked from "../IsNetworked";
 import PrefabManager from "../../utils/prefabs/PrefabManager";
-import NetworkComponent, { SerializedNetworkComponent, } from "../NetworkComponent";
+import NetworkComponent, {
+    SerializedNetworkComponent,
+} from "../NetworkComponent";
 import IsPrefab from "../../utils/prefabs/IsPrefab";
 import type Command from "../commands/Command";
-import type { SerializedCommand } from "../commands/Command";
-import CommandHandler, { CommandContext, } from "../commands/CommandHandler";
+import type { SerializedCommand } from "../commands";
+import CommandHandler, { CommandContext } from "../commands/CommandHandler";
 import CommandRegistry from "../commands/CommandRegistry";
 import SetupCommand from "../commands/SetupCommand";
 
@@ -21,7 +26,7 @@ import SetupCommand from "../commands/SetupCommand";
 export default abstract class ClientNetworkSystem extends NetworkSystem {
     #webSocket?: WebSocket;
 
-    protected $serverSnapshot?: GameState;
+    protected $serverSnapshot: GameState;
 
     protected $clientSnapshot: GameState;
 
@@ -44,6 +49,7 @@ export default abstract class ClientNetworkSystem extends NetworkSystem {
         this.#address = address;
         this.#connected = false;
         this.$clientSnapshot = new GameState();
+        this.$serverSnapshot = new GameState();
         this.#commandRegistry = commandRegistry ?? new CommandRegistry();
     }
 
@@ -64,15 +70,12 @@ export default abstract class ClientNetworkSystem extends NetworkSystem {
         this.#webSocket.addEventListener(
             "message",
             (event: { data: { toString: () => string } }) => {
-                if (this.$serverSnapshot) {
-                    console.warn("Too many messages from server");
-                    return;
-                }
-
-                this.$serverSnapshot = JSON.parse(
+                const snapshot = JSON.parse(
                     event.data.toString(),
                     GameState.reviver
                 );
+                // TODO: find a better solutions for handling packets instead of merging
+                this.#mergeServerSnapshot(snapshot);
             }
         );
 
@@ -94,7 +97,10 @@ export default abstract class ClientNetworkSystem extends NetworkSystem {
         entities: Entity[],
         deltaTime: number
     ): void {
-        if (this.$serverSnapshot) {
+        if (
+            this.$serverSnapshot.commands.length > 0 ||
+            this.$serverSnapshot.entities.size > 0
+        ) {
             this.$serverSnapshot.commands.forEach((serializedCommand) => {
                 this.onCommand(serializedCommand);
             });
@@ -103,7 +109,7 @@ export default abstract class ClientNetworkSystem extends NetworkSystem {
                 this.deserializeEntity(serializedEntity);
             });
 
-            this.$serverSnapshot = undefined;
+            this.$serverSnapshot = new GameState();
         }
 
         if (!this.#connected) {
@@ -133,6 +139,28 @@ export default abstract class ClientNetworkSystem extends NetworkSystem {
         this.#webSocket?.send(JSON.stringify(deltaGameState));
     }
 
+    // TODO: refactor ?
+    #mergeServerSnapshot(snapshot: GameState): void {
+        snapshot.commands.forEach((serializedCommand) => {
+            this.$serverSnapshot.commands.push(serializedCommand);
+        });
+
+        snapshot.entities.forEach((networkEntity, id) => {
+            const pendingEntity = this.$serverSnapshot.entities.get(id);
+            if (!pendingEntity) {
+                this.$serverSnapshot.entities.set(id, networkEntity);
+                return;
+            }
+
+            if (networkEntity.isDestroyed) {
+                pendingEntity.isDestroyed = true;
+            }
+            networkEntity.components.forEach((component, className) => {
+                pendingEntity.components.set(className, component);
+            });
+        });
+    }
+
     private setup(data: { clientId: string }) {
         this.#networkId = data.clientId;
         this.onSetup(data.clientId);
@@ -160,9 +188,7 @@ export default abstract class ClientNetworkSystem extends NetworkSystem {
 
         const handler = this.#commandRegistry.get(serializedCommand.type);
         if (!handler) {
-            console.warn(
-                `Received unknown command ${serializedCommand.type}`
-            );
+            console.warn(`Received unknown command ${serializedCommand.type}`);
             return;
         }
 

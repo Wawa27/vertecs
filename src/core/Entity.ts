@@ -291,7 +291,7 @@ export default class Entity {
      * Destroy this entity, remove and destroy all added components
      */
     public destroy(): void {
-        this.children.forEach((child) => child.destroy());
+        Array.from(this.children).forEach((child) => child.destroy());
         for (let i = this.components.length - 1; i >= 0; i--) {
             this.removeComponent(
                 this.components[i].constructor as ComponentClass

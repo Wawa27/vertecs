@@ -236,6 +236,20 @@ export default class AssetManager {
         return asset?.clone();
     }
 
+    public static getAssetNames(): string[] {
+        return Array.from(AssetManager.#assets.keys());
+    }
+
+    public static isModelAsset(assetName: string): boolean {
+        const asset = AssetManager.#assets.get(assetName);
+        if (!asset) {
+            return false;
+        }
+        const object3D = asset.getComponent(ThreeObject3D)?.object3D;
+        const flagged = object3D as { isMesh?: boolean; isGroup?: boolean };
+        return Boolean(flagged && (flagged.isMesh || flagged.isGroup));
+    }
+
     public static set(assetName: string, entity: Entity) {
         return AssetManager.#assets.set(assetName, entity);
     }

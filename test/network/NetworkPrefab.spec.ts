@@ -29,7 +29,10 @@ describe("Prefabs", async () => {
 
         serverNetworkSystem = new ServerNetworkSystem(
             allowedNetworkComponents,
-            TestClientHandler
+            TestClientHandler,
+            undefined,
+            undefined,
+            8092
         );
         await serverEcsManager.addSystem(serverNetworkSystem);
 
@@ -38,7 +41,7 @@ describe("Prefabs", async () => {
 
         clientANetworkSystem = new TestClientNetworkSystem(
             allowedNetworkComponents,
-            "ws://localhost:8080"
+            "ws://localhost:8092"
         );
         await clientAEcsManager.addSystem(clientANetworkSystem);
 

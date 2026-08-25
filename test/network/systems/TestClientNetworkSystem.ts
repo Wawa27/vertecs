@@ -67,7 +67,13 @@ export default class TestClientNetworkSystem extends ClientNetworkSystem {
     }
 
     public set serverSnapshot(value: any) {
-        this.$serverSnapshot = value;
+        const snapshot = value;
+        snapshot.commands.forEach((command: any) => {
+            this.$serverSnapshot.commands.push(command);
+        });
+        snapshot.entities.forEach((entity: any, id: string) => {
+            this.$serverSnapshot.entities.set(id, entity);
+        });
     }
 }
 

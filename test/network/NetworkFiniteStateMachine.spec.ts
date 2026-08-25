@@ -45,7 +45,10 @@ describe("FiniteStateMachine", async () => {
     before(async () => {
         serverNetworkSystem = new ServerNetworkSystem(
             allowedNetworkComponents,
-            TestClientHandler
+            TestClientHandler,
+            undefined,
+            undefined,
+            8091
         );
 
         await serverEcsManager.addSystem(serverNetworkSystem);
@@ -57,7 +60,7 @@ describe("FiniteStateMachine", async () => {
 
         clientANetworkSystem = new TestClientNetworkSystem(
             allowedNetworkComponents,
-            "ws://localhost:8080"
+            "ws://localhost:8091"
         );
         await clientAEcsManager.addSystem(clientANetworkSystem);
         await clientAEcsManager.addSystem(new FiniteStateMachineSystem());

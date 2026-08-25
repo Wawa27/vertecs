@@ -39,11 +39,14 @@ export default class ServerNetworkSystem extends NetworkSystem {
 
     readonly #commandRegistry: CommandRegistry;
 
+    readonly #port: number;
+
     public constructor(
         allowedNetworkComponents: ComponentClass[],
         clientHandlerConstructor: ClientHandlerConstructor,
         commandRegistry?: CommandRegistry,
-        tps?: number
+        tps?: number,
+        port?: number
     ) {
         super(allowedNetworkComponents, tps);
 
@@ -51,11 +54,12 @@ export default class ServerNetworkSystem extends NetworkSystem {
         this.$clientHandlers = [];
         this.#gameState = new GameState();
         this.#commandRegistry = commandRegistry ?? new CommandRegistry();
+        this.#port = port ?? 8080;
     }
 
     public async onStart(): Promise<void> {
         this.#webSocketServer = new WebSocketServer({
-            port: 8080,
+            port: this.#port,
             perMessageDeflate: {
                 zlibDeflateOptions: {
                     chunkSize: 1024,

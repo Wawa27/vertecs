@@ -7,9 +7,9 @@ export default class ThreeAnimation extends Component {
 
     #clips?: AnimationClip[];
 
-    #actions?: Map<string, AnimationAction>;
+    #actions?: Map<string, AnimationAction[]>;
 
-    #currentAnimation?: AnimationAction;
+    #currentAnimations?: AnimationAction[];
 
     public constructor() {
         super();
@@ -47,7 +47,11 @@ export default class ThreeAnimation extends Component {
         this.#clips.forEach((clip) => {
             const action = this.#mixer?.clipAction(clip);
             if (action) {
-                this.#actions?.set(clip.name, action);
+                // Models with multiple armatures can expose several clips that
+                // share the same name. Keep every action so all of them play.
+                const actions = this.#actions!.get(clip.name) ?? [];
+                actions.push(action);
+                this.#actions!.set(clip.name, actions);
                 action.weight = 0;
                 action.play();
             } else {
@@ -63,36 +67,43 @@ export default class ThreeAnimation extends Component {
             return;
         }
 
-        if (this.#currentAnimation?.getClip().name === animationName) {
+        if (
+            this.#currentAnimations &&
+            this.#currentAnimations.length > 0 &&
+            this.#currentAnimations.every(
+                (action) => action.getClip().name === animationName
+            )
+        ) {
             return;
         }
 
-        const action = this.#actions?.get(animationName);
+        const actions = this.#actions?.get(animationName);
 
-        if (!action) {
+        if (!actions || actions.length === 0) {
             console.warn("No action found");
             return;
         }
 
-        action.enabled = true;
-        action.setEffectiveTimeScale(1);
-        action.setEffectiveWeight(1);
+        const previous = this.#currentAnimations ?? [];
 
-        if (this.#currentAnimation) {
-            this.#currentAnimation.time = 0;
-            this.#currentAnimation.weight = 1;
-            this.#currentAnimation.crossFadeTo(action, 0.2, false);
-        }
+        actions.forEach((action) => {
+            action.reset();
+            action.setEffectiveTimeScale(1);
+            action.setEffectiveWeight(1);
+            action.play();
+        });
 
-        this.#currentAnimation = action;
+        previous.forEach((action) => action.fadeOut(0.2));
+
+        this.#currentAnimations = actions;
     }
 
     public stopAnimation() {
-        this.#currentAnimation?.stop();
+        this.#currentAnimations?.forEach((action) => action.stop());
     }
 
-    public get currentAnimation(): AnimationAction | undefined {
-        return this.#currentAnimation;
+    public get currentAnimation(): AnimationAction[] | undefined {
+        return this.#currentAnimations;
     }
 
     public get mixer(): AnimationMixer | undefined {
