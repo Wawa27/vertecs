@@ -16,6 +16,7 @@ import SetupCommand from "./commands/SetupCommand";
 import type { SerializedCommand, CommandContext } from "./commands";
 
 export type { NetworkScope, SerializedCommand, CommandContext };
+export type { TransformData } from "./components/NetworkTransform";
 export {
     ServerNetworkSystem,
     AoiServerNetworkSystem,

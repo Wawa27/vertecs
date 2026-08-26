@@ -161,6 +161,14 @@ export default class ClientHandler {
             }
         }
 
+        // Server-side authority: reject client updates the component does not
+        // accept. accept() may also clamp the data in place (e.g.
+        // AuthoritativeNetworkTransform) before it is applied.
+        const { data } = serializedNetworkComponent;
+        if (!component.accept(data)) {
+            return;
+        }
+
         component.forceUpdate = true;
         component.updateTimestamp = serializedNetworkComponent.updateTimestamp;
         component.deserialize(serializedNetworkComponent);
