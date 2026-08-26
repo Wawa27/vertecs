@@ -1,4 +1,6 @@
 import ServerNetworkSystem from "./server/ServerNetworkSystem";
+import AoiServerNetworkSystem from "./server/AoiServerNetworkSystem";
+import AoiClientHandler from "./server/AoiClientHandler";
 import ClientNetworkSystem from "./client/ClientNetworkSystem";
 import NetworkComponent from "./NetworkComponent";
 import ClientHandler from "./server/ClientHandler";
@@ -16,6 +18,8 @@ import type { SerializedCommand, CommandContext } from "./commands";
 export type { NetworkScope, SerializedCommand, CommandContext };
 export {
     ServerNetworkSystem,
+    AoiServerNetworkSystem,
+    AoiClientHandler,
     ClientNetworkSystem,
     NetworkComponent,
     ClientHandler,
