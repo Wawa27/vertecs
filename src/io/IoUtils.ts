@@ -5,7 +5,6 @@ import type {
     ComponentClass,
     ComponentClassConstructor,
 } from "../core/Component";
-import { State } from "../utils";
 
 export default class IoUtils {
     /**

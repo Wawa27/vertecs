@@ -25,6 +25,11 @@ export default class NetworkAsset extends NetworkComponent<string> {
         }
         this.#assetName = assetName;
 
+        // TODO: check if server or client
+        if (AssetManager.getAssetNames().length === 0) {
+            return;
+        }
+
         const asset = AssetManager.get(assetName);
         asset.getComponent(Transform)?.reset();
         this.entity!.addChild(asset);

@@ -13,7 +13,7 @@ import {
 import CounterComponent from "../components/CounterComponent";
 
 describe("Prefabs", async () => {
-    const allowedNetworkComponents = [NetworkCounter];
+    const allowedNetworkComponents = [NetworkCounter, IsPrefab];
 
     let serverNetworkSystem: ServerNetworkSystem;
     const serverEcsManager = new EcsManager();
@@ -38,6 +38,7 @@ describe("Prefabs", async () => {
 
         const serverTestPrefab = PrefabManager.get("testPrefab");
         serverTestPrefab?.addComponent(new IsNetworked());
+        serverEcsManager.addEntity(serverTestPrefab!);
 
         clientANetworkSystem = new TestClientNetworkSystem(
             allowedNetworkComponents,
@@ -50,16 +51,50 @@ describe("Prefabs", async () => {
     });
 
     it("should send prefab to client", async () => {
-        await new Promise((resolve) => setTimeout(resolve, 100));
-        const newClientEntity = clientANetworkSystem.entities[0];
+        await new Promise((resolve) => setTimeout(resolve, 300));
 
-        assert.equal(clientANetworkSystem.entities.length, 1);
-        assert.exists(newClientEntity);
-        assert.equal(newClientEntity.getComponent(CounterComponent)?.count, 0);
-        assert.equal(
-            newClientEntity.getComponent(IsNetworked)?.ownerId,
-            clientANetworkSystem.networkId
+        const prefabEntity = clientANetworkSystem.entities.find((entity) =>
+            entity.hasComponent(IsPrefab)
         );
+
+        assert.exists(prefabEntity);
+        assert.equal(
+            prefabEntity!.getComponent(IsPrefab)?.prefabName,
+            "testPrefab"
+        );
+        assert.equal(prefabEntity!.getComponent(CounterComponent)?.count, 0);
+    });
+
+    it("should instantiate the entity from the prefab on deserialization", () => {
+        const template = new Entity({ name: "instantiateMe" });
+        template.addComponent(new NetworkCounter());
+        PrefabManager.set("instantiateMe", template);
+
+        const target = new Entity();
+        const isPrefab = new IsPrefab();
+        target.addComponent(isPrefab);
+        isPrefab.read("instantiateMe");
+
+        assert.equal(target.name, "instantiateMe");
+        assert.equal(
+            target.getComponent(IsPrefab)?.prefabName,
+            "instantiateMe"
+        );
+        assert.exists(target.getComponent(CounterComponent));
+        assert.exists(target.getComponent(NetworkCounter));
+    });
+
+    it("should instantiate the entity on onAddedToEntity when added to a world entity", () => {
+        const template = new Entity({ name: "worldPrefab" });
+        template.addComponent(new NetworkCounter());
+        PrefabManager.set("worldPrefab", template);
+
+        const target = new EcsManager().createEntity();
+        target.addComponent(new IsPrefab("worldPrefab"));
+
+        assert.equal(target.getComponent(IsPrefab)?.prefabName, "worldPrefab");
+        assert.exists(target.getComponent(CounterComponent));
+        assert.exists(target.getComponent(NetworkCounter));
     });
 
     after(async () => {

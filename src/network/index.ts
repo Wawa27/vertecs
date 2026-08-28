@@ -9,6 +9,7 @@ import NetworkTransform from "./components/NetworkTransform";
 import NetworkAnimation from "./components/NetworkAnimation";
 import IsNetworked from "./IsNetworked";
 import type { NetworkScope } from "./IsNetworked";
+import IsPrefab from "../utils/prefabs/IsPrefab";
 import Command from "./commands/Command";
 import CommandHandler from "./commands/CommandHandler";
 import CommandRegistry from "./commands/CommandRegistry";
@@ -16,6 +17,7 @@ import SetupCommand from "./commands/SetupCommand";
 import type { SerializedCommand, CommandContext } from "./commands";
 
 export type { NetworkScope, SerializedCommand, CommandContext };
+export type { SerializedNetworkComponent } from "./NetworkComponent";
 export type { TransformData } from "./components/NetworkTransform";
 export {
     ServerNetworkSystem,
@@ -27,6 +29,7 @@ export {
     IsPlayer,
     NetworkTransform,
     IsNetworked,
+    IsPrefab,
     NetworkAnimation,
     Command,
     CommandHandler,
