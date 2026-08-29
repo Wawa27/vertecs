@@ -1,4 +1,6 @@
+import type { ComponentClass } from "../../core/Component";
 import Entity from "../../core/Entity";
+import IoUtils from "../../io/IoUtils";
 import IsPrefab from "./IsPrefab";
 
 export default class PrefabManager {
@@ -10,7 +12,21 @@ export default class PrefabManager {
         if (!prefab.getComponent(IsPrefab)) {
             prefab.addComponent(new IsPrefab(name));
         }
+        const existing = this.#prefabs.get(name);
+        if (existing) {
+            this.#append(existing, prefab);
+            return;
+        }
         this.#prefabs.set(name, prefab);
+    }
+
+    static load(json: string, componentClasses: ComponentClass[]): Entity {
+        const prefab = IoUtils.import(componentClasses, json);
+        if (!prefab.name) {
+            throw new Error("Cannot load a prefab without a name");
+        }
+        this.set(prefab.name, prefab);
+        return prefab;
     }
 
     static get(name: string, id?: string): Entity {
@@ -19,5 +35,24 @@ export default class PrefabManager {
             throw new Error(`Cannot find prefab with id "${name}"`);
         }
         return prefab?.clone(id);
+    }
+
+    static #append(target: Entity, source: Entity): void {
+        source.components.forEach((component) => {
+            const componentClass = component.constructor as ComponentClass;
+            if (target.hasComponent(componentClass)) {
+                target.removeComponent(componentClass);
+            }
+            target.addComponent(component);
+        });
+
+        source.children.forEach((child) => {
+            const targetChild = target.children.find(
+                (targetChild) => targetChild.name === child.name
+            );
+            if (!targetChild) {
+                target.addChild(child);
+            }
+        });
     }
 }
