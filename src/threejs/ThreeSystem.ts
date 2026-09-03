@@ -3,6 +3,7 @@ import {
     Camera,
     ColorManagement,
     Fog,
+    FogExp2,
     InstancedMesh,
     Matrix4,
     PCFSoftShadowMap,
@@ -23,6 +24,12 @@ import ThreeCss3dSystem from "./css3d/ThreeCss3dSystem";
 import ThreeInstancedMesh from "./ThreeInstancedMesh";
 import { SystemConstructor } from "../core/EcsManager";
 
+export interface RendererComposer {
+    render(): void;
+    setSize(width: number, height: number): void;
+    dispose(): void;
+}
+
 export default class ThreeSystem extends System<[Transform, ThreeObject3D]> {
     #scene: Scene;
 
@@ -35,6 +42,8 @@ export default class ThreeSystem extends System<[Transform, ThreeObject3D]> {
     #css3dSystem?: ThreeCss3dSystem;
 
     #stats?: Stats;
+
+    #composer?: RendererComposer;
 
     public constructor(tps?: number, dependencies?: SystemConstructor<any>[]) {
         super([Transform, ThreeObject3D], tps, dependencies);
@@ -88,7 +97,7 @@ export default class ThreeSystem extends System<[Transform, ThreeObject3D]> {
         this.#renderer.toneMapping = ACESFilmicToneMapping;
     }
 
-    public addFog(fog: Fog) {
+    public addFog(fog: Fog | FogExp2) {
         this.#scene.fog = fog;
         this.#renderer.setClearColor(this.#scene.fog.color);
     }
@@ -186,9 +195,17 @@ export default class ThreeSystem extends System<[Transform, ThreeObject3D]> {
             }
         }
 
-        this.#renderer.render(this.#scene, this.getCamera());
+        if (this.#composer) {
+            this.#composer.render();
+        } else {
+            this.#renderer.render(this.#scene, this.getCamera());
+        }
 
         this.#stats?.update();
+    }
+
+    public setComposer(composer: RendererComposer | undefined): void {
+        this.#composer = composer;
     }
 
     public getCamera(): Camera {

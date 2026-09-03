@@ -167,10 +167,10 @@ export default class AssetManager {
 
         skyboxGroups.forEach((faceUrls, dirName) => {
             const ordered = [
-                faceUrls.find((u) => u.endsWith("/nx.png"))!,
                 faceUrls.find((u) => u.endsWith("/px.png"))!,
-                faceUrls.find((u) => u.endsWith("/ny.png"))!,
+                faceUrls.find((u) => u.endsWith("/nx.png"))!,
                 faceUrls.find((u) => u.endsWith("/py.png"))!,
+                faceUrls.find((u) => u.endsWith("/ny.png"))!,
                 faceUrls.find((u) => u.endsWith("/pz.png"))!,
                 faceUrls.find((u) => u.endsWith("/nz.png"))!,
             ];
