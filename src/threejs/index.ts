@@ -16,6 +16,8 @@ import AnimatedState from "./fsm/AnimatedState";
 import AnimatedStateSystem from "./fsm/AnimatedStateSystem";
 import NetworkAsset from "./network/NetworkAsset";
 import AssetManager from "./AssetManager";
+import ThreeShaderComponent from "./shader/three-shader.component";
+import ThreeShaderSystem from "./shader/three-shader.system";
 
 export {
     AssetManager,
@@ -36,4 +38,6 @@ export {
     ThreeInstancedMesh,
     AnimatedState,
     AnimatedStateSystem,
+    ThreeShaderComponent,
+    ThreeShaderSystem,
 };
