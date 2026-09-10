@@ -29,6 +29,15 @@ export default class PrefabManager {
         return prefab;
     }
 
+    static async loadFile(
+        path: string,
+        componentClasses: ComponentClass[]
+    ): Promise<Entity> {
+        const response = await fetch(path);
+        const json = await response.text();
+        return this.load(json, componentClasses);
+    }
+
     static get(name: string, id?: string): Entity {
         const prefab = this.#prefabs.get(name);
         if (!prefab) {
