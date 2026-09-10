@@ -1,5 +1,4 @@
-import { ShaderMaterial } from "three";
-import { IUniform } from "three/src/renderers/shaders/UniformsLib";
+import { ShaderMaterial, IUniform } from "three";
 import { Component } from "../../core";
 
 export default abstract class ThreeShaderComponent extends Component {
