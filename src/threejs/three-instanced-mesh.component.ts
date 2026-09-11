@@ -1,8 +1,8 @@
 import { InstancedMesh, StaticDrawUsage } from "three";
-import ThreeObject3D from "./ThreeObject3D";
+import ThreeObject3DComponent from "./three-object3D.component";
 import { Entity } from "../core";
 
-export default class ThreeInstancedMesh extends ThreeObject3D {
+export default class ThreeInstancedMeshComponent extends ThreeObject3DComponent {
     #entities: string[];
 
     public constructor(instancedMesh: InstancedMesh, id?: string) {
@@ -30,9 +30,9 @@ export default class ThreeInstancedMesh extends ThreeObject3D {
         return this.#entities;
     }
 
-    public clone(): ThreeInstancedMesh {
+    public clone(): ThreeInstancedMeshComponent {
         if (this.entities.length > 1024) {
-            return new ThreeInstancedMesh(
+            return new ThreeInstancedMeshComponent(
                 new InstancedMesh(
                     (super.object3D as InstancedMesh).geometry,
                     (super.object3D as InstancedMesh).material,

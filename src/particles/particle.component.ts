@@ -11,7 +11,7 @@ export type ParticleOptions = {
     endColor: Vec3;
 };
 
-export default class Particle extends Component {
+export default class ParticleComponent extends Component {
     #startScale: number;
 
     #endScale: number;
@@ -77,8 +77,8 @@ export default class Particle extends Component {
         return this.#endScale;
     }
 
-    public clone(): Particle {
-        return new Particle({
+    public clone(): ParticleComponent {
+        return new ParticleComponent({
             getDirection: this.#getDirection,
             startScale: Math.random() * 0.1,
             endScale: 0.1 + Math.random() * 0.1,

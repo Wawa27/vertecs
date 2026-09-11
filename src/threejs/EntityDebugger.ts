@@ -2,7 +2,7 @@ import { Box3, BoxGeometry, Mesh, MeshBasicMaterial, Vector3 } from "three";
 import { vec3 } from "ts-gl-matrix";
 import { Component, Entity } from "../core";
 import { Transform } from "../math";
-import ThreeObject3D from "./ThreeObject3D";
+import ThreeObject3DComponent from "./three-object3D.component";
 
 export default class EntityDebugger extends Component {
     public constructor() {
@@ -13,7 +13,7 @@ export default class EntityDebugger extends Component {
         const debugEntity = new Entity({ name: "entity-debugger" });
 
         const transform = entity.getComponent(Transform);
-        const threeObject = entity.getComponent(ThreeObject3D);
+        const threeObject = entity.getComponent(ThreeObject3DComponent);
 
         let geometry: BoxGeometry;
         let position = vec3.fromValues(0, 0, 0);
@@ -36,7 +36,7 @@ export default class EntityDebugger extends Component {
         });
 
         debugEntity.addComponent(
-            new ThreeObject3D(new Mesh(geometry, material))
+            new ThreeObject3DComponent(new Mesh(geometry, material))
         );
         debugEntity.addComponent(new Transform(position));
 

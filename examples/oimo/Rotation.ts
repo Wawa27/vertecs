@@ -10,7 +10,7 @@ import {
     OimoComponent,
     ThreeCamera,
     ThreeLightComponent,
-    ThreeObject3D,
+    ThreeObject3DComponent,
     Transform,
 } from "../../src";
 import { initializeBoilerplate, spawnSphere } from "./Boilerplate";
@@ -29,7 +29,7 @@ platform1.addComponent(
     })
 );
 platform1.addComponent(
-    new ThreeObject3D(
+    new ThreeObject3DComponent(
         new Mesh(
             new BoxGeometry(50, 10, 20),
             new MeshStandardMaterial({ color: 0x6fbbd3 })
@@ -49,7 +49,7 @@ platform2.addComponent(
     })
 );
 platform2.addComponent(
-    new ThreeObject3D(
+    new ThreeObject3DComponent(
         new Mesh(
             new BoxGeometry(50, 10, 20),
             new MeshStandardMaterial({ color: 0x6fbbd3 })

@@ -1,7 +1,7 @@
 import { quat } from "ts-gl-matrix";
 import { Component, Entity } from "../../core";
 import { Transform } from "../../math";
-import NetworkComponent from "../NetworkComponent";
+import NetworkComponent from "../network.component";
 
 export type TransformData = {
     position: [number, number, number];

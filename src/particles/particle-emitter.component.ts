@@ -1,6 +1,6 @@
 import { Component, Entity } from "../core";
 
-export default class ParticleEmitter extends Component {
+export default class ParticleEmitterComponent extends Component {
     #particlePrefab: Entity;
 
     #maxParticleCount: number;

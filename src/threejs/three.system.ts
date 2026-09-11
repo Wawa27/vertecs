@@ -15,13 +15,13 @@ import {
 } from "three";
 import Stats from "three/examples/jsm/libs/stats.module.js";
 import { EcsManager, Entity, System } from "../core";
-import ThreeObject3D from "./ThreeObject3D";
+import ThreeObject3DComponent from "./three-object3D.component";
 import { Transform } from "../math";
 import ThreeCameraSystem from "./camera/ThreeCameraSystem";
 import ThreeCamera from "./camera/ThreeCamera";
 import ThreeLightSystem from "./light/ThreeLightSystem";
 import ThreeCss3dSystem from "./css3d/ThreeCss3dSystem";
-import ThreeInstancedMesh from "./ThreeInstancedMesh";
+import ThreeInstancedMeshComponent from "./three-instanced-mesh.component";
 import { SystemConstructor } from "../core/EcsManager";
 
 export interface RendererComposer {
@@ -30,7 +30,9 @@ export interface RendererComposer {
     dispose(): void;
 }
 
-export default class ThreeSystem extends System<[Transform, ThreeObject3D]> {
+export default class ThreeSystem extends System<
+    [Transform, ThreeObject3DComponent]
+> {
     #scene: Scene;
 
     #renderer: WebGLRenderer;
@@ -46,7 +48,7 @@ export default class ThreeSystem extends System<[Transform, ThreeObject3D]> {
     #composer?: RendererComposer;
 
     public constructor(tps?: number, dependencies?: SystemConstructor<any>[]) {
-        super([Transform, ThreeObject3D], tps, dependencies);
+        super([Transform, ThreeObject3DComponent], tps, dependencies);
         this.#scene = new Scene();
 
         const canvas = document.getElementById("canvas");
@@ -114,9 +116,9 @@ export default class ThreeSystem extends System<[Transform, ThreeObject3D]> {
 
     public onEntityEligible(
         entity: Entity,
-        components: [Transform, ThreeObject3D]
+        components: [Transform, ThreeObject3DComponent]
     ) {
-        const threeMesh = entity.getComponent(ThreeObject3D);
+        const threeMesh = entity.getComponent(ThreeObject3DComponent);
 
         if (!threeMesh) {
             throw new Error("ThreeMesh not found on eligible entity");
@@ -127,11 +129,11 @@ export default class ThreeSystem extends System<[Transform, ThreeObject3D]> {
 
     public onEntityNoLongerEligible(
         entity: Entity,
-        components: [Transform, ThreeObject3D]
+        components: [Transform, ThreeObject3DComponent]
     ) {
         const [transform, threeComponent] = components;
 
-        if (threeComponent instanceof ThreeInstancedMesh) {
+        if (threeComponent instanceof ThreeInstancedMeshComponent) {
             const instancedMesh = threeComponent.object3D as InstancedMesh;
             const matrix = new Matrix4();
             matrix.compose(
@@ -152,7 +154,7 @@ export default class ThreeSystem extends System<[Transform, ThreeObject3D]> {
     public async onStart(): Promise<void> {}
 
     protected onLoop(
-        components: [Transform, ThreeObject3D][],
+        components: [Transform, ThreeObject3DComponent][],
         entities: Entity[],
         deltaTime: number
     ): void {
@@ -170,7 +172,7 @@ export default class ThreeSystem extends System<[Transform, ThreeObject3D]> {
             const [qx, qy, qz, qw] = transform.getWorldRotation();
             const [sx, sy, sz] = transform.getWorldScale();
 
-            if (threeMesh instanceof ThreeInstancedMesh) {
+            if (threeMesh instanceof ThreeInstancedMeshComponent) {
                 const object3d = threeMesh.object3D as InstancedMesh;
                 const index = threeMesh.getEntityIndex(entities[i].id);
 

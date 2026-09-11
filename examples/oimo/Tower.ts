@@ -12,7 +12,7 @@ import {
     OimoSystem,
     ThreeCamera,
     ThreeLightComponent,
-    ThreeObject3D,
+    ThreeObject3DComponent,
     Transform,
 } from "../../src";
 import { initializeBoilerplate } from "./Boilerplate";
@@ -22,7 +22,7 @@ const ecsManager = await initializeBoilerplate();
 const floor = ecsManager.createEntity();
 floor.addComponent(new Transform([0, -5, 0]));
 floor.addComponent(
-    new ThreeObject3D(
+    new ThreeObject3DComponent(
         new Mesh(
             new BoxGeometry(50, 10, 50),
             new MeshStandardMaterial({ color: 0x808080 })
@@ -96,7 +96,7 @@ const addTower = (towerOptions: {
                 )
             );
             brick.addComponent(
-                new ThreeObject3D(
+                new ThreeObject3DComponent(
                     new Mesh(
                         new BoxGeometry(sx, sy, sz),
                         new MeshStandardMaterial({ color: 0x808080 })
@@ -129,7 +129,7 @@ platform.addComponent(
     new Transform([-30, 10, 0], quat.fromEuler(quat.create(), 0, 0, 60))
 );
 platform.addComponent(
-    new ThreeObject3D(
+    new ThreeObject3DComponent(
         new Mesh(
             new BoxGeometry(2, 40, 50),
             new MeshStandardMaterial({ color: 0x808080 })
@@ -147,7 +147,7 @@ platform.addComponent(
 const ball = ecsManager.createEntity();
 ball.addComponent(new Transform([-45, 25, 0]));
 ball.addComponent(
-    new ThreeObject3D(
+    new ThreeObject3DComponent(
         new Mesh(
             new SphereGeometry(2, 64, 64),
             new MeshStandardMaterial({ color: 0x808080 })

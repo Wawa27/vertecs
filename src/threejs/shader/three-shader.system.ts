@@ -1,28 +1,28 @@
 import { Entity, System } from "../../core";
 import ThreeShaderComponent from "./three-shader.component";
 import { SystemConstructor } from "../../core/EcsManager";
-import ThreeObject3D from "../ThreeObject3D";
+import ThreeObject3DComponent from "../three-object3D.component";
 
 export default class ThreeShaderSystem extends System<
-    [ThreeObject3D, ThreeShaderComponent]
+    [ThreeObject3DComponent, ThreeShaderComponent]
 > {
     public constructor(tps?: number, dependencies?: SystemConstructor<any>[]) {
-        super([ThreeObject3D, ThreeShaderComponent], tps, dependencies);
+        super([ThreeObject3DComponent, ThreeShaderComponent], tps, dependencies);
     }
 
     onEntityEligible(
         entity: Entity,
-        components: [ThreeObject3D, ThreeShaderComponent]
+        components: [ThreeObject3DComponent, ThreeShaderComponent]
     ) {
         const [_, shader] = components;
-        const mesh = entity.getComponent(ThreeObject3D)?.object3D;
+        const mesh = entity.getComponent(ThreeObject3DComponent)?.object3D;
         if (mesh && "material" in mesh) {
             mesh.material = shader.material;
         }
     }
 
     protected onLoop(
-        entities: [ThreeObject3D, ThreeShaderComponent][],
+        entities: [ThreeObject3DComponent, ThreeShaderComponent][],
         _entities: Entity[],
         deltaTime: number
     ): void {

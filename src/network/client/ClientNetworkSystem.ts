@@ -4,19 +4,17 @@ import type {
 } from "../../core/Component";
 import Entity from "../../core/Entity";
 import GameState from "../GameState";
-import NetworkSystem from "../NetworkSystem";
 import NetworkEntity from "../NetworkEntity";
 import IsNetworked from "../IsNetworked";
 import PrefabManager from "../../utils/prefabs/PrefabManager";
-import NetworkComponent, {
-    SerializedNetworkComponent,
-} from "../NetworkComponent";
 import IsPrefab from "../../utils/prefabs/IsPrefab";
 import type Command from "../commands/Command";
 import type { SerializedCommand } from "../commands";
 import CommandHandler, { CommandContext } from "../commands/CommandHandler";
 import CommandRegistry from "../commands/CommandRegistry";
 import SetupCommand from "../commands/SetupCommand";
+import NetworkSystem from "../network.system";
+import NetworkComponent, { SerializedNetworkComponent } from "../network.component";
 
 /**
  * Entry point for the client-side networking.

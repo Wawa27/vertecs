@@ -1,41 +1,41 @@
 import ThreeCamera from "./camera/ThreeCamera";
-import ThreeObject3D from "./ThreeObject3D";
-import ThreeSystem from "./ThreeSystem";
-import ThreeAnimation from "./ThreeAnimation";
-import ThreeAnimationSystem from "./ThreeAnimationSystem";
+import ThreeObject3DComponent from "./three-object3D.component";
+import ThreeAnimationComponent from "./three-animation.component";
 import ThreeCameraSystem from "./camera/ThreeCameraSystem";
 import ThreeLightSystem from "./light/ThreeLightSystem";
 import ThreeLightComponent from "./light/ThreeLightComponent";
 import ThreeCss3dSystem from "./css3d/ThreeCss3dSystem";
 import ThreeCss3dComponent from "./css3d/ThreeCss3dComponent";
-import ThreeComponentDebugger from "./ThreeComponentDebugger";
+import ThreeDebuggerComponent from "./three-debugger.component";
 import EntityDebugger from "./EntityDebugger";
-import EntityDebuggerSystem from "./EntityDebuggerSystem";
-import ThreeInstancedMesh from "./ThreeInstancedMesh";
+import ThreeInstancedMeshComponent from "./three-instanced-mesh.component";
 import AnimatedState from "./fsm/AnimatedState";
 import AnimatedStateSystem from "./fsm/AnimatedStateSystem";
-import NetworkAsset from "./network/NetworkAsset";
+import NetworkAssetComponent from "./network/network-asset.component";
 import AssetManager from "./AssetManager";
 import ThreeShaderComponent from "./shader/three-shader.component";
 import ThreeShaderSystem from "./shader/three-shader.system";
+import EntityDebuggerSystem from "./entity-debugger.system";
+import ThreeAnimationSystem from "./three-animation.system";
+import ThreeSystem from "./three.system";
 
 export {
     AssetManager,
-    NetworkAsset,
+    NetworkAssetComponent,
     ThreeCamera,
-    ThreeObject3D,
+    ThreeObject3DComponent,
     ThreeSystem,
     ThreeCameraSystem,
     ThreeAnimationSystem,
-    ThreeAnimation,
+    ThreeAnimationComponent,
     ThreeLightSystem,
     ThreeLightComponent,
     ThreeCss3dSystem,
     ThreeCss3dComponent,
-    ThreeComponentDebugger,
+    ThreeDebuggerComponent,
     EntityDebugger,
     EntityDebuggerSystem,
-    ThreeInstancedMesh,
+    ThreeInstancedMeshComponent,
     AnimatedState,
     AnimatedStateSystem,
     ThreeShaderComponent,

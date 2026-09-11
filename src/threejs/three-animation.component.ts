@@ -1,8 +1,8 @@
 import { AnimationAction, AnimationClip, AnimationMixer } from "three";
 import { Component, Entity } from "../core";
-import ThreeObject3D from "./ThreeObject3D";
+import ThreeObject3DComponent from "./three-object3D.component";
 
-export default class ThreeAnimation extends Component {
+export default class ThreeAnimationComponent extends Component {
     #mixer?: AnimationMixer;
 
     #clips?: AnimationClip[];
@@ -18,7 +18,7 @@ export default class ThreeAnimation extends Component {
     }
 
     public onAddedToEntity(entity: Entity) {
-        const component = entity.getComponent(ThreeObject3D);
+        const component = entity.getComponent(ThreeObject3DComponent);
         if (!component) {
             return;
         }
@@ -26,12 +26,12 @@ export default class ThreeAnimation extends Component {
     }
 
     public onComponentAddedToAttachedEntity(component: Component) {
-        if (component instanceof ThreeObject3D) {
+        if (component instanceof ThreeObject3DComponent) {
             this.createMixer(component);
         }
     }
 
-    private createMixer(meshComponent: ThreeObject3D) {
+    private createMixer(meshComponent: ThreeObject3DComponent) {
         const { object3D } = meshComponent;
         const firstChild = object3D.children[0];
         const animatedRoot =
@@ -115,6 +115,6 @@ export default class ThreeAnimation extends Component {
     }
 
     public clone(): Component {
-        return new ThreeAnimation();
+        return new ThreeAnimationComponent();
     }
 }

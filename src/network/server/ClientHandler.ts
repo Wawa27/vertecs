@@ -4,7 +4,7 @@ import GameState from "../GameState";
 import NetworkEntity from "../NetworkEntity";
 import NetworkComponent, {
     SerializedNetworkComponent,
-} from "../NetworkComponent";
+} from "../network.component";
 import { ComponentClassConstructor } from "../../core/Component";
 import ServerNetworkSystem from "./ServerNetworkSystem";
 import IsPlayer from "../IsPlayer";

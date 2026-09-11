@@ -1,17 +1,17 @@
 import { Entity, System } from "../core";
-import ThreeAnimation from "./ThreeAnimation";
+import ThreeAnimationComponent from "./three-animation.component";
 import { Animation } from "../utils";
 
 export default class ThreeAnimationSystem extends System<
-    [ThreeAnimation, Animation]
+    [ThreeAnimationComponent, Animation]
 > {
     public constructor(tps?: number) {
-        super([ThreeAnimation, Animation], tps);
+        super([ThreeAnimationComponent, Animation], tps);
     }
 
     public onEntityEligible(
         entity: Entity,
-        components: [ThreeAnimation, Animation]
+        components: [ThreeAnimationComponent, Animation]
     ) {
         const [threeAnimation, animation] = components;
         threeAnimation.playAnimation(animation.name);
@@ -19,7 +19,7 @@ export default class ThreeAnimationSystem extends System<
 
     public onEntityNoLongerEligible(
         entity: Entity,
-        components: [ThreeAnimation, Animation]
+        components: [ThreeAnimationComponent, Animation]
     ) {
         const [threeAnimation] = components;
     }
@@ -27,7 +27,7 @@ export default class ThreeAnimationSystem extends System<
     public async onStart(): Promise<void> {}
 
     protected onLoop(
-        components: [ThreeAnimation, Animation][],
+        components: [ThreeAnimationComponent, Animation][],
         entities: Entity[],
         deltaTime: number
     ): void {

@@ -2,7 +2,7 @@ import { Scene } from "three";
 import { Entity, System } from "../../core";
 import ThreeLightComponent from "./ThreeLightComponent";
 import { Transform } from "../../math";
-import ThreeObject3D from "../ThreeObject3D";
+import ThreeObject3DComponent from "../three-object3D.component";
 import { SystemConstructor } from "../../core/EcsManager";
 
 export default class ThreeLightSystem extends System<
@@ -34,7 +34,7 @@ export default class ThreeLightSystem extends System<
         if (lightComponent.target) {
             // @ts-ignore
             lightComponent.light.target =
-                lightComponent.target.getComponent(ThreeObject3D)?.object3D;
+                lightComponent.target.getComponent(ThreeObject3DComponent)?.object3D;
         }
     }
 

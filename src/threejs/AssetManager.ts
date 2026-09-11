@@ -11,8 +11,8 @@ import {
 import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader.js";
 import { Entity } from "../core";
 import { Transform } from "../math";
-import ThreeObject3D from "./ThreeObject3D";
-import ThreeAnimation from "./ThreeAnimation";
+import ThreeObject3DComponent from "./three-object3D.component";
+import ThreeAnimationComponent from "./three-animation.component";
 
 const SKYBOX_FACES = ["px", "nx", "py", "ny", "pz", "nz"];
 
@@ -73,9 +73,9 @@ export default class AssetManager {
         entity.addComponent(
             new Transform(undefined, undefined, [2 / size, 2 / size, 2 / size])
         );
-        entity.addComponent(new ThreeObject3D(wrapper));
+        entity.addComponent(new ThreeObject3DComponent(wrapper));
         if (gltf.animations.length > 0) {
-            entity.addComponent(new ThreeAnimation());
+            entity.addComponent(new ThreeAnimationComponent());
         }
 
         this.#assets.set(assetName, entity);
@@ -121,9 +121,9 @@ export default class AssetManager {
         entity.addComponent(
             new Transform(undefined, undefined, [2 / size, 2 / size, 2 / size])
         );
-        entity.addComponent(new ThreeObject3D(wrapper));
+        entity.addComponent(new ThreeObject3DComponent(wrapper));
         if (group.animations.length > 0) {
-            entity.addComponent(new ThreeAnimation());
+            entity.addComponent(new ThreeAnimationComponent());
         }
 
         this.#assets.set(assetName, entity);
@@ -194,7 +194,7 @@ export default class AssetManager {
         const texture = await AssetManager.asyncLoadTexture(url);
 
         const entity = new Entity();
-        entity.addComponent(new ThreeObject3D(texture as any));
+        entity.addComponent(new ThreeObject3DComponent(texture as any));
 
         this.#assets.set(assetName, entity);
     }
@@ -215,7 +215,7 @@ export default class AssetManager {
         this.#cubeTextures.set(assetName, texture as unknown as CubeTexture);
 
         const entity = new Entity();
-        entity.addComponent(new ThreeObject3D(texture as any));
+        entity.addComponent(new ThreeObject3DComponent(texture as any));
 
         this.#assets.set(assetName, entity);
     }
@@ -245,7 +245,7 @@ export default class AssetManager {
         if (!asset) {
             return false;
         }
-        const object3D = asset.getComponent(ThreeObject3D)?.object3D;
+        const object3D = asset.getComponent(ThreeObject3DComponent)?.object3D;
         const flagged = object3D as { isMesh?: boolean; isGroup?: boolean };
         return Boolean(flagged && (flagged.isMesh || flagged.isGroup));
     }

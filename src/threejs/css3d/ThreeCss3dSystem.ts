@@ -2,8 +2,8 @@ import { PerspectiveCamera, Scene, Vector3 } from "three";
 import { CSS3DRenderer } from "three/addons/renderers/CSS3DRenderer.js";
 import { Entity, System } from "../../core";
 import ThreeCss3dComponent from "./ThreeCss3dComponent";
-import ThreeSystem from "../ThreeSystem";
 import { Transform } from "../../math";
+import ThreeSystem from "../three.system";
 
 export default class ThreeCss3dSystem extends System<
     [ThreeCss3dComponent, Transform]

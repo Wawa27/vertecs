@@ -1,5 +1,5 @@
-import NetworkComponent from "./NetworkComponent";
 import { Component, Entity } from "../core";
+import NetworkComponent from "./network.component";
 
 export type NetworkScope = "public" | "private";
 

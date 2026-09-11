@@ -1,4 +1,4 @@
-import NetworkComponent from "./NetworkComponent";
+import NetworkComponent from "./network.component";
 
 export default class IsPlayer extends NetworkComponent<undefined> {
     public constructor() {

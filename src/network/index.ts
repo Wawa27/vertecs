@@ -2,7 +2,7 @@ import ServerNetworkSystem from "./server/ServerNetworkSystem";
 import AoiServerNetworkSystem from "./server/AoiServerNetworkSystem";
 import AoiClientHandler from "./server/AoiClientHandler";
 import ClientNetworkSystem from "./client/ClientNetworkSystem";
-import NetworkComponent from "./NetworkComponent";
+import NetworkComponent from "./network.component";
 import ClientHandler from "./server/ClientHandler";
 import IsPlayer from "./IsPlayer";
 import NetworkTransform from "./components/NetworkTransform";
@@ -17,7 +17,7 @@ import SetupCommand from "./commands/SetupCommand";
 import type { SerializedCommand, CommandContext } from "./commands";
 
 export type { NetworkScope, SerializedCommand, CommandContext };
-export type { SerializedNetworkComponent } from "./NetworkComponent";
+export type { SerializedNetworkComponent } from "./network.component";
 export type { TransformData } from "./components/NetworkTransform";
 export {
     ServerNetworkSystem,

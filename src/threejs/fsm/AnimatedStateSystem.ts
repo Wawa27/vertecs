@@ -1,5 +1,5 @@
 import { Entity, System } from "../../core";
-import ThreeAnimation from "../ThreeAnimation";
+import ThreeAnimationComponent from "../three-animation.component";
 import AnimatedState from "./AnimatedState";
 import { Animation } from "../../utils";
 
@@ -12,7 +12,7 @@ export default class AnimatedStateSystem extends System<[AnimatedState]> {
     }
 
     public onEntityEligible(entity: Entity, components: [AnimatedState]) {
-        const meshEntity = entity.findWithComponent(ThreeAnimation);
+        const meshEntity = entity.findWithComponent(ThreeAnimationComponent);
 
         if (!meshEntity) {
             console.warn("Animation not found for ", entity);
@@ -23,7 +23,7 @@ export default class AnimatedStateSystem extends System<[AnimatedState]> {
 
         if (animatedState.duration === 0) {
             const clip = meshEntity
-                .getComponent(ThreeAnimation)
+                .getComponent(ThreeAnimationComponent)
                 ?.clips?.find((clip) => clip.name === animatedState.name);
             if (!clip) {
                 console.warn(
@@ -55,7 +55,7 @@ export default class AnimatedStateSystem extends System<[AnimatedState]> {
         entity: Entity,
         components: [AnimatedState]
     ) {
-        const meshEntity = entity?.root.findWithComponent(ThreeAnimation);
+        const meshEntity = entity?.root.findWithComponent(ThreeAnimationComponent);
         if (!meshEntity) {
             return;
         }

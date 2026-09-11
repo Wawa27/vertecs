@@ -1,4 +1,4 @@
-import type { SerializedNetworkComponent } from "./NetworkComponent";
+import type { SerializedNetworkComponent } from "./network.component";
 import { SerializedEntity } from "../io";
 
 /**

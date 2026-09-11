@@ -3,7 +3,7 @@ import AssetManager from "../AssetManager";
 import { Component } from "../../core";
 import { Transform } from "../../math";
 
-export default class NetworkAsset extends NetworkComponent<string> {
+export default class NetworkAssetComponent extends NetworkComponent<string> {
     #assetName: string;
 
     public constructor(assetName: string) {
@@ -40,7 +40,7 @@ export default class NetworkAsset extends NetworkComponent<string> {
     }
 
     public clone(): Component {
-        return new NetworkAsset(this.#assetName);
+        return new NetworkAssetComponent(this.#assetName);
     }
 
     public get assetName(): string {

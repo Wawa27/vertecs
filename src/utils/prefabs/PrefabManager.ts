@@ -37,6 +37,10 @@ export default class PrefabManager {
         });
     }
 
+    static getPrefabNames(): string[] {
+        return Array.from(this.#prefabs.keys());
+    }
+
     static get(name: string, id?: string): Entity {
         const prefab = this.#prefabs.get(name);
         if (!prefab) {

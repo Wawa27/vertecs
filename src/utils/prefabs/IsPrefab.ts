@@ -1,11 +1,9 @@
 import type { Entity } from "../../core";
 import Component from "../../core/Component";
-import NetworkComponent from "../../network/NetworkComponent";
 import PrefabManager from "./PrefabManager";
+import NetworkComponent from "../../network/network.component";
 
 export default class IsPrefab extends NetworkComponent<string> {
-    static #instantiationInProgress = false;
-
     #prefabName: string;
 
     public constructor(prefabName = "") {

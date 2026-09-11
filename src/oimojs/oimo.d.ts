@@ -1,4 +1,4 @@
-import "oimo";
+import "oimo-esm";
 
 declare module "oimo" {
     import "oimo";

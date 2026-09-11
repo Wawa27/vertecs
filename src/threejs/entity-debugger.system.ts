@@ -2,7 +2,7 @@ import { Material, Mesh, Object3D, Scene } from "three";
 import { Entity } from "../core";
 import KeyboardInputSystem from "../input/KeyboardInputSystem";
 import EntityDebugger from "./EntityDebugger";
-import ThreeObject3D from "./ThreeObject3D";
+import ThreeObject3DComponent from "./three-object3D.component";
 
 export default class EntityDebuggerSystem extends KeyboardInputSystem {
     #visible: boolean;
@@ -46,7 +46,7 @@ export default class EntityDebuggerSystem extends KeyboardInputSystem {
         this.#entities.forEach((entity) => {
             const child = entity.findChildByName("entity-debugger");
             if (child) {
-                const threeObject = child.getComponent(ThreeObject3D);
+                const threeObject = child.getComponent(ThreeObject3DComponent);
                 if (threeObject) {
                     threeObject.object3D.visible = this.#visible;
                 }

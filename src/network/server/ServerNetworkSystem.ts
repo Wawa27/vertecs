@@ -2,12 +2,11 @@ import { IncomingMessage } from "http";
 import { WebSocket, WebSocketServer } from "ws";
 import { EcsManager, Entity } from "../../core";
 import ClientHandler from "./ClientHandler";
-import NetworkSystem from "../NetworkSystem";
 import GameState from "../GameState";
 import type { ComponentClass } from "../../core";
 import NetworkComponent, {
     SerializedNetworkComponent,
-} from "../NetworkComponent";
+} from "../network.component";
 import IsNetworked from "../IsNetworked";
 import NetworkEntity from "../NetworkEntity";
 import IsPrefab from "../../utils/prefabs/IsPrefab";
@@ -16,6 +15,7 @@ import type { SerializedCommand } from "../commands";
 import CommandHandler, { CommandContext } from "../commands/CommandHandler";
 import CommandRegistry from "../commands/CommandRegistry";
 import SetupCommand from "../commands/SetupCommand";
+import NetworkSystem from "../network.system";
 
 type ClientHandlerConstructor = new (
     ecsManager: EcsManager,

@@ -1,5 +1,5 @@
 // @ts-ignore
-import { BodyOptions, Body } from "oimo";
+import { BodyOptions, Body } from "oimo-esm";
 import { Component } from "../core";
 
 export type OimoComponentOptions = Exclude<BodyOptions, "rot" | "pos">;

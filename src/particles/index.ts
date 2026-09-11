@@ -1,5 +1,5 @@
-import Particle from "./Particle";
-import ParticleEmitter from "./ParticleEmitter";
-import ParticleSystem from "./ParticleSystem";
+import ParticleComponent from "./particle.component";
+import ParticleEmitterComponent from "./particle-emitter.component";
+import ParticleSystem from "./particle.system";
 
-export { Particle, ParticleEmitter, ParticleSystem };
+export { ParticleComponent, ParticleEmitterComponent, ParticleSystem };

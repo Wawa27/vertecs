@@ -1,16 +1,16 @@
 import { Vec3 } from "ts-gl-matrix";
 import { Color, Material, Mesh } from "three";
 import { EcsManager, Entity, System } from "../core";
-import Particle from "./Particle";
-import ParticleEmitter from "./ParticleEmitter";
+import ParticleComponent from "./particle.component";
+import ParticleEmitterComponent from "./particle-emitter.component";
 import { Transform } from "../math";
-import { ThreeObject3D } from "../threejs";
+import { ThreeObject3DComponent } from "../threejs";
 
 export default class ParticleSystem extends System<
-    [Particle, Transform, ThreeObject3D]
+    [ParticleComponent, Transform, ThreeObject3DComponent]
 > {
     public constructor() {
-        super([Particle, Transform, ThreeObject3D]);
+        super([ParticleComponent, Transform, ThreeObject3DComponent]);
     }
 
     public onAddedToEcsManager(ecsManager: EcsManager) {
@@ -20,7 +20,7 @@ export default class ParticleSystem extends System<
     }
 
     protected onLoop(
-        components: [Particle, Transform, ThreeObject3D][],
+        components: [ParticleComponent, Transform, ThreeObject3DComponent][],
         entities: Entity[],
         deltaTime: number
     ): void {
@@ -71,12 +71,15 @@ export default class ParticleSystem extends System<
     }
 }
 
-export class ParticleEmitterSystem extends System<[ParticleEmitter]> {
+export class ParticleEmitterSystem extends System<[ParticleEmitterComponent]> {
     public constructor() {
-        super([ParticleEmitter]);
+        super([ParticleEmitterComponent]);
     }
 
-    public onEntityEligible(entity: Entity, components: [ParticleEmitter]) {
+    public onEntityEligible(
+        entity: Entity,
+        components: [ParticleEmitterComponent]
+    ) {
         const [particleEmitter] = components;
 
         for (let i = 0; i < particleEmitter.startParticleCount; i++) {
@@ -87,7 +90,7 @@ export class ParticleEmitterSystem extends System<[ParticleEmitter]> {
     }
 
     protected onLoop(
-        components: [ParticleEmitter][],
+        components: [ParticleEmitterComponent][],
         entities: Entity[],
         deltaTime: number
     ): void {
@@ -99,7 +102,8 @@ export class ParticleEmitterSystem extends System<[ParticleEmitter]> {
             for (let j = children.length - 1; j >= 0; j--) {
                 const particle = children[j];
 
-                const particleComponent = particle.getComponent(Particle);
+                const particleComponent =
+                    particle.getComponent(ParticleComponent);
                 if (particleComponent) {
                     particleComponent.timeAlive += deltaTime;
 

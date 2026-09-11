@@ -2,7 +2,7 @@ import { Material, Mesh, Object3D } from "three";
 import * as SkeletonUtils from "three/examples/jsm/utils/SkeletonUtils.js";
 import { Component } from "../core";
 
-export default class ThreeObject3D extends Component {
+export default class ThreeObject3DComponent extends Component {
     #isVisible: boolean;
 
     #object3D: Object3D;
@@ -30,7 +30,7 @@ export default class ThreeObject3D extends Component {
         this.#isVisible = value;
     }
 
-    public clone(): ThreeObject3D {
+    public clone(): ThreeObject3DComponent {
         const mesh = this.object3D as Mesh;
         const clonedMesh = SkeletonUtils.clone(mesh) as Mesh;
         const { material } = mesh;
@@ -42,6 +42,6 @@ export default class ThreeObject3D extends Component {
             clonedMesh.material = materials.map((material) => material.clone());
         }
 
-        return new ThreeObject3D(clonedMesh);
+        return new ThreeObject3DComponent(clonedMesh);
     }
 }

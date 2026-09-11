@@ -1,7 +1,7 @@
 import { BoxGeometry, Mesh, MeshBasicMaterial, SphereGeometry } from "three";
 import { vec3 } from "ts-gl-matrix";
 import { Component, Entity } from "../core";
-import { ThreeObject3D } from "../threejs";
+import { ThreeObject3DComponent } from "../threejs";
 import { Transform } from "../math";
 import SphereBody from "./bodies/SphereBody";
 import CubeBody from "./bodies/CubeBody";
@@ -45,7 +45,7 @@ export default class BodyDebugger extends Component {
     }
 
     getSphereDebugger(sphereBody: SphereBody) {
-        return new ThreeObject3D(
+        return new ThreeObject3DComponent(
             new Mesh(
                 new SphereGeometry(sphereBody?.radius || 1, 32, 32),
                 new MeshBasicMaterial({ color: 0xff0000 })
@@ -54,7 +54,7 @@ export default class BodyDebugger extends Component {
     }
 
     getCubeDebugger(cubeBody: CubeBody) {
-        return new ThreeObject3D(
+        return new ThreeObject3DComponent(
             new Mesh(
                 new BoxGeometry(
                     cubeBody.width,

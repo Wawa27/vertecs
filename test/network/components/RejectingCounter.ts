@@ -1,6 +1,6 @@
 import CounterComponent from "../../components/CounterComponent";
 import { Entity } from "../../../src/core";
-import NetworkComponent from "../../../src/network/NetworkComponent";
+import { NetworkComponent } from "../../../src";
 
 type CounterComponentData = {
     count: number;
