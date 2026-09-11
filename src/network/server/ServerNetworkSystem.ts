@@ -4,7 +4,7 @@ import { EcsManager, Entity } from "../../core";
 import ClientHandler from "./ClientHandler";
 import NetworkSystem from "../NetworkSystem";
 import GameState from "../GameState";
-import type { ComponentClass } from "../../core/Component";
+import type { ComponentClass } from "../../core";
 import NetworkComponent, {
     SerializedNetworkComponent,
 } from "../NetworkComponent";
@@ -12,10 +12,8 @@ import IsNetworked from "../IsNetworked";
 import NetworkEntity from "../NetworkEntity";
 import IsPrefab from "../../utils/prefabs/IsPrefab";
 import type Command from "../commands/Command";
-import type { SerializedCommand } from "../commands/Command";
-import CommandHandler, {
-    CommandContext,
-} from "../commands/CommandHandler";
+import type { SerializedCommand } from "../commands";
+import CommandHandler, { CommandContext } from "../commands/CommandHandler";
 import CommandRegistry from "../commands/CommandRegistry";
 import SetupCommand from "../commands/SetupCommand";
 
@@ -244,9 +242,7 @@ export default class ServerNetworkSystem extends NetworkSystem {
     ): void {
         const handler = this.#commandRegistry.get(serializedCommand.type);
         if (!handler) {
-            console.warn(
-                `Received unknown command ${serializedCommand.type}`
-            );
+            console.warn(`Received unknown command ${serializedCommand.type}`);
             return;
         }
 
@@ -290,9 +286,7 @@ export default class ServerNetworkSystem extends NetworkSystem {
         if (clientHandler) {
             clientHandler.sendCommand(command);
         } else {
-            console.warn(
-                `Client ${clientId} not found. Cannot send command.`
-            );
+            console.warn(`Client ${clientId} not found. Cannot send command.`);
         }
     }
 

@@ -1,4 +1,4 @@
-import type { SerializedNetworkComponent } from "../network/NetworkComponent";
+import type { SerializedNetworkComponent } from "../network";
 import type SerializedComponent from "./SerializedComponent";
 
 /**

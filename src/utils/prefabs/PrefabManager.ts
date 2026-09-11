@@ -20,22 +20,21 @@ export default class PrefabManager {
         this.#prefabs.set(name, prefab);
     }
 
-    static load(json: string, componentClasses: ComponentClass[]): Entity {
+    static load(json: string, componentClasses: ComponentClass[]): void {
         const prefab = IoUtils.import(componentClasses, json);
         if (!prefab.name) {
             throw new Error("Cannot load a prefab without a name");
         }
         this.set(prefab.name, prefab);
-        return prefab;
     }
 
     static async loadFile(
-        path: string,
+        prefabs: string[],
         componentClasses: ComponentClass[]
-    ): Promise<Entity> {
-        const response = await fetch(path);
-        const json = await response.text();
-        return this.load(json, componentClasses);
+    ): Promise<void> {
+        prefabs.forEach((prefabJson) => {
+            this.load(JSON.stringify(prefabJson), componentClasses);
+        });
     }
 
     static get(name: string, id?: string): Entity {

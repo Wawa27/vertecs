@@ -9,6 +9,7 @@ import type {
 export default class IoUtils {
     /**
      * Imports an entity from a json string
+     * TODO: serializedEntityJson should be the parsed json
      * @param ComponentClasses The list of component classes to import
      * @param serializedEntityJson
      */
@@ -46,6 +47,39 @@ export default class IoUtils {
         return targetEntity;
     }
 
+    public static importTree(
+        ComponentClasses: ComponentClass[],
+        serializedEntitiesJson: string[]
+    ): Entity[] {
+        const serializedEntities = serializedEntitiesJson.map(
+            (json) =>
+                JSON.parse(json, SerializedEntity.reviver) as SerializedEntity
+        );
+
+        const entities = serializedEntitiesJson.map((serializedEntity) =>
+            this.import(ComponentClasses, serializedEntity)
+        );
+
+        const entitiesById = new Map(
+            entities.map((entity) => [entity.id, entity])
+        );
+
+        serializedEntities.forEach((serializedEntity) => {
+            if (serializedEntity.parentId) {
+                const parentEntity = entitiesById.get(
+                    serializedEntity.parentId
+                );
+                if (parentEntity) {
+                    parentEntity.addChild(
+                        entitiesById.get(serializedEntity.id)!
+                    );
+                }
+            }
+        });
+
+        return entities;
+    }
+
     /**
      * Exports an entity to a json string
      * @param entity
@@ -54,7 +88,8 @@ export default class IoUtils {
         const serializedEntity: SerializedEntity = new SerializedEntity(
             entity.id,
             new Map(),
-            entity.name
+            entity.name,
+            entity.parent?.id
         );
         entity.components.forEach((component) => {
             if (component instanceof SerializableComponent) {
@@ -65,5 +100,12 @@ export default class IoUtils {
             }
         });
         return JSON.stringify(serializedEntity);
+    }
+
+    public static exportTree(entity: Entity): string[] {
+        return [
+            this.export(entity),
+            ...entity.children.flatMap((child) => this.exportTree(child)),
+        ];
     }
 }

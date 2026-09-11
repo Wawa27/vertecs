@@ -47,9 +47,10 @@ describe("PrefabManager", () => {
         const template = new Entity({ name: "jsonPrefab" });
         template.addComponent(new SerializableCounter(7));
 
-        const loaded = PrefabManager.load(IoUtils.export(template), [
-            SerializableCounter,
-        ]);
+        PrefabManager.load(IoUtils.export(template), [SerializableCounter]);
+
+        const loaded = PrefabManager.get("jsonPrefab");
+
         assert.equal(loaded.name, "jsonPrefab");
         assert.equal(
             PrefabManager.get("jsonPrefab")!.getComponent(SerializableCounter)
