@@ -76,7 +76,7 @@ export default class ParticleComponent extends Component {
             endScale: this.#endScale,
             lifeTime: this.lifeTime,
             timeAlive: 0,
-            colors: this.#colors
+            colors: this.#colors,
         });
     }
 }
