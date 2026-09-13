@@ -110,7 +110,7 @@ export default abstract class System<T extends Component[] = []> {
      * Called every frame
      * @param components
      * @param entities
-     * @param deltaTime The time since the last loop
+     * @param deltaTime The time since the last loop in milliseconds
      */
     protected abstract onLoop(
         components: T[],

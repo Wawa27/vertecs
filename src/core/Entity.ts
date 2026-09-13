@@ -143,6 +143,21 @@ export default class Entity {
     }
 
     /**
+     * Find all entities in the entity hierarchy with the specified component
+     * @param component
+     */
+    public findAllWithComponent(component: ComponentClass): Entity[] {
+        const results: Entity[] = [];
+        if (this.getComponent(component)) {
+            results.push(this);
+        }
+        for (let i = this.children.length - 1; i >= 0; i--) {
+            results.push(...this.children[i].findAllWithComponent(component));
+        }
+        return results;
+    }
+
+    /**
      * Return a component by its class
      * @param componentClass The component's class or subclass constructor
      */

@@ -33,8 +33,9 @@ export default class ThreeLightSystem extends System<
 
         if (lightComponent.target) {
             // @ts-ignore
-            lightComponent.light.target =
-                lightComponent.target.getComponent(ThreeObject3DComponent)?.object3D;
+            lightComponent.light.target = lightComponent.target.getComponent(
+                ThreeObject3DComponent
+            )?.object3D;
         }
     }
 

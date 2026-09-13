@@ -1,5 +1,5 @@
 import { Vec3 } from "ts-gl-matrix";
-import { Color, Material, Mesh } from "three";
+import { Color, Material, MathUtils, Mesh } from "three";
 import { EcsManager, Entity, System } from "../core";
 import ParticleComponent from "./particle.component";
 import ParticleEmitterComponent from "./particle-emitter.component";
@@ -50,22 +50,30 @@ export default class ParticleSystem extends System<
                     .material as Material;
                 // @ts-ignore
                 const color = material.color as Color;
-                color.setRGB(
-                    (particle.startColor[0] +
-                        (particle.endColor[0] - particle.startColor[0]) *
-                            (particle.timeAlive / particle.lifeTime)) /
-                        255,
-                    (particle.startColor[1] +
-                        (particle.endColor[1] - particle.startColor[1]) *
-                            (particle.timeAlive / particle.lifeTime)) /
-                        255,
-                    (particle.startColor[2] +
-                        (particle.endColor[2] - particle.startColor[2]) *
-                            (particle.timeAlive / particle.lifeTime)) /
-                        255
+
+                const particleLifetimeRatio =
+                    particle.timeAlive / particle.lifeTime;
+
+                const segmentCount = particle.colors.length - 1;
+                const segmentRatio = 1 / segmentCount;
+
+                const current = Math.min(
+                    Math.floor(particleLifetimeRatio / segmentRatio),
+                    segmentCount - 1
                 );
-                material.opacity =
-                    0.3 + 1 - particle.timeAlive / particle.lifeTime;
+
+                const from = particle.colors[current];
+                const to = particle.colors[current + 1];
+
+                const localT =
+                    (particleLifetimeRatio - current * segmentRatio) /
+                    segmentRatio;
+
+                color.setRGB(
+                    MathUtils.lerp(from.x, to.x, localT),
+                    MathUtils.lerp(from.y, to.y, localT),
+                    MathUtils.lerp(from.z, to.z, localT)
+                );
             }
         }
     }
@@ -96,6 +104,8 @@ export class ParticleEmitterSystem extends System<[ParticleEmitterComponent]> {
     ): void {
         for (let i = 0; i < components.length; i++) {
             const [particleEmitter] = components[i];
+            particleEmitter.emittedParticleCount -=
+                (deltaTime / 1000) * particleEmitter.emissionSpeed;
 
             const { children } = entities[i];
 
@@ -117,9 +127,34 @@ export class ParticleEmitterSystem extends System<[ParticleEmitterComponent]> {
             }
 
             if (children.length < particleEmitter.maxParticleCount) {
-                const particle = particleEmitter.particlePrefab.clone();
+                if (
+                    particleEmitter.emittedParticleCount <
+                    particleEmitter.emissionSpeed
+                ) {
+                    const particle = particleEmitter.particlePrefab.clone();
 
-                entities[i].addChild(particle);
+                    const particleTransform = particle.getComponent(Transform);
+                    if (!particleTransform) {
+                        console.warn(
+                            "Transform particle not found on particle ",
+                            particle
+                        );
+                        return;
+                    }
+
+                    particleTransform.translate(
+                        new Vec3(
+                            Math.random() * particleEmitter.emissionRadius -
+                                particleEmitter.emissionRadius / 2,
+                            0,
+                            Math.random() * particleEmitter.emissionRadius -
+                                particleEmitter.emissionRadius / 2
+                        )
+                    );
+
+                    entities[i].addChild(particle);
+                    particleEmitter.emittedParticleCount++;
+                }
             }
         }
     }

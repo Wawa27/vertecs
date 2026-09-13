@@ -7,8 +7,7 @@ export type ParticleOptions = {
     endScale: number;
     lifeTime: number;
     timeAlive: number;
-    startColor: Vec3;
-    endColor: Vec3;
+    colors: Vec3[];
 };
 
 export default class ParticleComponent extends Component {
@@ -22,9 +21,7 @@ export default class ParticleComponent extends Component {
 
     #timeAlive: number;
 
-    #startColor: Vec3;
-
-    #endColor: Vec3;
+    #colors: Vec3[];
 
     readonly #getDirection: () => Vec3;
 
@@ -36,17 +33,12 @@ export default class ParticleComponent extends Component {
         this.#direction = options.getDirection();
         this.#lifeTime = options.lifeTime;
         this.#timeAlive = options.timeAlive;
-        this.#startColor = options.startColor;
-        this.#endColor = options.endColor;
+        this.#colors = options.colors;
         this.#getDirection = options.getDirection;
     }
 
-    public get startColor(): Vec3 {
-        return this.#startColor;
-    }
-
-    public get endColor(): Vec3 {
-        return this.#endColor;
+    public get colors(): Vec3[] {
+        return this.#colors;
     }
 
     public get lifeTime(): number {
@@ -80,12 +72,11 @@ export default class ParticleComponent extends Component {
     public clone(): ParticleComponent {
         return new ParticleComponent({
             getDirection: this.#getDirection,
-            startScale: Math.random() * 0.1,
-            endScale: 0.1 + Math.random() * 0.1,
+            startScale: this.#startScale,
+            endScale: this.#endScale,
             lifeTime: this.lifeTime,
             timeAlive: 0,
-            startColor: new Vec3(this.startColor),
-            endColor: new Vec3(this.endColor),
+            colors: this.#colors
         });
     }
 }
