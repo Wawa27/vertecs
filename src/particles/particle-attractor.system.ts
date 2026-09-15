@@ -7,7 +7,7 @@ import ParticleComponent from "./particle.component";
 export default class ParticleAttractorSystem extends System<
     [ParticleAttractorComponent, Transform]
 > {
-    #strength = 0.4;
+    #strength = 0.5;
 
     public constructor() {
         super([ParticleAttractorComponent, Transform]);
