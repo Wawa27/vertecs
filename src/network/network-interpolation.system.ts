@@ -1,7 +1,7 @@
 import { Entity, System } from "../core";
 import { Transform } from "../math";
 import { ComponentClass } from "../core/Component";
-import IsNetworked from "./IsNetworked";
+import IsNetworked from "./is-networked.component";
 import NetworkSystem from "./network.system";
 
 export default class NetworkInterpolationSystem extends System<[IsNetworked]> {

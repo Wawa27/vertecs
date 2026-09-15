@@ -1,7 +1,7 @@
 import { Entity, System } from "../core";
 import type { ComponentClass } from "../core/Component";
 import Component from "../core/Component";
-import IsNetworked from "./IsNetworked";
+import IsNetworked from "./is-networked.component";
 
 /**
  * The networking system is responsible for sending and receiving entities over the network.

@@ -10,12 +10,21 @@ export type TransformData = {
 };
 
 export default class NetworkTransform extends NetworkComponent<TransformData> {
+    #clonedData: TransformData | null;
+
     public constructor() {
         super();
+        this.#clonedData = null;
     }
 
     public onAddedToEntity(entity: Entity) {
-        if (!entity.getComponent(Transform)) {
+        if (this.#clonedData) {
+            entity.addComponent(new Transform(
+                this.#clonedData.position,
+                this.#clonedData.rotation,
+                this.#clonedData.scale,
+            ));
+        } else if (!entity.getComponent(Transform)) {
             entity.addComponent(new Transform());
         }
     }
@@ -29,7 +38,7 @@ export default class NetworkTransform extends NetworkComponent<TransformData> {
         const transform = this.entity?.getComponent(Transform);
 
         if (!transform) {
-            console.warn("TransformNetworkComponent: Transform not found");
+            console.warn("NetworkTransform: Transform not found");
             return;
         }
 
@@ -42,7 +51,7 @@ export default class NetworkTransform extends NetworkComponent<TransformData> {
         const transform = this.entity?.getComponent(Transform);
 
         if (!transform) {
-            throw new Error("TransformNetworkComponent: Position not found");
+            throw new Error("NetworkTransform: Position not found");
         }
 
         const position = transform.getWorldPosition();
@@ -61,7 +70,7 @@ export default class NetworkTransform extends NetworkComponent<TransformData> {
         const transform = this.entity?.getComponent(Transform);
 
         if (!transform) {
-            throw new Error("TransformNetworkComponent: Transform not found");
+            throw new Error("NetworkTransform: Transform not found");
         }
 
         const position = transform.getWorldPosition();
@@ -76,6 +85,28 @@ export default class NetworkTransform extends NetworkComponent<TransformData> {
     }
 
     public clone(): Component {
-        return new NetworkTransform();
+        const clone = new NetworkTransform();
+        const transform = this.entity?.getComponent(Transform);
+        if (transform) {
+            clone.#clonedData = {
+                position: [
+                    transform.getWorldPosition()[0],
+                    transform.getWorldPosition()[1],
+                    transform.getWorldPosition()[2],
+                ] as [number, number, number],
+                rotation: [
+                    transform.getWorldRotation()[0],
+                    transform.getWorldRotation()[1],
+                    transform.getWorldRotation()[2],
+                    transform.getWorldRotation()[3],
+                ] as [number, number, number, number],
+                scale: [
+                    transform.getWorldScale()[0],
+                    transform.getWorldScale()[1],
+                    transform.getWorldScale()[2],
+                ] as [number, number, number],
+            };
+        }
+        return clone;
     }
 }

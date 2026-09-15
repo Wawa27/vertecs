@@ -1,6 +1,6 @@
 import { Entity } from "../core";
 import SerializedEntity from "./SerializedEntity";
-import SerializableComponent from "./SerializableComponent";
+import SerializableComponent from "./serializable.component";
 import type {
     ComponentClass,
     ComponentClassConstructor,

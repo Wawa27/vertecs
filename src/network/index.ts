@@ -5,10 +5,10 @@ import ClientNetworkSystem from "./client/ClientNetworkSystem";
 import NetworkComponent from "./network.component";
 import ClientHandler from "./server/ClientHandler";
 import IsPlayer from "./IsPlayer";
-import NetworkTransform from "./components/NetworkTransform";
-import NetworkAnimation from "./components/NetworkAnimation";
-import IsNetworked from "./IsNetworked";
-import type { NetworkScope } from "./IsNetworked";
+import NetworkTransform from "./components/network-transform.component";
+import NetworkAnimation from "./components/network-animation.component";
+import IsNetworked from "./is-networked.component";
+import type { NetworkScope } from "./is-networked.component";
 import IsPrefab from "../utils/prefabs/IsPrefab";
 import Command from "./commands/Command";
 import CommandHandler from "./commands/CommandHandler";
@@ -18,7 +18,7 @@ import type { SerializedCommand, CommandContext } from "./commands";
 
 export type { NetworkScope, SerializedCommand, CommandContext };
 export type { SerializedNetworkComponent } from "./network.component";
-export type { TransformData } from "./components/NetworkTransform";
+export type { TransformData } from "./components/network-transform.component";
 export {
     ServerNetworkSystem,
     AoiServerNetworkSystem,

@@ -1,4 +1,4 @@
-import SerializableComponent from "../../src/io/SerializableComponent";
+import { SerializableComponent } from "../../src";
 
 export default class SerializableCounter extends SerializableComponent<number> {
     #count: number;

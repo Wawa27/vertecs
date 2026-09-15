@@ -1,46 +1,45 @@
 import { InstancedMesh, StaticDrawUsage } from "three";
 import ThreeObject3DComponent from "./three-object3D.component";
-import { Entity } from "../core";
+import { Transform } from "../math";
 
 export default class ThreeInstancedMeshComponent extends ThreeObject3DComponent {
-    #entities: string[];
+    readonly #instances: {
+        transform: Transform;
+        isDirty: boolean;
+    }[];
 
     public constructor(instancedMesh: InstancedMesh, id?: string) {
         super(instancedMesh, id);
-        this.#entities = [];
+        this.#instances = [];
+        for (let i = 0; i < instancedMesh.count; i++) {
+            this.#instances.push({
+                isDirty: false,
+                transform: new Transform(),
+            });
+        }
         instancedMesh.instanceMatrix.setUsage(StaticDrawUsage);
     }
 
-    public onAddedToEntity(entity: Entity) {
-        this.#entities.push(entity.id);
+    public getInstance(index: number): {
+        transform: Transform;
+        isDirty: boolean;
+    } {
+        return this.#instances[index];
     }
 
-    public onRemovedFromEntity(entity: Entity) {
-        const index = this.getEntityIndex(entity.id);
-        if (index !== -1) {
-            this.#entities.splice(index, 1);
-        }
+    public markInstanceAsDirty(index: number): void {
+        this.#instances[index].isDirty = true;
     }
 
-    public getEntityIndex(entityId: string): number {
-        return this.#entities.indexOf(entityId);
+    public unmarkInstanceAsDirty(index: number): void {
+        this.#instances[index].isDirty = false;
     }
 
-    public get entities(): string[] {
-        return this.#entities;
+    public get instances(): { transform: Transform; isDirty: boolean }[] {
+        return this.#instances;
     }
 
     public clone(): ThreeInstancedMeshComponent {
-        if (this.entities.length > 1024) {
-            return new ThreeInstancedMeshComponent(
-                new InstancedMesh(
-                    (super.object3D as InstancedMesh).geometry,
-                    (super.object3D as InstancedMesh).material,
-                    this.entities.length
-                ),
-                this.id
-            );
-        }
-        return this;
+        return new ThreeInstancedMeshComponent(this.object3D as InstancedMesh);
     }
 }

@@ -4,6 +4,9 @@ import {
     CubeTexture,
     CubeTextureLoader,
     Group,
+    Mesh,
+    MeshStandardMaterial,
+    Object3D,
     Texture,
     TextureLoader,
     Vector3,
@@ -63,6 +66,8 @@ export default class AssetManager {
             }
         });
 
+        AssetManager.applyFlatShading(gltf.scene);
+
         const wrapper = new Group();
         wrapper.add(gltf.scene);
 
@@ -104,12 +109,30 @@ export default class AssetManager {
         });
     }
 
+    private static applyFlatShading(object: Object3D) {
+        object.traverse((child) => {
+            const mesh = child as Mesh;
+            if (!mesh.isMesh) {
+                return;
+            }
+            const materials = Array.isArray(mesh.material)
+                ? mesh.material
+                : [mesh.material];
+            materials.forEach((material) => {
+                (material as MeshStandardMaterial).flatShading = true;
+                material.needsUpdate = true;
+            });
+        });
+    }
+
     public static async loadFbx(url: string, assetName: string) {
         const group = await AssetManager.asyncLoadFbx(url);
 
         group.updateMatrixWorld();
 
         AssetManager.sanitizeClipNames(group);
+
+        AssetManager.applyFlatShading(group);
 
         const wrapper = new Group();
         wrapper.add(group);

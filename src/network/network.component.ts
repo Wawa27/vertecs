@@ -1,6 +1,6 @@
 import type { SerializedComponent } from "../io";
 import { SerializableComponent } from "../io";
-import { NetworkScope } from "./IsNetworked";
+import { NetworkScope } from "./is-networked.component";
 
 export type SerializedNetworkComponent<T> = SerializedComponent<T> & {
     updateTimestamp: number;

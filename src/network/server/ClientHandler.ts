@@ -8,7 +8,7 @@ import NetworkComponent, {
 import { ComponentClassConstructor } from "../../core/Component";
 import ServerNetworkSystem from "./ServerNetworkSystem";
 import IsPlayer from "../IsPlayer";
-import IsNetworked from "../IsNetworked";
+import IsNetworked from "../is-networked.component";
 import type Command from "../commands/Command";
 
 export default class ClientHandler {

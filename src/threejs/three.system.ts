@@ -131,24 +131,9 @@ export default class ThreeSystem extends System<
         entity: Entity,
         components: [Transform, ThreeObject3DComponent]
     ) {
-        const [transform, threeComponent] = components;
+        const [, threeComponent] = components;
 
-        if (threeComponent instanceof ThreeInstancedMeshComponent) {
-            const instancedMesh = threeComponent.object3D as InstancedMesh;
-            const matrix = new Matrix4();
-            matrix.compose(
-                new Vector3(0, 0, 0),
-                new Quaternion(0, 0, 0, 1),
-                new Vector3(0, 0, 0)
-            );
-            instancedMesh.setMatrixAt(
-                threeComponent.entities.length + 1,
-                matrix
-            );
-            instancedMesh.instanceMatrix.needsUpdate = true;
-        } else {
-            this.#scene.remove(threeComponent?.object3D);
-        }
+        this.#scene.remove(threeComponent?.object3D);
     }
 
     public async onStart(): Promise<void> {}
@@ -173,19 +158,33 @@ export default class ThreeSystem extends System<
             const [sx, sy, sz] = transform.getWorldScale();
 
             if (threeMesh instanceof ThreeInstancedMeshComponent) {
-                const object3d = threeMesh.object3D as InstancedMesh;
-                const index = threeMesh.getEntityIndex(entities[i].id);
+                for (
+                    let instanceIndex = 0;
+                    instanceIndex < threeMesh.instances.length;
+                    instanceIndex++
+                ) {
+                    const object3d = threeMesh.object3D as InstancedMesh;
+                    const instance = threeMesh.getInstance(instanceIndex);
 
-                object3d.getMatrixAt(index, matrix4);
+                    if (instance.isDirty) {
+                        const [ix, iy, iz] =
+                            instance.transform.getWorldPosition();
+                        const [iqx, iqy, iqz, iqw] =
+                            instance.transform.getWorldRotation();
+                        const [isx, isy, isz] =
+                            instance.transform.getWorldScale();
 
-                matrix4.makeRotationFromQuaternion(
-                    quaternion.set(qx, qy, qz, qw)
-                );
-                matrix4.scale(scaleVector3.set(sx, sy, sz));
-                matrix4.setPosition(x, y, z);
+                        matrix4.compose(
+                            positionVector3.set(ix, iy, iz),
+                            quaternion.set(iqx, iqy, iqz, iqw),
+                            scaleVector3.set(isx, isy, isz)
+                        );
 
-                object3d.setMatrixAt(index, matrix4);
-                object3d.instanceMatrix.needsUpdate = true;
+                        object3d.setMatrixAt(instanceIndex, matrix4);
+                        object3d.instanceMatrix.needsUpdate = true;
+                        threeMesh.unmarkInstanceAsDirty(instanceIndex);
+                    }
+                }
             } else {
                 const { object3D } = threeMesh;
 

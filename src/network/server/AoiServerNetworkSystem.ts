@@ -1,7 +1,7 @@
 import { WebSocket } from "ws";
 import { EcsManager, Entity } from "../../core";
 import type { ComponentClass } from "../../core/Component";
-import IsNetworked from "../IsNetworked";
+import IsNetworked from "../is-networked.component";
 import CommandRegistry from "../commands/CommandRegistry";
 import ServerNetworkSystem from "./ServerNetworkSystem";
 import AoiClientHandler from "./AoiClientHandler";

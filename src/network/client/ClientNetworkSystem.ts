@@ -5,7 +5,7 @@ import type {
 import Entity from "../../core/Entity";
 import GameState from "../GameState";
 import NetworkEntity from "../NetworkEntity";
-import IsNetworked from "../IsNetworked";
+import IsNetworked from "../is-networked.component";
 import PrefabManager from "../../utils/prefabs/PrefabManager";
 import IsPrefab from "../../utils/prefabs/IsPrefab";
 import type Command from "../commands/Command";

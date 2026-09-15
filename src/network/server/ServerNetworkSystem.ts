@@ -7,7 +7,7 @@ import type { ComponentClass } from "../../core";
 import NetworkComponent, {
     SerializedNetworkComponent,
 } from "../network.component";
-import IsNetworked from "../IsNetworked";
+import IsNetworked from "../is-networked.component";
 import NetworkEntity from "../NetworkEntity";
 import IsPrefab from "../../utils/prefabs/IsPrefab";
 import type Command from "../commands/Command";

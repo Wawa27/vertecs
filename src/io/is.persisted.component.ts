@@ -1,5 +1,5 @@
 import { Component } from "../core";
-import SerializableComponent from "./SerializableComponent";
+import SerializableComponent from "./serializable.component";
 
 export default class IsPersisted extends SerializableComponent<undefined> {
     public constructor() {
@@ -13,6 +13,6 @@ export default class IsPersisted extends SerializableComponent<undefined> {
     }
 
     public clone(): Component {
-        return new IsPersisted();
+        return this;
     }
 }
