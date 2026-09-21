@@ -259,6 +259,24 @@ export default class AssetManager {
         return asset?.clone();
     }
 
+    /**
+     * Clones an asset's components and children directly onto an existing
+     * entity instead of returning a new one.
+     */
+    public static applyTo(target: Entity, assetName: string): Entity {
+        const asset = AssetManager.#assets.get(assetName);
+        if (!asset) {
+            throw new Error(`Asset not found ${assetName}`);
+        }
+        asset.components.forEach((component) => {
+            target.addComponent(component.clone());
+        });
+        asset.children.forEach((child) => {
+            target.addChild(child.clone());
+        });
+        return target;
+    }
+
     public static getAssetNames(): string[] {
         return Array.from(AssetManager.#assets.keys());
     }
