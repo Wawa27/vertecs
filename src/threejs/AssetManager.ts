@@ -251,6 +251,16 @@ export default class AssetManager {
         return texture;
     }
 
+    public static getTexture(assetName: string): Texture {
+        const asset = AssetManager.#assets.get(assetName);
+        const texture = asset?.getComponent(ThreeObject3DComponent)
+            ?.object3D as unknown as Texture;
+        if (!texture || !texture.isTexture) {
+            throw new Error(`Texture not found: ${assetName}`);
+        }
+        return texture;
+    }
+
     public static get(assetName: string): Entity {
         const asset = AssetManager.#assets.get(assetName);
         if (!asset) {
