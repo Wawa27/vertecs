@@ -16,14 +16,10 @@ import CommandHandler, { CommandContext } from "../commands/CommandHandler";
 import CommandRegistry from "../commands/CommandRegistry";
 import SetupCommand from "../commands/SetupCommand";
 import NetworkSystem from "../network.system";
-import type { NetworkScope } from "../is-networked.component";
-import SnapshotHistory from "../snapshot-history";
 
-type NetworkComponentCursor = {
-    data: any;
-    ownerId: string;
-    scope: NetworkScope;
-};
+type NetworkComponentSnapshot = Required<
+    Pick<SerializedNetworkComponent<any>, "data" | "ownerId" | "scope">
+>;
 
 type ClientHandlerConstructor = new (
     ecsManager: EcsManager,
@@ -45,7 +41,10 @@ export default class ServerNetworkSystem extends NetworkSystem {
 
     readonly #commandRegistry: CommandRegistry;
 
-    readonly snapshotHistory: SnapshotHistory;
+    readonly #componentSnapshots: WeakMap<
+        NetworkComponent<any>,
+        NetworkComponentSnapshot
+    >;
 
     readonly #port: number;
 
@@ -62,7 +61,7 @@ export default class ServerNetworkSystem extends NetworkSystem {
         this.$clientHandlers = [];
         this.#gameState = new NetworkSnapshot();
         this.#commandRegistry = commandRegistry ?? new CommandRegistry();
-        this.snapshotHistory = new SnapshotHistory();
+        this.#componentSnapshots = new WeakMap();
         this.#port = port ?? 8080;
     }
 
@@ -182,7 +181,7 @@ export default class ServerNetworkSystem extends NetworkSystem {
     protected serializeComponent(
         component: NetworkComponent<any>
     ): SerializedNetworkComponent<any> | undefined {
-        const componentSnapshot = this.snapshotHistory.get(component);
+        const componentSnapshot = this.#componentSnapshots.get(component);
         const isInitialSnapshot = componentSnapshot === undefined;
         const metadataChanged =
             isInitialSnapshot ||
@@ -206,7 +205,7 @@ export default class ServerNetworkSystem extends NetworkSystem {
         const snapshot = component.serialize(
             isInitialSnapshot || metadataChanged
         );
-        this.snapshotHistory.set(component, {
+        this.#componentSnapshots.set(component, {
             data: snapshot.data,
             ownerId: component.ownerId,
             scope: component.scope,
