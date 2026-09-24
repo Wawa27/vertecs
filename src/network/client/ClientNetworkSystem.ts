@@ -3,7 +3,7 @@ import type {
     ComponentClassConstructor,
 } from "../../core/Component";
 import Entity from "../../core/Entity";
-import GameState from "../GameState";
+import NetworkSnapshot from "../NetworkSnapshot";
 import NetworkEntity from "../NetworkEntity";
 import IsNetworked from "../is-networked.component";
 import PrefabManager from "../../utils/prefabs/PrefabManager";
@@ -24,9 +24,9 @@ import NetworkComponent, { SerializedNetworkComponent } from "../network.compone
 export default abstract class ClientNetworkSystem extends NetworkSystem {
     #webSocket?: WebSocket;
 
-    protected $serverSnapshot: GameState;
+    protected $serverSnapshot: NetworkSnapshot;
 
-    protected $clientSnapshot: GameState;
+    protected $clientSnapshot: NetworkSnapshot;
 
     #address: string;
 
@@ -46,8 +46,8 @@ export default abstract class ClientNetworkSystem extends NetworkSystem {
 
         this.#address = address;
         this.#connected = false;
-        this.$clientSnapshot = new GameState();
-        this.$serverSnapshot = new GameState();
+        this.$clientSnapshot = new NetworkSnapshot();
+        this.$serverSnapshot = new NetworkSnapshot();
         this.#commandRegistry = commandRegistry ?? new CommandRegistry();
     }
 
@@ -70,7 +70,7 @@ export default abstract class ClientNetworkSystem extends NetworkSystem {
             (event: { data: { toString: () => string } }) => {
                 const snapshot = JSON.parse(
                     event.data.toString(),
-                    GameState.reviver
+                    NetworkSnapshot.reviver
                 );
                 // TODO: find a better solutions for handling packets instead of merging
                 this.#mergeServerSnapshot(snapshot);
@@ -107,38 +107,38 @@ export default abstract class ClientNetworkSystem extends NetworkSystem {
                 this.deserializeEntity(serializedEntity);
             });
 
-            this.$serverSnapshot = new GameState();
+            this.$serverSnapshot = new NetworkSnapshot();
         }
 
         if (!this.#connected) {
             return;
         }
 
-        const deltaGameState = new GameState();
+        const deltaSnapshot = new NetworkSnapshot();
 
         entities.forEach((entity) => {
             const networkEntity = this.serializeEntity(entity);
             if (networkEntity) {
-                deltaGameState.entities.set(networkEntity.id, networkEntity);
+                deltaSnapshot.entities.set(networkEntity.id, networkEntity);
             }
         });
 
         if (
-            deltaGameState.entities.size === 0 &&
+            deltaSnapshot.entities.size === 0 &&
             this.$clientSnapshot.commands.length === 0
         ) {
             return;
         }
 
-        deltaGameState.commands = this.$clientSnapshot.commands;
+        deltaSnapshot.commands = this.$clientSnapshot.commands;
 
         this.$clientSnapshot.commands = [];
 
-        this.#webSocket?.send(JSON.stringify(deltaGameState));
+        this.#webSocket?.send(JSON.stringify(deltaSnapshot));
     }
 
     // TODO: refactor ?
-    #mergeServerSnapshot(snapshot: GameState): void {
+    #mergeServerSnapshot(snapshot: NetworkSnapshot): void {
         snapshot.commands.forEach((serializedCommand) => {
             this.$serverSnapshot.commands.push(serializedCommand);
         });

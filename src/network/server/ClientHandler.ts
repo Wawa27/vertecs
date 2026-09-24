@@ -1,6 +1,6 @@
 import { WebSocket } from "ws";
 import { EcsManager, Entity } from "../../core";
-import GameState from "../GameState";
+import NetworkSnapshot from "../NetworkSnapshot";
 import NetworkEntity from "../NetworkEntity";
 import NetworkComponent, {
     SerializedNetworkComponent,
@@ -20,9 +20,9 @@ export default class ClientHandler {
 
     readonly $clientEntity: Entity;
 
-    #clientSnapshot?: GameState;
+    #clientSnapshot?: NetworkSnapshot;
 
-    #serverSnapshot: GameState;
+    #serverSnapshot: NetworkSnapshot;
 
     #forceUpdate: boolean;
 
@@ -37,12 +37,12 @@ export default class ClientHandler {
         this.$webSocket.on("message", (data: any) => {
             this.#clientSnapshot = JSON.parse(
                 data.toString(),
-                GameState.reviver
+                NetworkSnapshot.reviver
             );
         });
         this.#forceUpdate = true;
-        this.#clientSnapshot = new GameState();
-        this.#serverSnapshot = new GameState();
+        this.#clientSnapshot = new NetworkSnapshot();
+        this.#serverSnapshot = new NetworkSnapshot();
         this.#serverNetworkSystem = serverNetworkSystem;
 
         this.$clientEntity = this.ecsManager!.createEntity();
@@ -78,7 +78,7 @@ export default class ClientHandler {
         }
 
         this.#forceUpdate = false;
-        this.#serverSnapshot = new GameState();
+        this.#serverSnapshot = new NetworkSnapshot();
     }
 
     public processClientSnapshot(): void {
@@ -169,7 +169,6 @@ export default class ClientHandler {
             return;
         }
 
-        component.forceUpdate = true;
         component.updateTimestamp = serializedNetworkComponent.updateTimestamp;
         component.deserialize(serializedNetworkComponent);
     }

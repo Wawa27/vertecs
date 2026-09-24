@@ -17,8 +17,6 @@ export default abstract class NetworkComponent<
 > extends SerializableComponent<T> {
     protected $updateTimestamp: number;
 
-    $forceUpdate: boolean;
-
     #lastData?: T;
 
     #ownerId: string;
@@ -28,7 +26,6 @@ export default abstract class NetworkComponent<
     protected constructor(ownerId?: string, scope?: NetworkScope) {
         super();
         this.$updateTimestamp = -1;
-        this.$forceUpdate = true;
         this.#ownerId = ownerId ?? "*";
         this.#scope = scope ?? "public";
     }
@@ -44,7 +41,6 @@ export default abstract class NetworkComponent<
             data.ownerId = this.#ownerId;
             data.scope = this.#scope;
         }
-        this.$forceUpdate = false;
         this.#lastData = data.data;
         return data;
     }
@@ -84,14 +80,6 @@ export default abstract class NetworkComponent<
 
     public set ownerId(value: string) {
         this.#ownerId = value;
-    }
-
-    public get forceUpdate(): boolean {
-        return this.$forceUpdate;
-    }
-
-    public set forceUpdate(value: boolean) {
-        this.$forceUpdate = value;
     }
 
     public get lastData(): T | undefined {

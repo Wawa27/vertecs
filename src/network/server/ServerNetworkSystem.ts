@@ -2,7 +2,7 @@ import { IncomingMessage } from "http";
 import { WebSocket, WebSocketServer } from "ws";
 import { EcsManager, Entity } from "../../core";
 import ClientHandler from "./ClientHandler";
-import GameState from "../GameState";
+import NetworkSnapshot from "../NetworkSnapshot";
 import type { ComponentClass } from "../../core";
 import NetworkComponent, {
     SerializedNetworkComponent,
@@ -16,6 +16,14 @@ import CommandHandler, { CommandContext } from "../commands/CommandHandler";
 import CommandRegistry from "../commands/CommandRegistry";
 import SetupCommand from "../commands/SetupCommand";
 import NetworkSystem from "../network.system";
+import type { NetworkScope } from "../is-networked.component";
+import SnapshotHistory from "../snapshot-history";
+
+type NetworkComponentCursor = {
+    data: any;
+    ownerId: string;
+    scope: NetworkScope;
+};
 
 type ClientHandlerConstructor = new (
     ecsManager: EcsManager,
@@ -33,9 +41,11 @@ export default class ServerNetworkSystem extends NetworkSystem {
 
     readonly #ClientHandlerConstructor: ClientHandlerConstructor;
 
-    readonly #gameState: GameState;
+    readonly #gameState: NetworkSnapshot;
 
     readonly #commandRegistry: CommandRegistry;
+
+    readonly snapshotHistory: SnapshotHistory;
 
     readonly #port: number;
 
@@ -50,8 +60,9 @@ export default class ServerNetworkSystem extends NetworkSystem {
 
         this.#ClientHandlerConstructor = clientHandlerConstructor;
         this.$clientHandlers = [];
-        this.#gameState = new GameState();
+        this.#gameState = new NetworkSnapshot();
         this.#commandRegistry = commandRegistry ?? new CommandRegistry();
+        this.snapshotHistory = new SnapshotHistory();
         this.#port = port ?? 8080;
     }
 
@@ -138,9 +149,12 @@ export default class ServerNetworkSystem extends NetworkSystem {
             entity.parent?.id
         );
 
-        const networkComponents: NetworkComponent<any>[] = entity
+        const networkComponents = entity
             .getComponents(this.$allowedNetworkComponents)
-            .filter((component) => component) as NetworkComponent<any>[];
+            .filter(
+                (component): component is NetworkComponent<any> =>
+                    component instanceof NetworkComponent
+            );
 
         if (networkComponents.length === 0) {
             return undefined;
@@ -168,14 +182,36 @@ export default class ServerNetworkSystem extends NetworkSystem {
     protected serializeComponent(
         component: NetworkComponent<any>
     ): SerializedNetworkComponent<any> | undefined {
-        if (component.forceUpdate) {
-            return component.serialize(true);
+        const componentSnapshot = this.snapshotHistory.get(component);
+        const isInitialSnapshot = componentSnapshot === undefined;
+        const metadataChanged =
+            isInitialSnapshot ||
+            componentSnapshot.ownerId !== component.ownerId ||
+            componentSnapshot.scope !== component.scope;
+        const isDirty = componentSnapshot
+            ? component.isDirty(componentSnapshot.data)
+            : true;
+
+        if (!metadataChanged && !isDirty) {
+            return undefined;
         }
-        if (component.lastData && component.isDirty(component.lastData)) {
-            component.updateTimestamp = Date.now();
-            return component.serialize();
+
+        if (!isInitialSnapshot && isDirty) {
+            component.updateTimestamp = Math.max(
+                Date.now(),
+                (component.updateTimestamp ?? -1) + 1
+            );
         }
-        return undefined;
+
+        const snapshot = component.serialize(
+            isInitialSnapshot || metadataChanged
+        );
+        this.snapshotHistory.set(component, {
+            data: snapshot.data,
+            ownerId: component.ownerId,
+            scope: component.scope,
+        });
+        return snapshot;
     }
 
     protected onLoop(
@@ -290,7 +326,7 @@ export default class ServerNetworkSystem extends NetworkSystem {
         }
     }
 
-    public get gameState(): GameState {
+    public get gameState(): NetworkSnapshot {
         return this.#gameState;
     }
 

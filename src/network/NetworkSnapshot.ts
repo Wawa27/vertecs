@@ -2,7 +2,9 @@ import { SerializedEntity } from "../io";
 import NetworkEntity from "./NetworkEntity";
 import type { SerializedCommand } from "./commands";
 
-export default class GameState {
+export default class NetworkSnapshot {
+    #revision: number;
+
     #timestamp: number;
 
     #entities: Map<string, NetworkEntity>;
@@ -10,21 +12,24 @@ export default class GameState {
     #commands: SerializedCommand[];
 
     public constructor() {
+        this.#revision = 0;
         this.#timestamp = Date.now();
         this.#entities = new Map();
         this.#commands = [];
     }
 
-    public clone(): GameState {
+    public clone(): NetworkSnapshot {
         return Object.assign(Object.create(this), this);
     }
 
     public toJSON(): {
+        revision: number;
         timestamp: number;
         entities: [string, SerializedEntity][];
         commands: SerializedCommand[];
     } {
         return {
+            revision: this.#revision,
             timestamp: this.#timestamp,
             entities: Array.from(this.entities.entries()),
             commands: this.commands,
@@ -49,6 +54,14 @@ export default class GameState {
             );
         }
         return value;
+    }
+
+    public get revision(): number {
+        return this.#revision;
+    }
+
+    public set revision(value: number) {
+        this.#revision = value;
     }
 
     public get timestamp(): number {

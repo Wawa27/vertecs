@@ -53,9 +53,8 @@ export default class AoiServerNetworkSystem extends ServerNetworkSystem {
         entity: Entity,
         components: [IsNetworked]
     ) {
-        // New networked entities start forceUpdate on all components, so they
-        // serialize fully on the first loop. Store them immediately in the
-        // game state so they can be sent in full to clients entering their AOI.
+        // Store new networked entities immediately so their initial snapshot
+        // is available to clients entering their AOI.
         if (!this.gameState.entities.has(entity.id)) {
             const serializedEntity = this.serializeEntity(entity);
             if (serializedEntity) {
