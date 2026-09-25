@@ -8,6 +8,11 @@ export type SerializedNetworkComponent<T> = SerializedComponent<T> & {
     scope?: NetworkScope;
 };
 
+export type PendingNetworkComponentUpdate<T> = {
+    previousData: T;
+    data: T;
+};
+
 /**
  * A network component is a component that is used to synchronize data over the network.
  * Components that inherit from this class will be synchronized over the network if they are attached to a networked entity.
@@ -23,11 +28,14 @@ export default abstract class NetworkComponent<
 
     #scope: NetworkScope;
 
+    #networkUpdateRevision: number;
+
     protected constructor(ownerId?: string, scope?: NetworkScope) {
         super();
         this.$updateTimestamp = -1;
         this.#ownerId = ownerId ?? "*";
         this.#scope = scope ?? "public";
+        this.#networkUpdateRevision = 0;
     }
 
     public serialize(
@@ -53,6 +61,34 @@ export default abstract class NetworkComponent<
         this.#scope = serializedComponent.scope ?? this.scope;
         this.#lastData = serializedComponent.data;
         return this.read(serializedComponent.data);
+    }
+
+    /**
+     * Apply an authoritative value, then replay client-side changes that the
+     * server has not acknowledged yet.
+     */
+    public reconcile(
+        serializedComponent: SerializedNetworkComponent<T>,
+        pendingUpdates: PendingNetworkComponentUpdate<T>[],
+        uncommittedUpdate?: PendingNetworkComponentUpdate<T>
+    ): void {
+        this.deserialize(serializedComponent);
+        pendingUpdates.forEach(({ previousData, data }) => {
+            this.replay(previousData, data);
+        });
+
+        if (pendingUpdates.length > 0) {
+            this.#lastData = this.write();
+        }
+
+        if (uncommittedUpdate) {
+            this.replay(uncommittedUpdate.previousData, uncommittedUpdate.data);
+        }
+    }
+
+    /** Reapply one predicted client change after an authoritative update. */
+    protected replay(_previousData: T, data: T): void {
+        this.read(data);
     }
 
     /**
@@ -92,5 +128,14 @@ export default abstract class NetworkComponent<
 
     public set updateTimestamp(value: number | undefined) {
         this.$updateTimestamp = value ?? -1;
+    }
+
+    /** Force the server to send the current value, even if it is unchanged. */
+    public requestNetworkUpdate(): void {
+        this.#networkUpdateRevision += 1;
+    }
+
+    public get networkUpdateRevision(): number {
+        return this.#networkUpdateRevision;
     }
 }

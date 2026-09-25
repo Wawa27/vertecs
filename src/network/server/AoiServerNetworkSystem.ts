@@ -88,10 +88,7 @@ export default class AoiServerNetworkSystem extends ServerNetworkSystem {
         entities: Entity[],
         deltaTime: number
     ): void {
-        // Process clients entities
-        this.$clientHandlers.forEach((clientHandler) => {
-            clientHandler.processClientSnapshot();
-        });
+        this.processClientSnapshots();
 
         // Update each client's area of interest. Entities leaving the client's
         // relevance set are marked destroyed.

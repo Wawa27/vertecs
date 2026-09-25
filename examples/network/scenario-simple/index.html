@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Network scenario: simple</title>
+    </head>
+    <body>
+        <pre id="state">Connecting...</pre>
+        <script>
+            const state = document.getElementById("state");
+            const events = new EventSource("/events");
+            const actions = new Set(["u", "r", "a", "b"]);
+
+            events.onmessage = (event) => {
+                state.textContent = JSON.parse(event.data);
+            };
+
+            document.addEventListener("keydown", (event) => {
+                const action = event.key.toLowerCase();
+                if (actions.has(action)) {
+                    fetch(`/action/${action}`, { method: "POST" });
+                }
+            });
+        </script>
+    </body>
+</html>

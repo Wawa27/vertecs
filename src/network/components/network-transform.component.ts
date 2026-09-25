@@ -1,7 +1,26 @@
-import { quat } from "ts-gl-matrix";
 import { Component, Entity } from "../../core";
 import { Transform } from "../../math";
 import NetworkComponent from "../network.component";
+import { Quat, Vec3 } from "ts-gl-matrix";
+
+const TRANSFORM_EPSILON = 0.00001;
+
+const approximatelyEqual = (a: number, b: number): boolean =>
+    Math.abs(a - b) <=
+    TRANSFORM_EPSILON * Math.max(1, Math.abs(a), Math.abs(b));
+
+const approximatelyEqualRotation = (
+    a: [number, number, number, number],
+    b: ArrayLike<number>
+): boolean => {
+    const sameSign = a.every((value, index) =>
+        approximatelyEqual(value, b[index])
+    );
+    const oppositeSign = a.every((value, index) =>
+        approximatelyEqual(value, -b[index])
+    );
+    return sameSign || oppositeSign;
+};
 
 export type TransformData = {
     position: [number, number, number];
@@ -42,9 +61,65 @@ export default class NetworkTransform extends NetworkComponent<TransformData> {
             return;
         }
 
-        transform.setWorldPosition(data.position);
-        transform.setWorldRotation(data.rotation);
-        transform.setWorldScale(data.scale);
+        transform.setWorldPosition([...data.position]);
+        transform.setWorldRotation([...data.rotation]);
+        transform.setWorldScale([...data.scale]);
+    }
+
+    protected override replay(
+        previousData: TransformData,
+        data: TransformData
+    ): void {
+        const transform = this.entity?.getComponent(Transform);
+        if (!transform) {
+            return;
+        }
+
+        const positionDelta = Vec3.sub(
+            Vec3.create(),
+            data.position,
+            previousData.position
+        );
+        transform.setWorldPosition(
+            Vec3.add(
+                Vec3.create(),
+                transform.getWorldPosition(),
+                positionDelta
+            )
+        );
+
+        const inversePreviousRotation = Quat.invert(
+            Quat.create(),
+            previousData.rotation
+        );
+        const rotationDelta = Quat.multiply(
+            Quat.create(),
+            inversePreviousRotation,
+            data.rotation
+        );
+        transform.setWorldRotation(
+            Quat.multiply(
+                Quat.create(),
+                transform.getWorldRotation(),
+                rotationDelta
+            )
+        );
+
+        const currentScale = transform.getWorldScale();
+        transform.setWorldScale([
+            previousData.scale[0] === 0
+                ? data.scale[0]
+                : currentScale[0] *
+                  (data.scale[0] / previousData.scale[0]),
+            previousData.scale[1] === 0
+                ? data.scale[1]
+                : currentScale[1] *
+                  (data.scale[1] / previousData.scale[1]),
+            previousData.scale[2] === 0
+                ? data.scale[2]
+                : currentScale[2] *
+                  (data.scale[2] / previousData.scale[2]),
+        ]);
     }
 
     public isDirty(lastData: TransformData): boolean {
@@ -55,14 +130,15 @@ export default class NetworkTransform extends NetworkComponent<TransformData> {
         }
 
         const position = transform.getWorldPosition();
+        const rotation = transform.getWorldRotation();
         const scale = transform.getWorldScale();
 
         return (
             position.distance(lastData.position) > 0.1 ||
-            !quat.equals(lastData.rotation, transform.getWorldRotation()) ||
-            scale[0] !== lastData.scale[0] ||
-            scale[1] !== lastData.scale[1] ||
-            scale[2] !== lastData.scale[2]
+            !approximatelyEqualRotation(lastData.rotation, rotation) ||
+            !approximatelyEqual(scale[0], lastData.scale[0]) ||
+            !approximatelyEqual(scale[1], lastData.scale[1]) ||
+            !approximatelyEqual(scale[2], lastData.scale[2])
         );
     }
 

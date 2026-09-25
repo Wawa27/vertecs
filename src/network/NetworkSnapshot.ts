@@ -1,18 +1,20 @@
-import { SerializedEntity } from "../io";
-import NetworkEntity from "./NetworkEntity";
+import SerializedNetworkEntity from "./SerializedNetworkEntity";
 import type { SerializedCommand } from "./commands";
 
 export default class NetworkSnapshot {
     #revision: number;
 
+    #ackRevision: number;
+
     #timestamp: number;
 
-    #entities: Map<string, NetworkEntity>;
+    #entities: Map<string, SerializedNetworkEntity>;
 
     #commands: SerializedCommand[];
 
     public constructor() {
         this.#revision = 0;
+        this.#ackRevision = 0;
         this.#timestamp = Date.now();
         this.#entities = new Map();
         this.#commands = [];
@@ -24,12 +26,14 @@ export default class NetworkSnapshot {
 
     public toJSON(): {
         revision: number;
+        ackRevision: number;
         timestamp: number;
-        entities: [string, SerializedEntity][];
+        entities: [string, SerializedNetworkEntity][];
         commands: SerializedCommand[];
     } {
         return {
             revision: this.#revision,
+            ackRevision: this.#ackRevision,
             timestamp: this.#timestamp,
             entities: Array.from(this.entities.entries()),
             commands: this.commands,
@@ -41,7 +45,7 @@ export default class NetworkSnapshot {
             return new Map(
                 value.map((entity: any) => [
                     entity[0],
-                    new NetworkEntity(
+                    new SerializedNetworkEntity(
                         entity[1].id,
                         new Map(entity[1].components),
                         entity[1].isDestroyed,
@@ -64,6 +68,14 @@ export default class NetworkSnapshot {
         this.#revision = value;
     }
 
+    public get ackRevision(): number {
+        return this.#ackRevision;
+    }
+
+    public set ackRevision(value: number) {
+        this.#ackRevision = value;
+    }
+
     public get timestamp(): number {
         return this.#timestamp;
     }
@@ -72,11 +84,11 @@ export default class NetworkSnapshot {
         this.#timestamp = value;
     }
 
-    public get entities(): Map<string, NetworkEntity> {
+    public get entities(): Map<string, SerializedNetworkEntity> {
         return this.#entities;
     }
 
-    public set entities(value: Map<string, NetworkEntity>) {
+    public set entities(value: Map<string, SerializedNetworkEntity>) {
         this.#entities = value;
     }
 

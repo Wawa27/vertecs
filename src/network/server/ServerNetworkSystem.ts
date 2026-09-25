@@ -8,7 +8,7 @@ import NetworkComponent, {
     SerializedNetworkComponent,
 } from "../network.component";
 import IsNetworked from "../is-networked.component";
-import NetworkEntity from "../NetworkEntity";
+import SerializedNetworkEntity from "../SerializedNetworkEntity";
 import IsPrefab from "../../utils/prefabs/IsPrefab";
 import type Command from "../commands/Command";
 import type { SerializedCommand } from "../commands";
@@ -19,7 +19,9 @@ import NetworkSystem from "../network.system";
 
 type NetworkComponentSnapshot = Required<
     Pick<SerializedNetworkComponent<any>, "data" | "ownerId" | "scope">
->;
+> & {
+    networkUpdateRevision: number;
+};
 
 type ClientHandlerConstructor = new (
     ecsManager: EcsManager,
@@ -137,8 +139,10 @@ export default class ServerNetworkSystem extends NetworkSystem {
         }
     }
 
-    protected serializeEntity(entity: Entity): NetworkEntity | undefined {
-        const serializedEntity = new NetworkEntity(
+    protected serializeEntity(
+        entity: Entity
+    ): SerializedNetworkEntity | undefined {
+        const serializedEntity = new SerializedNetworkEntity(
             entity.id,
             new Map(),
             false,
@@ -187,9 +191,15 @@ export default class ServerNetworkSystem extends NetworkSystem {
             isInitialSnapshot ||
             componentSnapshot.ownerId !== component.ownerId ||
             componentSnapshot.scope !== component.scope;
-        const isDirty = componentSnapshot
-            ? component.isDirty(componentSnapshot.data)
-            : true;
+        const updateRequested =
+            componentSnapshot !== undefined &&
+            componentSnapshot.networkUpdateRevision !==
+                component.networkUpdateRevision;
+        const isDirty =
+            updateRequested ||
+            (componentSnapshot
+                ? component.isDirty(componentSnapshot.data)
+                : true);
 
         if (!metadataChanged && !isDirty) {
             return undefined;
@@ -209,6 +219,7 @@ export default class ServerNetworkSystem extends NetworkSystem {
             data: snapshot.data,
             ownerId: component.ownerId,
             scope: component.scope,
+            networkUpdateRevision: component.networkUpdateRevision,
         });
         return snapshot;
     }
@@ -218,10 +229,7 @@ export default class ServerNetworkSystem extends NetworkSystem {
         entities: Entity[],
         deltaTime: number
     ): void {
-        // Process clients entities
-        this.$clientHandlers.forEach((clientHandler) => {
-            clientHandler.processClientSnapshot();
-        });
+        this.processClientSnapshots();
 
         // Add latest destroyed entities to the delta game state
         this.#gameState.entities.forEach((networkEntity) => {
@@ -263,6 +271,12 @@ export default class ServerNetworkSystem extends NetworkSystem {
 
         this.$clientHandlers.forEach((clientHandler) => {
             clientHandler.updateClient();
+        });
+    }
+
+    public processClientSnapshots(): void {
+        this.$clientHandlers.forEach((clientHandler) => {
+            clientHandler.processClientSnapshot();
         });
     }
 
@@ -332,4 +346,5 @@ export default class ServerNetworkSystem extends NetworkSystem {
     public get commandRegistry(): CommandRegistry {
         return this.#commandRegistry;
     }
+
 }

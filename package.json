@@ -10,6 +10,7 @@
     "build": "rollup -c rollup.config.js",
     "start:example-network-server": "tsx examples/network/hello-network/server/Main",
     "start:example-network-client": "tsx examples/network/hello-network/client/Main",
+    "start:example-network-scenario-simple": "tsx examples/network/scenario-simple/Main.ts",
     "test": "mocha --import=tsx test/**/*.spec.ts --exit --recursive",
     "lint": "tsc --noEmit && eslint src/**/*.ts test/**/*.ts examples/**/*.ts --ignore-pattern dist/ --fix && prettier --write src/**/*.ts test/**/*.ts examples/**/*.ts --ignore-pattern dist/",
     "build:examples": "rollup -c rollup.config.examples.js",

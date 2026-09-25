@@ -4,7 +4,7 @@ import { SerializedEntity } from "../io";
 /**
  * JSON representation of an entity that is synchronized over the network.
  */
-export default class NetworkEntity extends SerializedEntity {
+export default class SerializedNetworkEntity extends SerializedEntity {
     $isDestroyed: boolean;
 
     public constructor(

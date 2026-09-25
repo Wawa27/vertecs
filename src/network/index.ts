@@ -1,4 +1,5 @@
 import ServerNetworkSystem from "./server/ServerNetworkSystem";
+import ServerNetworkReceiveSystem from "./server/ServerNetworkReceiveSystem";
 import AoiServerNetworkSystem from "./server/AoiServerNetworkSystem";
 import AoiClientHandler from "./server/AoiClientHandler";
 import ClientNetworkSystem from "./client/ClientNetworkSystem";
@@ -18,9 +19,11 @@ import type { SerializedCommand, CommandContext } from "./commands";
 
 export type { NetworkScope, SerializedCommand, CommandContext };
 export type { SerializedNetworkComponent } from "./network.component";
+export type { PendingNetworkComponentUpdate } from "./network.component";
 export type { TransformData } from "./components/network-transform.component";
 export {
     ServerNetworkSystem,
+    ServerNetworkReceiveSystem,
     AoiServerNetworkSystem,
     AoiClientHandler,
     ClientNetworkSystem,

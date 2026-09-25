@@ -1,7 +1,7 @@
 import { WebSocket } from "ws";
 import { EcsManager } from "../../core";
 import ClientHandler from "./ClientHandler";
-import NetworkEntity from "../NetworkEntity";
+import SerializedNetworkEntity from "../SerializedNetworkEntity";
 import ServerNetworkSystem from "./ServerNetworkSystem";
 
 /**
@@ -57,7 +57,9 @@ export default class AoiClientHandler extends ClientHandler {
             (id) => !next.has(id)
         );
         removed.forEach((id) => {
-            this.sendEntity(new NetworkEntity(id, new Map(), true, []));
+            this.sendEntity(
+                new SerializedNetworkEntity(id, new Map(), true, [])
+            );
         });
         this.#relevantEntityIds = next;
         return entered;

@@ -58,8 +58,8 @@ describe("Networking accept authority", async () => {
 
         // The server must have rejected the update: its counter stays at 0.
         assert.equal(entity.getComponent(CounterComponent)?.count, 0);
-        // The client's own optimistic copy did change locally.
-        assert.equal(clientEntity!.getComponent(CounterComponent)?.count, 1);
+        // The rejected optimistic update is corrected by the server.
+        assert.equal(clientEntity!.getComponent(CounterComponent)?.count, 0);
     });
 
     after(async () => {
