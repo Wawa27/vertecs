@@ -45,3 +45,5 @@ for (let i = 0; i < 200; i++) {
             break;
     }
 }
+
+await ecsManager.start();

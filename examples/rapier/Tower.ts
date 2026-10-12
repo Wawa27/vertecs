@@ -8,8 +8,7 @@ import {
 } from "three";
 import { quat } from "ts-gl-matrix";
 import {
-    OimoComponent,
-    OimoSystem,
+    RapierComponent,
     ThreeCamera,
     ThreeLightComponent,
     ThreeObject3DComponent,
@@ -19,8 +18,8 @@ import { initializeBoilerplate } from "./Boilerplate";
 
 const ecsManager = await initializeBoilerplate();
 
-const floor = ecsManager.createEntity();
-floor.addComponent(new Transform([0, -5, 0]));
+const floor = ecsManager.entities.find((entity) => entity.name === "floor")!;
+floor.getComponent(RapierComponent)!.body!.collider(0).setRestitution(0.5);
 floor.addComponent(
     new ThreeObject3DComponent(
         new Mesh(
@@ -28,13 +27,6 @@ floor.addComponent(
             new MeshStandardMaterial({ color: 0x808080 })
         )
     )
-);
-floor.addComponent(
-    new OimoComponent({
-        size: [50, 10, 50],
-        density: 1,
-        restitution: 0.5,
-    })
 );
 
 const camera = ecsManager.createEntity({ name: "camera" });
@@ -104,9 +96,9 @@ const addTower = (towerOptions: {
                 )
             );
             brick.addComponent(
-                new OimoComponent({
+                new RapierComponent({
                     type: "box",
-                    move: true,
+                    bodyType: "dynamic",
                     size: [sx, sy, sz],
                     density: mass,
                     restitution: 0.1,
@@ -137,7 +129,8 @@ platform.addComponent(
     )
 );
 platform.addComponent(
-    new OimoComponent({
+    new RapierComponent({
+        type: "box",
         size: [2, 40, 50],
         density: 1,
         restitution: 0.2,
@@ -155,14 +148,12 @@ ball.addComponent(
     )
 );
 ball.addComponent(
-    new OimoComponent({
+    new RapierComponent({
         type: "sphere",
-        move: true,
-        size: [2, 2, 2],
+        bodyType: "dynamic",
+        size: [2],
         density: 0.6,
     })
 );
-
-await ecsManager.addSystem(new OimoSystem());
 
 await ecsManager.start();

@@ -2,6 +2,8 @@ import {
     AmbientLight,
     BoxGeometry,
     GridHelper,
+    Euler,
+    Quaternion,
     Mesh,
     MeshBasicMaterial,
     MeshStandardMaterial,
@@ -12,8 +14,8 @@ import {
 import {
     EcsManager,
     Entity,
-    OimoComponent,
-    OimoSystem,
+    RapierComponent,
+    RapierSystem,
     System,
     ThreeCamera,
     ThreeLightComponent,
@@ -30,7 +32,20 @@ export const spawnCube = (
     rotation: [number, number, number]
 ) => {
     const cube = ecsManager.createEntity({ name: "cube" });
-    cube.addComponent(new Transform(position, undefined, undefined));
+    cube.addComponent(
+        new Transform(
+            position,
+            new Quaternion()
+                .setFromEuler(
+                    new Euler(
+                        ...(rotation.map(
+                            (angle) => (angle * Math.PI) / 180
+                        ) as [number, number, number])
+                    )
+                )
+                .toArray()
+        )
+    );
     cube.addComponent(
         new ThreeObject3DComponent(
             new Mesh(
@@ -40,9 +55,9 @@ export const spawnCube = (
         )
     );
     cube.addComponent(
-        new OimoComponent({
+        new RapierComponent({
             type: "box",
-            move: true,
+            bodyType: "dynamic",
             density: 1,
             size: scale,
         })
@@ -64,9 +79,9 @@ export const spawnSphere = (
         )
     );
     sphere.addComponent(
-        new OimoComponent({
+        new RapierComponent({
             type: "sphere",
-            move: true,
+            bodyType: "dynamic",
             density: 1,
             size: [radius],
         })
@@ -75,8 +90,9 @@ export const spawnSphere = (
 
 export const initializeBoilerplate = async (): Promise<EcsManager> => {
     const threeSystem = new ThreeSystem();
+    threeSystem.$dependencies.push(RapierSystem);
     await ecsManager.addSystem(threeSystem);
-    await ecsManager.addSystem(new OimoSystem());
+    await ecsManager.addSystem(new RapierSystem());
 
     const gridHelper = new GridHelper(75, 20);
     threeSystem.scene.add(gridHelper);
@@ -84,10 +100,11 @@ export const initializeBoilerplate = async (): Promise<EcsManager> => {
     const floor = ecsManager.createEntity({ name: "floor" });
     floor.addComponent(new Transform([0, -5, 0]));
     floor.addComponent(
-        new OimoComponent({
+        new RapierComponent({
+            type: "box",
             size: [50, 10, 50],
             density: 1,
-            move: false,
+            bodyType: "fixed",
         })
     );
 
@@ -119,24 +136,32 @@ export const initializeBoilerplate = async (): Promise<EcsManager> => {
     );
     light.addComponent(new ThreeLightComponent(new PointLight(0xffffff, 1)));
 
-    class RespawnSystem extends System<[OimoComponent]> {
+    class RespawnSystem extends System<[RapierComponent]> {
         public constructor() {
-            super([OimoComponent]);
+            super([RapierComponent]);
         }
 
         protected onLoop(
-            components: [OimoComponent][],
+            components: [RapierComponent][],
             entities: Entity[],
             deltaTime: number
         ): void {
             for (let i = 0; i < components.length; i++) {
-                const [oimoComponent] = components[i];
-                if (oimoComponent.body && oimoComponent.body.position.y < -10) {
-                    oimoComponent.body?.resetPosition(
-                        Math.random() * 10 - 5,
-                        30,
-                        Math.random() * 10 - 5
+                const [rapierComponent] = components[i];
+                if (
+                    rapierComponent.body &&
+                    rapierComponent.body.translation().y < -10
+                ) {
+                    rapierComponent.body.setTranslation(
+                        {
+                            x: Math.random() * 10 - 5,
+                            y: 30,
+                            z: Math.random() * 10 - 5,
+                        },
+                        true
                     );
+                    rapierComponent.body.setLinvel({ x: 0, y: 0, z: 0 }, true);
+                    rapierComponent.body.setAngvel({ x: 0, y: 0, z: 0 }, true);
                 }
             }
         }
@@ -148,8 +173,6 @@ export const initializeBoilerplate = async (): Promise<EcsManager> => {
     );
 
     await ecsManager.addSystem(new RespawnSystem());
-
-    await ecsManager.start();
 
     return ecsManager;
 };

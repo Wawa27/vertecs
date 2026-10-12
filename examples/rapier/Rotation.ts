@@ -7,7 +7,7 @@ import {
 } from "three";
 import { quat } from "ts-gl-matrix";
 import {
-    OimoComponent,
+    RapierComponent,
     ThreeCamera,
     ThreeLightComponent,
     ThreeObject3DComponent,
@@ -22,7 +22,8 @@ platform1.addComponent(
     new Transform([0, -5, 12], quat.fromEuler(quat.create(), 0, 0, -1))
 );
 platform1.addComponent(
-    new OimoComponent({
+    new RapierComponent({
+        type: "box",
         size: [50, 10, 20],
         density: 1,
         restitution: 0.4,
@@ -42,7 +43,8 @@ platform2.addComponent(
     new Transform([0, -5, -12], quat.fromEuler(quat.create(), 0, 0, 1))
 );
 platform2.addComponent(
-    new OimoComponent({
+    new RapierComponent({
+        type: "box",
         size: [50, 10, 20],
         density: 1,
         restitution: 0.6,

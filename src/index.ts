@@ -6,7 +6,7 @@ export * from "./network";
 export * from "./math";
 export * from "./utils";
 export * from "./input";
-export * from "./oimojs";
+export * from "./rapier";
 export * from "./physics";
 export * from "./particles";
 export * from "./sound";

@@ -27,7 +27,7 @@
     "game-loop"
   ],
   "dependencies": {
-    "oimo-esm": "^1.0.10",
+    "@dimforge/rapier3d-compat": "^0.21.0",
     "performance-now": "^2.1.0",
     "three": "^0.182.0",
     "ts-gl-matrix": "4.0.3",

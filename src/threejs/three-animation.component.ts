@@ -11,10 +11,13 @@ export default class ThreeAnimationComponent extends Component {
 
     #currentAnimations?: AnimationAction[];
 
+    #layerActions: Map<string, AnimationAction[]>;
+
     public constructor() {
         super();
 
         this.#actions = new Map();
+        this.#layerActions = new Map();
     }
 
     public onAddedToEntity(entity: Entity) {
@@ -60,7 +63,7 @@ export default class ThreeAnimationComponent extends Component {
         });
     }
 
-    public playAnimation(animationName?: string) {
+    public playAnimation(animationName?: string, startAt = 0) {
         // TODO: Move this to the system
         if (!this.#clips || !animationName) {
             console.warn("No clips found or animation name not provided");
@@ -88,6 +91,7 @@ export default class ThreeAnimationComponent extends Component {
 
         actions.forEach((action) => {
             action.reset();
+            action.time = startAt;
             action.setEffectiveTimeScale(1);
             action.setEffectiveWeight(1);
             action.play();
@@ -95,6 +99,66 @@ export default class ThreeAnimationComponent extends Component {
 
         previous.forEach((action) => action.fadeOut(0.2));
 
+        this.#currentAnimations = actions;
+    }
+
+    public playAnimationLayers(
+        layers: {
+            name: string;
+            animationName: string;
+            trackFilter: (trackName: string) => boolean;
+        }[],
+        startAt = 0
+    ): void {
+        if (!this.#clips || !this.#mixer) {
+            console.warn("No clips found");
+            return;
+        }
+        const clips = this.#clips;
+        const mixer = this.#mixer;
+
+        const actions = layers.flatMap((layer) => {
+            const cached = this.#layerActions.get(layer.name);
+            if (cached) {
+                return cached;
+            }
+
+            const layerActions = clips
+                .filter((clip) => clip.name === layer.animationName)
+                .map((clip, index) => {
+                    const maskedClip = clip.clone();
+                    maskedClip.name = `${layer.animationName}::${layer.name}:${index}`;
+                    maskedClip.tracks = maskedClip.tracks.filter((track) =>
+                        layer.trackFilter(track.name)
+                    );
+                    const action = mixer.clipAction(maskedClip);
+                    action.weight = 0;
+                    action.play();
+                    return action;
+                });
+            this.#layerActions.set(layer.name, layerActions);
+            return layerActions;
+        });
+
+        if (
+            actions.length === 0 ||
+            (this.#currentAnimations?.length === actions.length &&
+                actions.every((action) =>
+                    this.#currentAnimations?.includes(action)
+                ))
+        ) {
+            return;
+        }
+
+        const previous = this.#currentAnimations ?? [];
+        actions.forEach((action) => {
+            action.reset();
+            action.time = startAt;
+            action.setEffectiveTimeScale(1);
+            action.setEffectiveWeight(1);
+            action.play();
+        });
+        previous.forEach((action) => action.fadeOut(0.1));
         this.#currentAnimations = actions;
     }
 

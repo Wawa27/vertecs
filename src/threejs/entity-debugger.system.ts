@@ -1,4 +1,4 @@
-import { Material, Mesh, Object3D, Scene } from "three";
+import { Scene } from "three";
 import { Entity } from "../core";
 import KeyboardInputSystem from "../input/KeyboardInputSystem";
 import EntityDebugger from "./EntityDebugger";
@@ -9,16 +9,10 @@ export default class EntityDebuggerSystem extends KeyboardInputSystem {
 
     #entities: Set<Entity>;
 
-    #scene?: Scene;
-
-    #wireframeMaterials: Map<Material, boolean>;
-
-    public constructor(scene?: Scene, tps?: number) {
+    public constructor(_scene?: Scene, tps?: number) {
         super([EntityDebugger], "canvas", tps);
         this.#visible = false;
         this.#entities = new Set();
-        this.#scene = scene;
-        this.#wireframeMaterials = new Map();
     }
 
     public onEntityEligible(entity: Entity): void {
@@ -32,7 +26,6 @@ export default class EntityDebuggerSystem extends KeyboardInputSystem {
     public onKeyDown(key: string): void {
         if (key === "p") {
             this.#visible = !this.#visible;
-            this.#toggleSceneWireframe();
         }
     }
 
@@ -50,36 +43,6 @@ export default class EntityDebuggerSystem extends KeyboardInputSystem {
                 if (threeObject) {
                     threeObject.object3D.visible = this.#visible;
                 }
-            }
-        });
-    }
-
-    #toggleSceneWireframe(): void {
-        if (!this.#scene) {
-            return;
-        }
-
-        this.#scene.traverse((object: Object3D) => {
-            if (object instanceof Mesh) {
-                const materials = Array.isArray(object.material)
-                    ? object.material
-                    : [object.material];
-
-                materials.forEach((material) => {
-                    if (this.#visible) {
-                        this.#wireframeMaterials.set(
-                            material,
-                            material.wireframe
-                        );
-                        material.wireframe = true;
-                    } else {
-                        const original = this.#wireframeMaterials.get(material);
-                        if (original !== undefined) {
-                            material.wireframe = original;
-                            this.#wireframeMaterials.delete(material);
-                        }
-                    }
-                });
             }
         });
     }
